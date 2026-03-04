@@ -1,13 +1,52 @@
 import { Injectable } from '@nestjs/common';
+import { CreateRiderDto } from './dto/create-rider.dto';
 
 @Injectable()
 export class AdminService {
-    getAdmins(): Array<object> {
-        return [
-            { name: 'faysal' },
-            { name: 'siyam' },
-            { name: 'shamin' },
-            { name: 'chhoya' },
-        ];
+    /* Manage Restaurant */
+
+    /* Manage Rider */
+
+    // create a rider
+
+    createRider(createRiderDto: CreateRiderDto): object {
+        return {
+            success: true,
+            message: 'Rider Created Successfully',
+            data: {
+                userId: 101,
+                riderId: 101,
+                ...createRiderDto,
+            },
+        };
+    }
+
+    // return all rider
+    getAllRider(): object {
+        return {
+            success: true,
+            message: 'Rider Fetched',
+            data: [
+                {
+                    userId: 101,
+                    riderId: 101,
+                },
+            ],
+        };
+    }
+
+    // search rider
+    searchRiderByRiderIdOrPhone(val: string): object {
+        if (!val) return {};
+        return {
+            success: true,
+            message: 'Rider Fetched',
+            data: [
+                {
+                    userId: 101,
+                    riderId: 101,
+                },
+            ],
+        };
     }
 }
