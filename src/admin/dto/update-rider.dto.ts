@@ -5,7 +5,6 @@ import {
     IsEmail,
     IsNotEmpty,
     IsNumberString,
-    IsOptional,
     IsString,
     Length,
     Matches,
@@ -13,7 +12,7 @@ import {
     MinLength,
 } from 'class-validator';
 
-export class CreateRiderDto {
+export class UpdateRiderDto {
     @IsNotEmpty()
     @IsString()
     @IsAlpha()
@@ -50,14 +49,12 @@ export class CreateRiderDto {
     @IsBoolean()
     isOnline: boolean;
 
-    @IsOptional()
     @Matches(/^(?:\+88)?01[0-9]{9}$/, {
         message: 'Invalid Bangladesh phone number',
     })
-    bkashAccount?: string;
+    bkashAccount: string;
 
-    @IsOptional()
     @IsNumberString()
     @MinLength(10)
-    bankAccount?: string;
+    bankAccount: string;
 }

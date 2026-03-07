@@ -2,9 +2,12 @@ import {
     BadRequestException,
     Body,
     Controller,
+    Delete,
     Get,
+    Param,
+    ParseIntPipe,
     Post,
-    Query,
+    Put,
     UseInterceptors,
     UsePipes,
     ValidationPipe,
@@ -13,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { AdminService } from './admin.service';
 import { CreateRiderDto } from './dto/create-rider.dto';
+import { UpdateRiderDto } from './dto/update-rider.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -24,6 +28,7 @@ export class AdminController {
 
     /* Manage Rider */
 
+    // create rider route
     @Post('create-rider')
     @UsePipes(new ValidationPipe({ transform: true }))
     @UseInterceptors(
@@ -51,13 +56,25 @@ export class AdminController {
         return this.adminService.createRider(createRiderDto);
     }
 
+    // get all rider route
     @Get('get-all-rider')
     getAllRider(): object {
         return this.adminService.getAllRider();
     }
 
-    @Get('search-rider')
-    searchRiderByRiderIdOrPhone(@Query('val') val: string): object {
-        return this.adminService.searchRiderByRiderIdOrPhone(val);
+    // update rider route
+    @Put('update-rider/:id')
+    @UsePipes(new ValidationPipe())
+    updateRider(
+        @Param('id', ParseIntPipe) riderId: number,
+        @Body() updateRiderDto: UpdateRiderDto,
+    ): object {
+        return this.adminService.updateRider(riderId, updateRiderDto);
+    }
+
+    // delete rider route
+    @Delete('delete-rider/:id')
+    deleteRider(@Param('id') riderId: string): object {
+        return this.adminService.deleteRider(riderId);
     }
 }
