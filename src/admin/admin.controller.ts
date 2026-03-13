@@ -8,6 +8,7 @@ import {
     ParseIntPipe,
     Post,
     Put,
+    Query,
     UseInterceptors,
     UsePipes,
     ValidationPipe,
@@ -15,7 +16,9 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { AdminService } from './admin.service';
+import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { CreateRiderDto } from './dto/create-rider.dto';
+import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { UpdateRiderDto } from './dto/update-rider.dto';
 
 @Controller('admin')
@@ -24,9 +27,50 @@ export class AdminController {
         this.adminService = adminService;
     }
 
-    /* Manage Restaurant */
+    /* ========== Manage Restaurant ========== */
 
-    /* Manage Rider */
+    // create a restaurant route
+    @Post('create-restaurant')
+    @UsePipes(new ValidationPipe())
+    createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto): object {
+        return this.adminService.createRestaurant(createRestaurantDto);
+    }
+
+    // get all restaurants route
+    @Get('get-all-restaurants')
+    getAllRestaurants(): object {
+        return this.adminService.getAllRestaurants();
+    }
+
+    // filter restaurants route
+    @Get('filter-restaurants')
+    filterRestaurants(
+        @Query('search') search: string,
+        @Query('filter') filter: string,
+    ): object {
+        return this.adminService.filterRestaurants(search, filter);
+    }
+
+    // update restaurant route
+    @Put('update-restaurant/:id')
+    @UsePipes(new ValidationPipe())
+    updateRestaurant(
+        @Param('id', ParseIntPipe) restaurantId: number,
+        @Body() updateRestaurantDto: UpdateRestaurantDto,
+    ): object {
+        return this.adminService.updateRestaurant(
+            restaurantId,
+            updateRestaurantDto,
+        );
+    }
+
+    // delete restaurant route
+    @Delete('delete-restaurant/:id')
+    deleteRestaurant(@Param('id', ParseIntPipe) restaurantId: number): object {
+        return this.adminService.deleteRestaurant(restaurantId);
+    }
+
+    /* ========== Manage Rider ========== */
 
     // create rider route
     @Post('create-rider')
@@ -57,9 +101,18 @@ export class AdminController {
     }
 
     // get all rider route
-    @Get('get-all-rider')
-    getAllRider(): object {
-        return this.adminService.getAllRider();
+    @Get('get-all-riders')
+    getAllRiders(): object {
+        return this.adminService.getAllRiders();
+    }
+
+    // filter riders route
+    @Get('filter-riders')
+    filterRiders(
+        @Query('search') search: string,
+        @Query('filter') filter: string,
+    ): object {
+        return this.adminService.filterRiders(search, filter);
     }
 
     // update rider route
@@ -74,7 +127,7 @@ export class AdminController {
 
     // delete rider route
     @Delete('delete-rider/:id')
-    deleteRider(@Param('id') riderId: string): object {
+    deleteRider(@Param('id', ParseIntPipe) riderId: number): object {
         return this.adminService.deleteRider(riderId);
     }
 }

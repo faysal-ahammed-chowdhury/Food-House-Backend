@@ -1,6 +1,4 @@
-import { Transform } from 'class-transformer';
 import {
-    IsAlpha,
     IsBoolean,
     IsEmail,
     IsNotEmpty,
@@ -16,7 +14,6 @@ import {
 export class CreateRiderDto {
     @IsNotEmpty()
     @IsString()
-    @IsAlpha()
     name: string;
 
     @IsNotEmpty()
@@ -37,16 +34,6 @@ export class CreateRiderDto {
     @Length(10, 10)
     riderNid: string;
 
-    @Transform(({ value }) => {
-        if (typeof value === 'boolean') return value;
-        if (typeof value === 'string') {
-            const lower = value.toLowerCase();
-            if (lower === 'true') return true;
-            if (lower === 'false') return false;
-        }
-        return value;
-    })
-    // @Type(() => Boolean)
     @IsBoolean()
     isOnline: boolean;
 

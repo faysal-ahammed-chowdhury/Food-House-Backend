@@ -4,14 +4,14 @@ import {
     IsNotEmpty,
     IsNumber,
     IsNumberString,
+    IsOptional,
     IsString,
-    Length,
     Matches,
     MaxLength,
     MinLength,
 } from 'class-validator';
 
-export class UpdateRiderDto {
+export class UpdateRestaurantDto {
     @IsNotEmpty()
     @IsString()
     name: string;
@@ -25,30 +25,36 @@ export class UpdateRiderDto {
     @MaxLength(32)
     password: string;
 
-    @Matches(/^(?:\+88)?01[0-9]{9}$/, {
-        message: 'Invalid Bangladesh phone number',
-    })
-    phone: string;
-
+    @IsNotEmpty()
     @IsString()
-    @Length(10, 10)
-    riderNid: string;
+    @MaxLength(100)
+    description: string;
+
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(100)
+    address: string;
 
     @IsBoolean()
-    isOnline: boolean;
+    isOpen: boolean;
 
+    @IsNumber()
+    currentCommissionPercent: number;
+
+    @IsNumber()
+    currentDeliveryFee: number;
+
+    @IsOptional()
     @Matches(/^(?:\+88)?01[0-9]{9}$/, {
         message: 'Invalid Bangladesh phone number',
     })
-    bkashAccount: string;
+    bkashAccount?: string;
 
+    @IsOptional()
     @IsNumberString()
     @MinLength(10)
-    bankAccount: string;
+    bankAccount?: string;
 
     @IsNumber()
     withdrawableBalance: number;
-
-    @IsNumber()
-    codDue: number;
 }
