@@ -6,7 +6,7 @@ import { UpdateRiderDto } from './dto/update-rider.dto';
 
 @Injectable()
 export class AdminService {
-    /* Manage Restaurant */
+    /* ========== Manage Restaurant ========== */
 
     // create a restaurant
     createRestaurant(createRestaurantDto: CreateRestaurantDto): object {
@@ -76,7 +76,7 @@ export class AdminService {
         };
     }
 
-    /* Manage Rider */
+    /* ========== Manage Rider ========== */
 
     // create a rider
     createRider(createRiderDto: CreateRiderDto): object {
