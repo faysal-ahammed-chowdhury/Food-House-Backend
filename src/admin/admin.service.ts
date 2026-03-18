@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { CreateItemDto } from './dto/create-item.dto';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { CreateRiderDto } from './dto/create-rider.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
+import { UpdateItemDto } from './dto/update-item.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { UpdateRiderDto } from './dto/update-rider.dto';
 
@@ -12,7 +16,7 @@ export class AdminService {
     createRestaurant(createRestaurantDto: CreateRestaurantDto): object {
         return {
             success: true,
-            message: 'Rider Created Successfully',
+            message: 'Restaurant Created Successfully',
             data: {
                 userId: 101,
                 restaurantId: 101,
@@ -21,31 +25,28 @@ export class AdminService {
         };
     }
 
-    // get all restaurants
-    getAllRestaurants(): object {
+    // get restaurants
+    getRestaurants(search: string, filter: string): object {
         return {
             success: true,
-            message: 'Restaurant Fetched',
-            data: [
-                {
-                    userId: 101,
-                    restaurantId: 101,
-                },
-            ],
-        };
-    }
-
-    // filter restaurants
-    filterRestaurants(search: string, filter: string): object {
-        return {
-            success: true,
-            message: 'Restaurant Fetched',
+            message: 'Restaurants Fetched',
             data: [
                 {
                     userId: search,
                     restaurantId: filter,
                 },
             ],
+        };
+    }
+
+    // get restaurant
+    getRestaurant(restaurantId: number): object {
+        return {
+            success: true,
+            message: 'Restaurant Fetched',
+            data: {
+                restaurantId: restaurantId,
+            },
         };
     }
 
@@ -76,6 +77,102 @@ export class AdminService {
         };
     }
 
+    /* ========== Manage Menu ========== */
+
+    // get restaurant menu
+    getRestaurantMenu(restaurantId: number, search: string, filter: string) {
+        return {
+            success: true,
+            message: 'Menu Fetched Successfully',
+            data: {
+                restaurantId,
+                search,
+                filter,
+            },
+        };
+    }
+
+    // add new item
+    addNewItem(restaurantId: number, createItemDto: CreateItemDto) {
+        return {
+            success: true,
+            message: 'Item Added Successfully',
+            data: {
+                restaurantId,
+                createItemDto,
+            },
+        };
+    }
+
+    // update item
+    updateItem(itemId: number, updateItemDto: UpdateItemDto) {
+        return {
+            success: true,
+            message: 'Item Updated Successfully',
+            data: {
+                itemId,
+                updateItemDto,
+            },
+        };
+    }
+
+    // make item unavailable
+    makeItemUnavailable(itemId: number) {
+        return {
+            success: true,
+            message: 'Item Unavailable Successfully',
+            data: {
+                itemId,
+            },
+        };
+    }
+
+    // delete item
+    deleteItem(itemId: number) {
+        return {
+            success: true,
+            message: 'Item Deleted Successfully',
+            data: {
+                itemId,
+            },
+        };
+    }
+
+    // add new category
+    addNewCategory(restaurantId: number, createCategoryDto: CreateCategoryDto) {
+        return {
+            success: true,
+            message: 'Category Added Successfully',
+            data: {
+                restaurantId,
+                createCategoryDto,
+            },
+        };
+    }
+
+    // update category
+    updateCategory(categoryId: number, updateCategoryDto: UpdateCategoryDto) {
+        return {
+            success: true,
+            message: 'Category Updated Successfully',
+            data: {
+                categoryId,
+                updateCategoryDto,
+            },
+        };
+    }
+
+    // delete category
+    deleteCategory(categoryId: number) {
+        return {
+            success: true,
+            message: 'Category Deleted Successfully',
+            data: {
+                categoryId,
+            },
+        };
+    }
+
     /* ========== Manage Rider ========== */
 
     // create a rider
@@ -91,22 +188,8 @@ export class AdminService {
         };
     }
 
-    // return all rider
-    getAllRiders(): object {
-        return {
-            success: true,
-            message: 'Rider Fetched',
-            data: [
-                {
-                    userId: 101,
-                    riderId: 101,
-                },
-            ],
-        };
-    }
-
-    // filter riders
-    filterRiders(search: string, filter: string): object {
+    // get riders
+    getRiders(search: string, filter: string): object {
         return {
             success: true,
             message: 'Rider Fetched',
@@ -116,6 +199,17 @@ export class AdminService {
                     riderId: filter,
                 },
             ],
+        };
+    }
+
+    // get rider
+    getRider(riderId: number): object {
+        return {
+            success: true,
+            message: 'Rider Fetched',
+            data: {
+                riderId: riderId,
+            },
         };
     }
 
