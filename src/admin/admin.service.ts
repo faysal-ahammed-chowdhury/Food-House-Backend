@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { OrderStatus } from 'src/common/enums/order-status.enum';
+import { PaymentMethod } from 'src/common/enums/payment-method.enum';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
@@ -116,13 +118,14 @@ export class AdminService {
         };
     }
 
-    // make item unavailable
-    makeItemUnavailable(itemId: number) {
+    // set item availability
+    setItemAvailability(itemId: number, isAvailable: boolean) {
         return {
             success: true,
-            message: 'Item Unavailable Successfully',
+            message: 'Item dummu Successfully',
             data: {
                 itemId,
+                isAvailable,
             },
         };
     }
@@ -233,6 +236,55 @@ export class AdminService {
             message: 'Rider Deleted Successfully',
             data: {
                 riderId,
+            },
+        };
+    }
+
+    /* ========== Manage Order ========== */
+
+    // get all order
+    getOrders(
+        search: string,
+        status: OrderStatus,
+        dateFrom: string,
+        dateTo: string,
+        paymentMethod: PaymentMethod,
+        restaurantId: number,
+        riderId: number,
+    ) {
+        return {
+            success: true,
+            message: 'Dummy Successfully',
+            data: {
+                search,
+                status,
+                dateFrom,
+                dateTo,
+                paymentMethod,
+                restaurantId,
+                riderId,
+            },
+        };
+    }
+
+    // get order
+    getOrder(orderId: number) {
+        return {
+            success: true,
+            message: 'Dummy Successfully',
+            data: {
+                orderId,
+            },
+        };
+    }
+
+    // get order
+    cancelOrder(orderId: number) {
+        return {
+            success: true,
+            message: 'Dummy Successfully',
+            data: {
+                orderId,
             },
         };
     }

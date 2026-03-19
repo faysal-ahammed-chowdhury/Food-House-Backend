@@ -5,6 +5,7 @@ import {
     Delete,
     Get,
     Param,
+    ParseBoolPipe,
     ParseIntPipe,
     Patch,
     Post,
@@ -16,6 +17,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { OrderStatus } from 'src/common/enums/order-status.enum';
+import { PaymentMethod } from 'src/common/enums/payment-method.enum';
 import { AdminService } from './admin.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -52,7 +55,7 @@ export class AdminController {
 
     // get restaurant route
     @Get('restaurants/:id')
-    getRestaurant(@Param('id') restaurantId: number): object {
+    getRestaurant(@Param('id', ParseIntPipe) restaurantId: number): object {
         return this.adminService.getRestaurant(restaurantId);
     }
 
@@ -111,10 +114,13 @@ export class AdminController {
         return this.adminService.updateItem(itemId, updateItemDto);
     }
 
-    // make item unavailable route
-    @Patch('menu/items/:id/makeUnavailable')
-    makeItemUnavailable(@Param('id', ParseIntPipe) itemId: number) {
-        return this.adminService.makeItemUnavailable(itemId);
+    // set item availability route
+    @Patch('menu/items/:id/availability')
+    setItemAvailability(
+        @Param('id', ParseIntPipe) itemId: number,
+        @Body('isAvailable', ParseBoolPipe) isAvailable: boolean,
+    ) {
+        return this.adminService.setItemAvailability(itemId, isAvailable);
     }
 
     // delete item route
@@ -140,7 +146,7 @@ export class AdminController {
     @Put('menu/categories/:id')
     @UsePipes(new ValidationPipe())
     updateCategory(
-        @Param('id') categoryId: number,
+        @Param('id', ParseIntPipe) categoryId: number,
         @Body() updateCategoryDto: UpdateCategoryDto,
     ) {
         return this.adminService.updateCategory(categoryId, updateCategoryDto);
@@ -211,5 +217,41 @@ export class AdminController {
     @Delete('riders/:id')
     deleteRider(@Param('id', ParseIntPipe) riderId: number): object {
         return this.adminService.deleteRider(riderId);
+    }
+
+    /* ========== Manage Order ========== */
+
+    // get all order route
+    @Get('orders')
+    getOrders(
+        @Query('search') search: string,
+        @Query('status') status: OrderStatus,
+        @Query('dateFrom') dateFrom: string,
+        @Query('dateTo') dateTo: string,
+        @Query('paymentMethod') paymentMethod: PaymentMethod,
+        @Query('restaurantId', ParseIntPipe) restaurantId: number,
+        @Query('riderId', ParseIntPipe) riderId: number,
+    ) {
+        return this.adminService.getOrders(
+            search,
+            status,
+            dateFrom,
+            dateTo,
+            paymentMethod,
+            restaurantId,
+            riderId,
+        );
+    }
+
+    // get order route
+    @Get('orders/:id')
+    getOrder(@Param('id', ParseIntPipe) orderId: number) {
+        return this.adminService.getOrder(orderId);
+    }
+
+    // cancel order route
+    @Patch('orders/:id/cancel')
+    cancelOrder(@Param('id', ParseIntPipe) orderId: number) {
+        return this.adminService.cancelOrder(orderId);
     }
 }

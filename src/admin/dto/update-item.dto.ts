@@ -1,32 +1,4 @@
-import {
-    IsNotEmpty,
-    IsNumber,
-    IsOptional,
-    MaxLength,
-    Min,
-} from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateItemDto } from './create-item.dto';
 
-export class UpdateItemDto {
-    @IsNotEmpty()
-    name: string;
-
-    @IsNotEmpty()
-    @MaxLength(200)
-    description: string;
-
-    @Min(0)
-    @IsNumber()
-    price: number;
-
-    @IsOptional()
-    image: string;
-
-    @IsNumber()
-    categoryId: number;
-
-    @IsNumber()
-    restaurantId: number;
-
-    @IsNumber()
-    preparationTime: number;
-}
+export class UpdateItemDto extends PartialType(CreateItemDto) {}

@@ -7,7 +7,9 @@ import {
     IsOptional,
     IsString,
     Matches,
+    Max,
     MaxLength,
+    Min,
     MinLength,
 } from 'class-validator';
 
@@ -25,10 +27,9 @@ export class CreateRestaurantDto {
     @MaxLength(32)
     password: string;
 
-    @IsNotEmpty()
-    @IsString()
+    @IsOptional()
     @MaxLength(100)
-    description: string;
+    description?: string;
 
     @IsNotEmpty()
     @IsString()
@@ -39,6 +40,8 @@ export class CreateRestaurantDto {
     isOpen: boolean;
 
     @IsNumber()
+    @Max(100)
+    @Min(0)
     currentCommissionPercent: number;
 
     @IsNumber()

@@ -30,8 +30,8 @@ export class CreateRiderDto {
     })
     phone: string;
 
-    @IsString()
-    @Length(10, 10)
+    @IsNumberString()
+    @Length(10, 17)
     riderNid: string;
 
     @IsBoolean()
