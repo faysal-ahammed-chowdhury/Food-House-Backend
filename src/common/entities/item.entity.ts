@@ -19,7 +19,7 @@ export class ItemEntity {
     @Column({ nullable: true })
     description: string;
 
-    @Column('decimal')
+    @Column('float')
     price: number;
 
     @Column({ nullable: true })
@@ -28,7 +28,7 @@ export class ItemEntity {
     @Column('boolean')
     isAvailable: boolean;
 
-    @Column('decimal')
+    @Column('float')
     preparationTime: number;
 
     @ManyToOne(() => CategoryEntity, {

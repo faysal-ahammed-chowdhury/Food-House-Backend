@@ -16,10 +16,12 @@ import {
 export class CreateRestaurantDto {
     @IsNotEmpty()
     @IsString()
+    @MaxLength(45)
     name: string;
 
     @IsNotEmpty()
     @IsEmail()
+    @MaxLength(30)
     email: string;
 
     @IsString()
@@ -45,6 +47,7 @@ export class CreateRestaurantDto {
     currentCommissionPercent: number;
 
     @IsNumber()
+    @Min(0)
     currentDeliveryFee: number;
 
     @IsOptional()

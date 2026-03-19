@@ -30,10 +30,10 @@ export class RestaurantEntity {
     @Column('boolean')
     isOpen: boolean;
 
-    @Column('decimal')
+    @Column('float')
     currentCommissionPercent: number;
 
-    @Column('decimal')
+    @Column('float')
     currentDeliveryFee: number;
 
     @Column({ nullable: true })

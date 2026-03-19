@@ -17,7 +17,7 @@ export class CODSubmissionEntity {
     @JoinColumn({ name: 'riderId' })
     rider: RiderEntity;
 
-    @Column('decimal')
+    @Column('float')
     amount: number;
 
     @Column({

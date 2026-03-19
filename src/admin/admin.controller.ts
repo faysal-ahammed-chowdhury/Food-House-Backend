@@ -40,7 +40,9 @@ export class AdminController {
     // create a restaurant route
     @Post('restaurants')
     @UsePipes(new ValidationPipe())
-    createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto): object {
+    createRestaurant(
+        @Body() createRestaurantDto: CreateRestaurantDto,
+    ): Promise<object> {
         return this.adminService.createRestaurant(createRestaurantDto);
     }
 
@@ -49,7 +51,7 @@ export class AdminController {
     getRestaurants(
         @Query('search') search: string,
         @Query('filter') filter: string,
-    ): object {
+    ): Promise<object> {
         return this.adminService.getRestaurants(search, filter);
     }
 

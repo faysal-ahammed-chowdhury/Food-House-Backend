@@ -22,12 +22,12 @@ export class OrderItemEntity {
     @Column()
     itemName: string;
 
-    @Column('decimal')
+    @Column('float')
     itemPrice: number;
 
-    @Column('decimal')
+    @Column('float')
     quantity: number;
 
-    @Column('decimal')
+    @Column('float')
     total: number;
 }

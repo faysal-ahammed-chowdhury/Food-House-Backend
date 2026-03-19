@@ -30,19 +30,19 @@ export class OrderEntity {
     @Column('timestamp')
     orderAt: string;
 
-    @Column('decimal')
+    @Column('float')
     subtotal: number;
 
     @Column({ nullable: true })
     voucherCode: string;
 
-    @Column('decimal')
+    @Column('float')
     discountAmount: number;
 
-    @Column('decimal')
+    @Column('float')
     deliveryFee: number;
 
-    @Column('decimal')
+    @Column('float')
     total: number;
 
     @Column({ type: 'enum', enum: PaymentMethod })
@@ -57,13 +57,13 @@ export class OrderEntity {
     @Column({ type: 'enum', enum: OrderStatus })
     status: OrderStatus;
 
-    @Column('decimal')
+    @Column('float')
     commissionAmount: number;
 
-    @Column('decimal')
+    @Column('float')
     commissionPercentage: number;
 
-    @Column('decimal')
+    @Column('float')
     estimatedDeliveryTime: number;
 
     @OneToOne(() => DeliveryEntity, (delivery) => delivery.order, {

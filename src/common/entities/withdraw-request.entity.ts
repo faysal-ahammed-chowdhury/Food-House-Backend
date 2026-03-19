@@ -27,7 +27,7 @@ export class WithdrawRequestEntity {
     @JoinColumn({ name: 'userId' })
     user: UserEntity;
 
-    @Column('decimal')
+    @Column('float')
     amount: number;
 
     @Column({ type: 'enum', enum: WithdrawMethod })

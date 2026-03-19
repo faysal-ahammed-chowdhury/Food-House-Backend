@@ -14,6 +14,7 @@ import { AdminModule } from './admin/admin.module';
             database: 'foodhouse',
             autoLoadEntities: true,
             synchronize: true,
+            // dropSchema: true,
         }),
     ],
     controllers: [],

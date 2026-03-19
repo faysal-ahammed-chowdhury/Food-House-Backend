@@ -21,12 +21,12 @@ export class VoucherEntity {
     @Column()
     voucherCode: string;
 
-    @Column('decimal')
+    @Column('float')
     percent: number;
 
-    @Column('decimal')
+    @Column('float')
     maxDiscount: number;
 
-    @Column('decimal')
+    @Column('float')
     minOrderAmount: number;
 }
