@@ -1,10 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RestaurantEntity } from 'src/common/entities/restaurant.entity';
 import { UserEntity } from 'src/common/entities/user.entity';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
-import { UserRoles } from 'src/common/enums/user-roles.enum';
 import { Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -17,6 +16,8 @@ import { UpdateRiderDto } from './dto/update-rider.dto';
 
 @Injectable()
 export class AdminService {
+    /* ========== Manage Admin ========== */
+
     /* ========== Manage Restaurant ========== */
 
     constructor(
@@ -27,62 +28,21 @@ export class AdminService {
     ) {}
 
     // create a restaurant
-    async createRestaurant(
-        createRestaurantDto: CreateRestaurantDto,
-    ): Promise<object> {
-        try {
-            const existingUser = await this.userRepository.findOne({
-                where: { email: createRestaurantDto.email },
-            });
-            if (existingUser) {
-                throw new BadRequestException('Email already exists');
-            }
-
-            // create user
-            const user = this.userRepository.create({
-                name: createRestaurantDto.name,
-                email: createRestaurantDto.email,
-                password: createRestaurantDto.password,
-                role: UserRoles.RESTAURANT,
-            });
-            await this.userRepository.save(user);
-
-            // then create restaurant
-            const restaurant = this.restaurantRepository.create({
-                user,
-                address: createRestaurantDto.address,
-                description: createRestaurantDto.description,
-                isOpen: createRestaurantDto.isOpen,
-                currentCommissionPercent:
-                    createRestaurantDto.currentCommissionPercent,
-                currentDeliveryFee: createRestaurantDto.currentDeliveryFee,
-                bkashAccount: createRestaurantDto.bkashAccount,
-                bankAccount: createRestaurantDto.bankAccount,
-            });
-            const data = await this.restaurantRepository.save(restaurant);
-
-            return {
-                success: true,
-                message: 'New Restaurant Created',
-                data,
-            };
-        } catch (err) {
-            throw new BadRequestException(
-                err.message || 'Failed to create restaurant',
-            );
-        }
+    createRestaurant(createRestaurantDto: CreateRestaurantDto): object {
+        return {
+            success: true,
+            message: 'Restaurants Created',
+            createRestaurantDto,
+        };
     }
 
     // get restaurants
-    async getRestaurants(search: string, filter: string): Promise<object> {
-        const data = await this.restaurantRepository.find({
-            relations: ['user'],
-            where: [{ restaurantId: 1 }],
-        });
+    getRestaurants(search: string, filter: string): object {
         return {
             success: true,
             message: 'Restaurants Fetched',
-            data,
+            search,
+            filter,
         };
     }
 

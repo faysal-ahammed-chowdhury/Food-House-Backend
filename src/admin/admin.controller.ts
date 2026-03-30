@@ -11,12 +11,14 @@ import {
     Post,
     Put,
     Query,
+    UseGuards,
     UseInterceptors,
     UsePipes,
     ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { AuthGuard } from 'src/auth/auth.guard';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
 import { AdminService } from './admin.service';
@@ -35,23 +37,24 @@ export class AdminController {
         this.adminService = adminService;
     }
 
+    /* ========== Manage Admin ========== */
+
     /* ========== Manage Restaurant ========== */
 
     // create a restaurant route
     @Post('restaurants')
     @UsePipes(new ValidationPipe())
-    createRestaurant(
-        @Body() createRestaurantDto: CreateRestaurantDto,
-    ): Promise<object> {
+    createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto): object {
         return this.adminService.createRestaurant(createRestaurantDto);
     }
 
     // get restaurants route
     @Get('restaurants')
+    @UseGuards(AuthGuard)
     getRestaurants(
         @Query('search') search: string,
         @Query('filter') filter: string,
-    ): Promise<object> {
+    ): object {
         return this.adminService.getRestaurants(search, filter);
     }
 
