@@ -14,6 +14,7 @@ export class AuthController {
         this.authService = authService;
     }
 
+    // Sign In route for any user
     @Post('login')
     @UsePipes(new ValidationPipe())
     async signIn(@Body() loginDto: LoginDto): Promise<object> {

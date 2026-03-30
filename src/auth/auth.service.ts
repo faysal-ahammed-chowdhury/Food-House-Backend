@@ -13,6 +13,7 @@ export class AuthService {
         private jwtService: JwtService,
     ) {}
 
+    // sign in logic for any user
     async signIn(email: string, pass: string): Promise<object> {
         try {
             const data = await this.userRepository.findOne({
