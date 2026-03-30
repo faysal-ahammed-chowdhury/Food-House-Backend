@@ -21,16 +21,20 @@ import { diskStorage } from 'multer';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
+import { AdminGuard } from './admin.guard';
 import { AdminService } from './admin.service';
+import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { CreateRiderDto } from './dto/create-rider.dto';
+import { UpdateAdminDto } from './dto/update-admin.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { UpdateRiderDto } from './dto/update-rider.dto';
 
+@UseGuards(AuthGuard, AdminGuard)
 @Controller('admin')
 export class AdminController {
     constructor(private readonly adminService: AdminService) {
@@ -38,6 +42,42 @@ export class AdminController {
     }
 
     /* ========== Manage Admin ========== */
+
+    // create admin route
+    @Post('admins')
+    createAdmin(@Body() createAdminDto: CreateAdminDto): object {
+        return this.adminService.createAdmin(createAdminDto);
+    }
+
+    // get admins route
+    @Get('admins')
+    async getAdmins(@Query('search') search: string): Promise<object> {
+        return this.adminService.getAdmins(search);
+    }
+
+    // get admin route
+    @Get('admins/:id')
+    async getAdmin(@Param('id', ParseIntPipe) userId: number): Promise<object> {
+        return this.adminService.getAdmin(userId);
+    }
+
+    // update admin route
+    @Put('admins/:id')
+    @UsePipes(new ValidationPipe({ whitelist: true }))
+    async updateAdmin(
+        @Param('id', ParseIntPipe) userId: number,
+        @Body() updateAdminDto: UpdateAdminDto,
+    ): Promise<object> {
+        return this.adminService.updateAdmin(userId, updateAdminDto);
+    }
+
+    // delete admin route
+    @Delete('admins/:id')
+    async deleteAdmin(
+        @Param('id', ParseIntPipe) userId: number,
+    ): Promise<object> {
+        return this.adminService.deleteAdmin(userId);
+    }
 
     /* ========== Manage Restaurant ========== */
 
@@ -50,7 +90,6 @@ export class AdminController {
 
     // get restaurants route
     @Get('restaurants')
-    @UseGuards(AuthGuard)
     getRestaurants(
         @Query('search') search: string,
         @Query('filter') filter: string,

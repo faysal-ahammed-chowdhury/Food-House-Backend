@@ -19,17 +19,17 @@ export class AuthService {
 
     // sign in logic for any user
     async signIn(email: string, pass: string): Promise<object> {
-        const data = await this.userRepository.findOne({
+        const user = await this.userRepository.findOne({
             where: {
                 email: email,
             },
         });
 
-        if (!data) {
+        if (!user) {
             throw new NotFoundException('User Not Found');
         }
 
-        const isMatch = await bcrypt.compare(pass, data?.password);
+        const isMatch = await bcrypt.compare(pass, user?.password);
 
         if (!isMatch) {
             throw new UnauthorizedException(
@@ -37,14 +37,18 @@ export class AuthService {
             );
         }
 
-        const payload = { sub: data?.userId, email: data?.email };
+        const payload = {
+            userId: user?.userId,
+            email: user?.email,
+            role: user.role,
+        };
 
-        const { password, ...result } = data;
+        const { password, ...result } = user;
 
         return {
             success: true,
             message: 'Login successful',
-            result,
+            data: result,
             access_token: await this.jwtService.signAsync(payload),
         };
     }
