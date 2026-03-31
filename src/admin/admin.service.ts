@@ -31,20 +31,28 @@ export class AdminService {
         private userRepository: Repository<UserEntity>,
     ) {}
 
+    /* ========== Common ========== */
+
+    // check user exist or not
+    async checkUserExist(email: string): Promise<boolean> {
+        const foundEmail = await this.userRepository.findOne({
+            where: { email: email },
+        });
+
+        return Boolean(foundEmail);
+    }
+
     /* ========== Manage Admin ========== */
 
     // create an admin
     async createAdmin(createAdminDto: CreateAdminDto): Promise<object> {
-        const salt = await bcrypt.genSalt();
-        const hashedPassword = await bcrypt.hash(createAdminDto.password, salt);
-
-        const foundEmail = await this.userRepository.findOne({
-            where: { email: createAdminDto.email },
-        });
-
-        if (foundEmail) {
+        const userExist = await this.checkUserExist(createAdminDto.email);
+        if (userExist) {
             throw new BadRequestException('Email already exists');
         }
+
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(createAdminDto.password, salt);
 
         const admin = await this.userRepository.save({
             name: createAdminDto.name,
@@ -169,11 +177,54 @@ export class AdminService {
     /* ========== Manage Restaurant ========== */
 
     // create a restaurant
-    createRestaurant(createRestaurantDto: CreateRestaurantDto): object {
+    async createRestaurant(
+        createRestaurantDto: CreateRestaurantDto,
+    ): Promise<object> {
+        const userExist = await this.checkUserExist(createRestaurantDto.email);
+        if (userExist) {
+            throw new BadRequestException('Email already exists');
+        }
+
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(
+            createRestaurantDto.password,
+            salt,
+        );
+
+        // const user = await this.userRepository.save({
+        //     name: createRestaurantDto.name,
+        //     email: createRestaurantDto.email,
+        //     password: hashedPassword,
+        //     role: UserRoles.RESTAURANT,
+        // });
+
+        const restaurant = await this.restaurantRepository.save({
+            user: {
+                name: createRestaurantDto.name,
+                email: createRestaurantDto.email,
+                password: hashedPassword,
+                role: UserRoles.RESTAURANT,
+            },
+
+            description: createRestaurantDto.description,
+            address: createRestaurantDto.address,
+            isOpen: createRestaurantDto.isOpen,
+            currentCommissionPercent:
+                createRestaurantDto.currentCommissionPercent,
+            currentDeliveryFee: createRestaurantDto.currentDeliveryFee,
+            bkashAccount: createRestaurantDto.bkashAccount,
+            bankAccount: createRestaurantDto.bankAccount,
+        });
+
+        const restaurantOutput: any = { ...restaurant };
+        if (restaurantOutput.user) {
+            delete restaurantOutput.user.password;
+        }
+
         return {
             success: true,
-            message: 'Restaurants Created',
-            createRestaurantDto,
+            message: 'Restaurant created successfully',
+            data: restaurantOutput,
         };
     }
 
