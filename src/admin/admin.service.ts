@@ -421,6 +421,14 @@ export class AdminService {
         search: string,
         categoryName: string,
     ): Promise<object> {
+        const restaurant = await this.restaurantRepository.findOneBy({
+            restaurantId: restaurantId,
+        });
+
+        if (!restaurant) {
+            throw new NotFoundException('Restaurant Not Exists');
+        }
+
         const qb = this.itemRepository
             .createQueryBuilder('item')
             .innerJoin('item.category', 'category')
@@ -599,12 +607,35 @@ export class AdminService {
         categoryId: number,
         updateCategoryDto: UpdateCategoryDto,
     ): Promise<object> {
-        const category = await this.categoryRepository.findOneBy({
-            categoryId: categoryId,
+        const category = await this.categoryRepository.findOne({
+            relations: ['restaurant'],
+            where: {
+                categoryId: categoryId,
+            },
         });
 
         if (!category) {
             throw new NotFoundException('Category Not Found');
+        }
+
+        if (updateCategoryDto.name) {
+            const categoryNameExist = await this.categoryRepository.findOne({
+                where: {
+                    name: updateCategoryDto.name,
+                    restaurant: {
+                        restaurantId: category.restaurant.restaurantId,
+                    },
+                },
+            });
+
+            if (
+                categoryNameExist &&
+                categoryNameExist.categoryId !== categoryId
+            ) {
+                throw new ConflictException(
+                    'Category already exist to the Restaurant',
+                );
+            }
         }
 
         category.name = updateCategoryDto.name ?? category.name;
