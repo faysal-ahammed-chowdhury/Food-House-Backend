@@ -13,7 +13,7 @@ export class CODSubmissionEntity {
     @PrimaryGeneratedColumn()
     codId: number;
 
-    @ManyToOne(() => RiderEntity)
+    @ManyToOne(() => RiderEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'riderId' })
     rider: RiderEntity;
 

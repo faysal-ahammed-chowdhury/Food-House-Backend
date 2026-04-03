@@ -5,15 +5,10 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
+import { WithdrawMethod } from '../enums/withdraw-method.enum';
 import { WithdrawStatus } from '../enums/withdraw-status.enum';
 import { WithdrawUserType } from '../enums/withdraw-user-type.enum';
 import { UserEntity } from './user.entity';
-
-export enum WithdrawMethod {
-    CASH = 'Cash',
-    BANK = 'Bank',
-    BKASH = 'bKash',
-}
 
 @Entity('withdraw_requests')
 export class WithdrawRequestEntity {
@@ -23,7 +18,7 @@ export class WithdrawRequestEntity {
     @Column({ type: 'enum', enum: WithdrawUserType })
     userType: WithdrawUserType;
 
-    @ManyToOne(() => UserEntity)
+    @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'userId' })
     user: UserEntity;
 

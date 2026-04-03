@@ -19,16 +19,16 @@ export class OrderEntity {
     @PrimaryGeneratedColumn()
     orderId: number;
 
-    @ManyToOne(() => RestaurantEntity, { cascade: true })
+    @ManyToOne(() => RestaurantEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'restaurantId' })
     restaurant: RestaurantEntity;
 
-    @ManyToOne(() => CustomerEntity, { cascade: true })
+    @ManyToOne(() => CustomerEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'customerId' })
     customer: CustomerEntity;
 
     @Column('timestamp')
-    orderAt: string;
+    orderAt: Date;
 
     @Column('float')
     subtotal: number;
@@ -72,5 +72,5 @@ export class OrderEntity {
     delivery: DeliveryEntity;
 
     @OneToMany(() => OrderItemEntity, (item) => item.order)
-    order_items: OrderItemEntity[];
+    orderItems: OrderItemEntity[];
 }

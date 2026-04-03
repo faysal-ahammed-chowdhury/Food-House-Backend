@@ -14,9 +14,7 @@ export class CategoryEntity {
     @PrimaryGeneratedColumn()
     categoryId: number;
 
-    @ManyToOne(() => RestaurantEntity, {
-        cascade: true,
-    })
+    @ManyToOne(() => RestaurantEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'restaurantId' })
     restaurant: RestaurantEntity;
 

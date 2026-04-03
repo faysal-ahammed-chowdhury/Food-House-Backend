@@ -31,13 +31,11 @@ export class ItemEntity {
     @Column('float')
     preparationTime: number;
 
-    @ManyToOne(() => CategoryEntity, {
-        cascade: true,
-    })
+    @ManyToOne(() => CategoryEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'categoryId' })
     category: CategoryEntity;
 
-    @ManyToOne(() => RestaurantEntity, { cascade: true })
+    @ManyToOne(() => RestaurantEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'restaurantId' })
     restaurant: RestaurantEntity;
 }
