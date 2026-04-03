@@ -1,16 +1,13 @@
 import {
     IsEmail,
     IsNotEmpty,
-    IsNumberString,
-    IsOptional,
     IsString,
-    Length,
     Matches,
     MaxLength,
     MinLength,
 } from 'class-validator';
 
-export class CreateRiderDto {
+export class CreateCustomerDto {
     @IsNotEmpty()
     @IsString()
     name: string;
@@ -24,23 +21,13 @@ export class CreateRiderDto {
     @MaxLength(32)
     password: string;
 
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(100)
+    address: string;
+
     @Matches(/^(?:\+88)?01[0-9]{9}$/, {
         message: 'Invalid Bangladesh phone number',
     })
     phone: string;
-
-    @IsNumberString()
-    @Length(10, 17)
-    riderNid: string;
-
-    @IsOptional()
-    @Matches(/^(?:\+88)?01[0-9]{9}$/, {
-        message: 'Invalid Bangladesh phone number',
-    })
-    bkashAccount?: string;
-
-    @IsOptional()
-    @IsNumberString()
-    @MinLength(10)
-    bankAccount?: string;
 }

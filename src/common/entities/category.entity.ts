@@ -21,9 +21,6 @@ export class CategoryEntity {
     @Column()
     name: string;
 
-    @Column('boolean')
-    isAvailable: boolean;
-
     @OneToMany(() => ItemEntity, (item) => item.category)
     items: ItemEntity[];
 }

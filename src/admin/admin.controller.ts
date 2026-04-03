@@ -11,6 +11,7 @@ import {
     Post,
     Put,
     Query,
+    UploadedFile,
     UseInterceptors,
     UsePipes,
     ValidationPipe,
@@ -22,11 +23,13 @@ import { PaymentMethod } from 'src/common/enums/payment-method.enum';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
+import { CreateCustomerDto } from './dto/create-customer.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { CreateRiderDto } from './dto/create-rider.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { UpdateRiderDto } from './dto/update-rider.dto';
@@ -125,62 +128,64 @@ export class AdminController {
 
     /* ========== Manage Menu ========== */
 
-    // get restaurant menu route
-    @Get('restaurants/:id/menu')
-    getRestaurantMenu(
+    // get restaurant items route
+    @Get('restaurants/:id/items')
+    async getRestaurantItems(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Query('search') search: string,
-        @Query('filter') filter: string,
-    ) {
-        return this.adminService.getRestaurantMenu(
+        @Query('category') categoryName: string,
+    ): Promise<object> {
+        return this.adminService.getRestaurantItems(
             restaurantId,
             search,
-            filter,
+            categoryName,
         );
     }
 
     // add new item route
-    @Post('restaurants/:id/menu/items')
+    @Post('restaurants/:id/items')
     @UsePipes(new ValidationPipe({ whitelist: true }))
-    addNewItem(
+    async addNewItem(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() createItemDto: CreateItemDto,
-    ) {
+    ): Promise<object> {
         return this.adminService.addNewItem(restaurantId, createItemDto);
     }
 
     // update item route
-    @Put('menu/items/:id')
+    @Put('items/:id')
     @UsePipes(new ValidationPipe({ whitelist: true }))
-    updateItem(
+    async updateItem(
         @Param('id', ParseIntPipe) itemId: number,
         @Body() updateItemDto: UpdateItemDto,
-    ) {
+    ): Promise<object> {
         return this.adminService.updateItem(itemId, updateItemDto);
     }
 
     // set item availability route
-    @Patch('menu/items/:id/availability')
-    setItemAvailability(
+    @Patch('items/:id/availability')
+    async setItemAvailability(
         @Param('id', ParseIntPipe) itemId: number,
         @Body('isAvailable', ParseBoolPipe) isAvailable: boolean,
-    ) {
+    ): Promise<object> {
         return this.adminService.setItemAvailability(itemId, isAvailable);
     }
 
     // delete item route
-    @Delete('menu/items/:id')
-    deleteItem(@Param('id', ParseIntPipe) itemId: number) {
+    @Delete('items/:id')
+    async deleteItem(
+        @Param('id', ParseIntPipe) itemId: number,
+    ): Promise<object> {
         return this.adminService.deleteItem(itemId);
     }
 
     // add new category route
-    @Post('restaurants/:id/menu/categories')
+    @Post('restaurants/:id/categories')
     @UsePipes(new ValidationPipe({ whitelist: true }))
-    addNewCategory(
+    async addNewCategory(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() createCategoryDto: CreateCategoryDto,
-    ) {
+    ): Promise<object> {
         return this.adminService.addNewCategory(
             restaurantId,
             createCategoryDto,
@@ -188,19 +193,57 @@ export class AdminController {
     }
 
     // update category
-    @Put('menu/categories/:id')
+    @Put('categories/:id')
     @UsePipes(new ValidationPipe({ whitelist: true }))
-    updateCategory(
+    async updateCategory(
         @Param('id', ParseIntPipe) categoryId: number,
         @Body() updateCategoryDto: UpdateCategoryDto,
-    ) {
+    ): Promise<object> {
         return this.adminService.updateCategory(categoryId, updateCategoryDto);
     }
 
     // delete category route
-    @Delete('menu/categories/:id')
-    deleteCategory(@Param('id', ParseIntPipe) categoryId: number) {
+    @Delete('categories/:id')
+    async deleteCategory(
+        @Param('id', ParseIntPipe) categoryId: number,
+    ): Promise<object> {
         return this.adminService.deleteCategory(categoryId);
+    }
+
+    /* ========== Manage Customer ========== */
+
+    // craete a customer route
+    @Post('customers')
+    @UsePipes(new ValidationPipe())
+    async createCustomer(
+        @Body() createCustomerDto: CreateCustomerDto,
+    ): Promise<object> {
+        return this.adminService.createCustomer(createCustomerDto);
+    }
+
+    // get customers route
+    @Get('customers')
+    async getCustomers(
+        @Query('search') search: string,
+        @Query('sortby') sortby: string,
+    ): Promise<object> {
+        return this.adminService.getCustomers(search, sortby);
+    }
+
+    // update customers route
+    @Put('customers/:id')
+    @UsePipes(new ValidationPipe())
+    async updateCustomers(
+        @Param('id', ParseIntPipe) customerId: number,
+        @Body() updateCustomerDto: UpdateCustomerDto,
+    ): Promise<object> {
+        return this.adminService.updateCustomer(customerId, updateCustomerDto);
+    }
+
+    // delete customer route
+    @Delete('customers/:id')
+    deleteCustomer(@Param('id', ParseIntPipe) customerId: number): object {
+        return this.adminService.deleteCustomer(customerId);
     }
 
     /* ========== Manage Rider ========== */
@@ -222,15 +265,22 @@ export class AdminController {
             },
             limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
             storage: diskStorage({
-                // destination: './uploads',
-                // filename(req, file, callback) {
-                //     callback(null, Date.now() + file.originalname);
-                // },
+                destination: './uploads',
+                filename(req, file, callback) {
+                    callback(null, Date.now() + file.originalname);
+                },
             }),
         }),
     )
-    createRider(@Body() createRiderDto: CreateRiderDto): object {
-        return this.adminService.createRider(createRiderDto);
+    async createRider(
+        @Body() createRiderDto: CreateRiderDto,
+        @UploadedFile() file: Express.Multer.File,
+    ): Promise<object> {
+        if (!file) {
+            throw new BadRequestException('NID image is required');
+        }
+
+        return this.adminService.createRider(createRiderDto, file.path);
     }
 
     // get riders route
@@ -242,25 +292,21 @@ export class AdminController {
         return this.adminService.getRiders(search, filter);
     }
 
-    // get rider route
-    @Get('riders/:id')
-    getRider(@Param('id', ParseIntPipe) riderId: number): object {
-        return this.adminService.getRider(riderId);
-    }
-
     // update rider route
     @Put('riders/:id')
     @UsePipes(new ValidationPipe({ whitelist: true }))
-    updateRider(
+    async updateRider(
         @Param('id', ParseIntPipe) riderId: number,
         @Body() updateRiderDto: UpdateRiderDto,
-    ): object {
+    ): Promise<object> {
         return this.adminService.updateRider(riderId, updateRiderDto);
     }
 
     // delete rider route
     @Delete('riders/:id')
-    deleteRider(@Param('id', ParseIntPipe) riderId: number): object {
+    async deleteRider(
+        @Param('id', ParseIntPipe) riderId: number,
+    ): Promise<object> {
         return this.adminService.deleteRider(riderId);
     }
 
