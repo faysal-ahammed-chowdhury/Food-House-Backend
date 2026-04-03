@@ -12,7 +12,7 @@ export class OrderItemEntity {
     @PrimaryGeneratedColumn()
     orderItemId: number;
 
-    @ManyToOne(() => OrderEntity, { cascade: true })
+    @ManyToOne(() => OrderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'orderId' })
     order: OrderEntity;
 
@@ -25,7 +25,7 @@ export class OrderItemEntity {
     @Column('float')
     itemPrice: number;
 
-    @Column('float')
+    @Column('int')
     quantity: number;
 
     @Column('float')

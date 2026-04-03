@@ -15,7 +15,7 @@ export class RiderEntity {
     @PrimaryGeneratedColumn()
     riderId: number;
 
-    @OneToOne(() => UserEntity, { cascade: true })
+    @OneToOne(() => UserEntity, { cascade: true, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId' })
     user: UserEntity;
 

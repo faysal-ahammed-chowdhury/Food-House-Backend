@@ -11,17 +11,14 @@ import {
     Post,
     Put,
     Query,
-    UseGuards,
     UseInterceptors,
     UsePipes,
     ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { AuthGuard } from 'src/auth/auth.guard';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
-import { AdminGuard } from './admin.guard';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -34,7 +31,7 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { UpdateRiderDto } from './dto/update-rider.dto';
 
-@UseGuards(AuthGuard, AdminGuard)
+// @UseGuards(AuthGuard, AdminGuard)
 @Controller('admin')
 export class AdminController {
     constructor(private readonly adminService: AdminService) {
@@ -45,6 +42,7 @@ export class AdminController {
 
     // create admin route
     @Post('admins')
+    @UsePipes(new ValidationPipe({ whitelist: true }))
     createAdmin(@Body() createAdminDto: CreateAdminDto): object {
         return this.adminService.createAdmin(createAdminDto);
     }
@@ -83,33 +81,34 @@ export class AdminController {
 
     // create a restaurant route
     @Post('restaurants')
-    @UsePipes(new ValidationPipe())
-    createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto): object {
+    @UsePipes(new ValidationPipe({ whitelist: true }))
+    async createRestaurant(
+        @Body() createRestaurantDto: CreateRestaurantDto,
+    ): Promise<object> {
         return this.adminService.createRestaurant(createRestaurantDto);
     }
 
     // get restaurants route
     @Get('restaurants')
-    getRestaurants(
-        @Query('search') search: string,
-        @Query('filter') filter: string,
-    ): object {
-        return this.adminService.getRestaurants(search, filter);
+    async getRestaurants(@Query('search') search: string): Promise<object> {
+        return this.adminService.getRestaurants(search);
     }
 
     // get restaurant route
     @Get('restaurants/:id')
-    getRestaurant(@Param('id', ParseIntPipe) restaurantId: number): object {
+    async getRestaurant(
+        @Param('id', ParseIntPipe) restaurantId: number,
+    ): Promise<object> {
         return this.adminService.getRestaurant(restaurantId);
     }
 
     // update restaurant route
     @Put('restaurants/:id')
-    @UsePipes(new ValidationPipe())
-    updateRestaurant(
+    @UsePipes(new ValidationPipe({ whitelist: true }))
+    async updateRestaurant(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() updateRestaurantDto: UpdateRestaurantDto,
-    ): object {
+    ): Promise<object> {
         return this.adminService.updateRestaurant(
             restaurantId,
             updateRestaurantDto,
@@ -118,7 +117,9 @@ export class AdminController {
 
     // delete restaurant route
     @Delete('restaurants/:id')
-    deleteRestaurant(@Param('id', ParseIntPipe) restaurantId: number): object {
+    async deleteRestaurant(
+        @Param('id', ParseIntPipe) restaurantId: number,
+    ): Promise<object> {
         return this.adminService.deleteRestaurant(restaurantId);
     }
 
@@ -140,7 +141,7 @@ export class AdminController {
 
     // add new item route
     @Post('restaurants/:id/menu/items')
-    @UsePipes(new ValidationPipe())
+    @UsePipes(new ValidationPipe({ whitelist: true }))
     addNewItem(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() createItemDto: CreateItemDto,
@@ -150,7 +151,7 @@ export class AdminController {
 
     // update item route
     @Put('menu/items/:id')
-    @UsePipes(new ValidationPipe())
+    @UsePipes(new ValidationPipe({ whitelist: true }))
     updateItem(
         @Param('id', ParseIntPipe) itemId: number,
         @Body() updateItemDto: UpdateItemDto,
@@ -175,7 +176,7 @@ export class AdminController {
 
     // add new category route
     @Post('restaurants/:id/menu/categories')
-    @UsePipes(new ValidationPipe())
+    @UsePipes(new ValidationPipe({ whitelist: true }))
     addNewCategory(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() createCategoryDto: CreateCategoryDto,
@@ -188,7 +189,7 @@ export class AdminController {
 
     // update category
     @Put('menu/categories/:id')
-    @UsePipes(new ValidationPipe())
+    @UsePipes(new ValidationPipe({ whitelist: true }))
     updateCategory(
         @Param('id', ParseIntPipe) categoryId: number,
         @Body() updateCategoryDto: UpdateCategoryDto,
@@ -249,7 +250,7 @@ export class AdminController {
 
     // update rider route
     @Put('riders/:id')
-    @UsePipes(new ValidationPipe())
+    @UsePipes(new ValidationPipe({ whitelist: true }))
     updateRider(
         @Param('id', ParseIntPipe) riderId: number,
         @Body() updateRiderDto: UpdateRiderDto,

@@ -12,9 +12,7 @@ export class VoucherEntity {
     @PrimaryGeneratedColumn()
     voucherId: number;
 
-    @ManyToOne(() => RestaurantEntity, {
-        cascade: true,
-    })
+    @ManyToOne(() => RestaurantEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'restaurantId' })
     restaurant: RestaurantEntity;
 
@@ -29,4 +27,7 @@ export class VoucherEntity {
 
     @Column('float')
     minOrderAmount: number;
+
+    @Column('timestamp', { nullable: true })
+    expiresAt?: Date;
 }

@@ -14,20 +14,23 @@ export class DeliveryEntity {
     @PrimaryGeneratedColumn()
     deliveryId: number;
 
-    @OneToOne(() => OrderEntity, { cascade: true })
+    @OneToOne(() => OrderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'orderId' })
     order: OrderEntity;
 
-    @ManyToOne(() => RiderEntity, { cascade: true })
+    @ManyToOne(() => RiderEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'riderId' })
     rider: RiderEntity;
 
-    @Column('int')
+    @Column('timestamp')
+    acceptedAt: Date;
+
+    @Column('int', { nullable: true })
     otp: number;
 
-    @Column('timestamp')
-    pickUpTime: string;
+    @Column('timestamp', { nullable: true })
+    pickUpTime: Date;
 
     @Column('timestamp', { nullable: true })
-    deliveredTime: string;
+    deliveredTime: Date;
 }
