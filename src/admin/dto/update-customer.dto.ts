@@ -1,7 +1,5 @@
 import {
-    IsBoolean,
     IsEmail,
-    IsNumberString,
     IsOptional,
     IsString,
     Matches,
@@ -9,7 +7,7 @@ import {
     MinLength,
 } from 'class-validator';
 
-export class UpdateRiderDto {
+export class UpdateCustomerDto {
     @IsOptional()
     @IsString()
     name?: string;
@@ -25,23 +23,13 @@ export class UpdateRiderDto {
     password?: string;
 
     @IsOptional()
+    @IsString()
+    @MaxLength(100)
+    address?: string;
+
+    @IsOptional()
     @Matches(/^(?:\+88)?01[0-9]{9}$/, {
         message: 'Invalid Bangladesh phone number',
     })
     phone?: string;
-
-    @IsOptional()
-    @IsBoolean()
-    isOnline: boolean;
-
-    @IsOptional()
-    @Matches(/^(?:\+88)?01[0-9]{9}$/, {
-        message: 'Invalid Bangladesh phone number',
-    })
-    bkashAccount?: string;
-
-    @IsOptional()
-    @IsNumberString()
-    @MinLength(10)
-    bankAccount?: string;
 }

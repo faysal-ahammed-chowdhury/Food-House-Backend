@@ -19,13 +19,10 @@ export class CreateItemDto {
     price: number;
 
     @IsOptional()
-    image: string;
+    imageUrl: string;
 
     @IsNumber()
     categoryId: number;
-
-    @IsNumber()
-    restaurantId: number;
 
     @IsNumber()
     preparationTime: number;
