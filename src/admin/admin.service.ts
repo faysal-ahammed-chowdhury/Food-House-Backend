@@ -1,16 +1,17 @@
 import {
-    BadRequestException,
+    ConflictException,
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { OrderEntity } from 'src/common/entities/order.entity';
 import { RestaurantEntity } from 'src/common/entities/restaurant.entity';
 import { UserEntity } from 'src/common/entities/user.entity';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
 import { UserRoles } from 'src/common/enums/user-roles.enum';
-import { Like, Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -25,10 +26,12 @@ import { UpdateRiderDto } from './dto/update-rider.dto';
 @Injectable()
 export class AdminService {
     constructor(
-        @InjectRepository(RestaurantEntity)
-        private restaurantRepository: Repository<RestaurantEntity>,
         @InjectRepository(UserEntity)
         private userRepository: Repository<UserEntity>,
+        @InjectRepository(RestaurantEntity)
+        private restaurantRepository: Repository<RestaurantEntity>,
+        @InjectRepository(OrderEntity)
+        private orderRepository: Repository<OrderEntity>,
     ) {}
 
     /* ========== Common ========== */
@@ -48,7 +51,7 @@ export class AdminService {
     async createAdmin(createAdminDto: CreateAdminDto): Promise<object> {
         const userExist = await this.checkUserExist(createAdminDto.email);
         if (userExist) {
-            throw new BadRequestException('Email already exists');
+            throw new ConflictException('Email already exists');
         }
 
         const salt = await bcrypt.genSalt();
@@ -60,36 +63,45 @@ export class AdminService {
             password: hashedPassword,
             role: UserRoles.ADMIN,
         });
-        const { password, ...result } = admin;
+        const { password, ...adminWithoutPassword } = admin;
 
         return {
             success: true,
             message: 'Admin Created Successfully',
-            data: result,
+            data: adminWithoutPassword,
         };
     }
 
     // get admins
     async getAdmins(search: string): Promise<object> {
         const idSearch = Number(search);
-        const conditions: any[] = [];
-        if (!isNaN(idSearch)) {
-            conditions.push({ userId: idSearch });
+
+        const qb = this.userRepository
+            .createQueryBuilder('user')
+            .select(['user.userId', 'user.name', 'user.email'])
+            .where('user.role = :role', { role: UserRoles.ADMIN });
+
+        if (search?.trim()) {
+            qb.andWhere(
+                new Brackets((qb) => {
+                    qb.where('user.userId = :id', {
+                        id: !isNaN(idSearch) ? idSearch : -1,
+                    })
+                        .orWhere('user.name ILIKE :search', {
+                            search: `%${search.trim()}%`,
+                        })
+                        .orWhere('user.email ILIKE :search', {
+                            search: `%${search.trim()}%`,
+                        });
+                }),
+            );
         }
 
-        if (search) {
-            conditions.push({ name: Like(`%${search}%`) });
-            conditions.push({ email: Like(`%${search}%`) });
-        }
-
-        const admins = await this.userRepository.find({
-            select: ['userId', 'name', 'email'],
-            where: conditions.length ? conditions : {},
-        });
+        const admins = await qb.getMany();
 
         return {
             success: true,
-            message: 'All Admin Provided',
+            message: 'All Admins Fetched',
             data: admins,
         };
     }
@@ -100,6 +112,7 @@ export class AdminService {
             select: ['userId', 'name', 'email', 'role'],
             where: {
                 userId: userId,
+                role: UserRoles.ADMIN,
             },
         });
 
@@ -119,10 +132,10 @@ export class AdminService {
         userId: number,
         updateAdminDto: UpdateAdminDto,
     ): Promise<object> {
-        let admin = await this.userRepository.findOne({
-            select: ['userId', 'name', 'email', 'role'],
+        const admin = await this.userRepository.findOne({
             where: {
-                userId: userId,
+                userId,
+                role: UserRoles.ADMIN,
             },
         });
 
@@ -130,31 +143,43 @@ export class AdminService {
             throw new NotFoundException(`Admin not found with id ${userId}`);
         }
 
-        if (admin.role !== UserRoles.ADMIN) {
-            throw new BadRequestException(`User ID: ${userId} is not an admin`);
+        if (updateAdminDto.email && updateAdminDto.email !== admin.email) {
+            const emailTaken = await this.userRepository.findOne({
+                where: { email: updateAdminDto.email },
+            });
+            if (emailTaken) {
+                throw new ConflictException('Email already in use');
+            }
         }
 
-        await this.userRepository.update(userId, updateAdminDto);
-        admin = await this.userRepository.findOne({
-            select: ['userId', 'name', 'email', 'role'],
-            where: {
-                userId: userId,
-            },
-        });
+        if (updateAdminDto.password) {
+            const salt = await bcrypt.genSalt();
+            updateAdminDto.password = await bcrypt.hash(
+                updateAdminDto.password,
+                salt,
+            );
+        }
+
+        admin.name = updateAdminDto.name ?? admin.name;
+        admin.email = updateAdminDto.email ?? admin.email;
+        admin.password = updateAdminDto.password ?? admin.password;
+
+        const updated = await this.userRepository.save(admin);
+        const { password, ...output } = updated;
 
         return {
             success: true,
-            message: 'Admin Updated Successfully',
-            data: admin,
+            message: `Admin Updated Successfully`,
+            data: output,
         };
     }
 
     // delete admin
     async deleteAdmin(userId: number): Promise<object> {
         const admin = await this.userRepository.findOne({
-            select: ['userId', 'name', 'email', 'role'],
             where: {
                 userId: userId,
+                role: UserRoles.ADMIN,
             },
         });
 
@@ -162,15 +187,11 @@ export class AdminService {
             throw new NotFoundException(`Admin not found with id ${userId}`);
         }
 
-        if (admin.role !== UserRoles.ADMIN) {
-            throw new BadRequestException(`User ID: ${userId} is not an admin`);
-        }
-
         await this.userRepository.delete(userId);
 
         return {
             success: true,
-            message: `User ID: ${userId} Deleted Successfully`,
+            message: `Admin Deleted Successfully`,
         };
     }
 
@@ -182,7 +203,7 @@ export class AdminService {
     ): Promise<object> {
         const userExist = await this.checkUserExist(createRestaurantDto.email);
         if (userExist) {
-            throw new BadRequestException('Email already exists');
+            throw new ConflictException('Email already exists');
         }
 
         const salt = await bcrypt.genSalt();
@@ -190,13 +211,6 @@ export class AdminService {
             createRestaurantDto.password,
             salt,
         );
-
-        // const user = await this.userRepository.save({
-        //     name: createRestaurantDto.name,
-        //     email: createRestaurantDto.email,
-        //     password: hashedPassword,
-        //     role: UserRoles.RESTAURANT,
-        // });
 
         const restaurant = await this.restaurantRepository.save({
             user: {
@@ -216,63 +230,170 @@ export class AdminService {
             bankAccount: createRestaurantDto.bankAccount,
         });
 
-        const restaurantOutput: any = { ...restaurant };
-        if (restaurantOutput.user) {
-            delete restaurantOutput.user.password;
-        }
+        const { password, ...userWithoutPassword } = restaurant.user;
+        const output = { ...restaurant, user: userWithoutPassword };
 
         return {
             success: true,
-            message: 'Restaurant created successfully',
-            data: restaurantOutput,
+            message: `Restaurant ${restaurant.user.name} created successfully`,
+            data: output,
         };
     }
 
     // get restaurants
-    getRestaurants(search: string, filter: string): object {
+    async getRestaurants(search: string): Promise<object> {
+        const idSearch = Number(search);
+
+        const qb = this.restaurantRepository
+            .createQueryBuilder('restaurant')
+            .innerJoin('restaurant.user', 'user')
+            .select([
+                'restaurant.restaurantId',
+                'restaurant.address',
+                'restaurant.description',
+                'restaurant.isOpen',
+                'restaurant.currentCommissionPercent',
+                'restaurant.currentDeliveryFee',
+                'user.userId',
+                'user.name',
+                'user.email',
+            ]);
+
+        if (search?.trim()) {
+            qb.where(
+                'restaurant.restaurantId = :id OR user.name ILIKE :search OR user.email ILIKE :search OR restaurant.address ILIKE :search',
+                {
+                    id: !isNaN(idSearch) ? idSearch : -1,
+                    search: `%${search.trim()}%`,
+                },
+            );
+        }
+
+        const restaurants = await qb.getMany();
+
         return {
             success: true,
             message: 'Restaurants Fetched',
-            search,
-            filter,
+            data: restaurants,
         };
     }
 
     // get restaurant
-    getRestaurant(restaurantId: number): object {
+    async getRestaurant(restaurantId: number): Promise<object> {
+        const restaurant = await this.restaurantRepository.findOne({
+            relations: {
+                user: true,
+            },
+            where: {
+                restaurantId: restaurantId,
+            },
+        });
+
+        if (!restaurant) {
+            throw new NotFoundException(
+                `Restaurant not found with ID: ${restaurantId}`,
+            );
+        }
+
+        const { password, ...userWithoutPassword } = restaurant.user;
+        const output = { ...restaurant, user: userWithoutPassword };
+
         return {
             success: true,
             message: 'Restaurant Fetched',
-            data: {
-                restaurantId: restaurantId,
-            },
+            data: output,
         };
     }
 
     // update restaurant
-    updateRestaurant(
+    async updateRestaurant(
         restaurantId: number,
         updateRestaurantDto: UpdateRestaurantDto,
-    ): object {
+    ): Promise<object> {
+        const restaurant = await this.restaurantRepository.findOne({
+            relations: ['user'],
+            where: { restaurantId },
+        });
+
+        if (!restaurant) {
+            throw new NotFoundException(
+                `Restaurant not found with id ${restaurantId}`,
+            );
+        }
+
+        if (
+            updateRestaurantDto.email &&
+            updateRestaurantDto.email !== restaurant.user.email
+        ) {
+            const emailTaken = await this.userRepository.findOne({
+                where: { email: updateRestaurantDto.email },
+            });
+            if (emailTaken) {
+                throw new ConflictException('Email already in use');
+            }
+        }
+
+        if (updateRestaurantDto.password) {
+            const salt = await bcrypt.genSalt();
+            updateRestaurantDto.password = await bcrypt.hash(
+                updateRestaurantDto.password,
+                salt,
+            );
+        }
+
+        restaurant.user.name = updateRestaurantDto.name ?? restaurant.user.name;
+        restaurant.user.email =
+            updateRestaurantDto.email ?? restaurant.user.email;
+        restaurant.user.password =
+            updateRestaurantDto.password ?? restaurant.user.password;
+
+        restaurant.description =
+            updateRestaurantDto.description ?? restaurant.description;
+        restaurant.address = updateRestaurantDto.address ?? restaurant.address;
+        restaurant.isOpen = updateRestaurantDto.isOpen ?? restaurant.isOpen;
+        restaurant.currentCommissionPercent =
+            updateRestaurantDto.currentCommissionPercent ??
+            restaurant.currentCommissionPercent;
+        restaurant.currentDeliveryFee =
+            updateRestaurantDto.currentDeliveryFee ??
+            restaurant.currentDeliveryFee;
+        restaurant.bkashAccount =
+            updateRestaurantDto.bkashAccount ?? restaurant.bkashAccount;
+        restaurant.bankAccount =
+            updateRestaurantDto.bankAccount ?? restaurant.bankAccount;
+
+        const updated = await this.restaurantRepository.save(restaurant);
+
+        const { password, ...userWithoutPassword } = updated.user;
+        const output = { ...updated, user: userWithoutPassword };
+
         return {
             success: true,
-            message: 'Restaurant Updated Successfully',
-            data: {
-                userId: 101,
-                restaurantId,
-                ...updateRestaurantDto,
-            },
+            message: `Restaurant Updated Successfully`,
+            data: output,
         };
     }
 
     // delete restaurant
-    deleteRestaurant(restaurantId: number): object {
+    async deleteRestaurant(restaurantId: number): Promise<object> {
+        const restaurant = await this.restaurantRepository.findOne({
+            relations: ['user'],
+            where: {
+                restaurantId: restaurantId,
+            },
+        });
+
+        if (!restaurant) {
+            throw new NotFoundException(
+                `Restaurant not found with id ${restaurantId}`,
+            );
+        }
+
+        await this.userRepository.delete(restaurant.user.userId);
+
         return {
             success: true,
-            message: 'Restaurant Deleted Successfully',
-            data: {
-                restaurantId,
-            },
+            message: `Restaurant Deleted Successfully`,
         };
     }
 

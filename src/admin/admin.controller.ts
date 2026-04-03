@@ -42,6 +42,7 @@ export class AdminController {
 
     // create admin route
     @Post('admins')
+    @UsePipes(new ValidationPipe({ whitelist: true }))
     createAdmin(@Body() createAdminDto: CreateAdminDto): object {
         return this.adminService.createAdmin(createAdminDto);
     }
@@ -89,26 +90,25 @@ export class AdminController {
 
     // get restaurants route
     @Get('restaurants')
-    getRestaurants(
-        @Query('search') search: string,
-        @Query('filter') filter: string,
-    ): object {
-        return this.adminService.getRestaurants(search, filter);
+    async getRestaurants(@Query('search') search: string): Promise<object> {
+        return this.adminService.getRestaurants(search);
     }
 
     // get restaurant route
     @Get('restaurants/:id')
-    getRestaurant(@Param('id', ParseIntPipe) restaurantId: number): object {
+    async getRestaurant(
+        @Param('id', ParseIntPipe) restaurantId: number,
+    ): Promise<object> {
         return this.adminService.getRestaurant(restaurantId);
     }
 
     // update restaurant route
     @Put('restaurants/:id')
     @UsePipes(new ValidationPipe({ whitelist: true }))
-    updateRestaurant(
+    async updateRestaurant(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() updateRestaurantDto: UpdateRestaurantDto,
-    ): object {
+    ): Promise<object> {
         return this.adminService.updateRestaurant(
             restaurantId,
             updateRestaurantDto,
@@ -117,7 +117,9 @@ export class AdminController {
 
     // delete restaurant route
     @Delete('restaurants/:id')
-    deleteRestaurant(@Param('id', ParseIntPipe) restaurantId: number): object {
+    async deleteRestaurant(
+        @Param('id', ParseIntPipe) restaurantId: number,
+    ): Promise<object> {
         return this.adminService.deleteRestaurant(restaurantId);
     }
 

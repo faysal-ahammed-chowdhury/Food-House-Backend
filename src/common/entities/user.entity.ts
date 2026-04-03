@@ -1,8 +1,5 @@
 import { UserRoles } from 'src/common/enums/user-roles.enum';
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { CustomerEntity } from './customer.entity';
-import { RestaurantEntity } from './restaurant.entity';
-import { RiderEntity } from './rider.entity';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('users')
 export class UserEntity {
@@ -21,11 +18,11 @@ export class UserEntity {
     @Column({ type: 'enum', enum: UserRoles })
     role: UserRoles;
 
-    @OneToOne(() => RestaurantEntity, (restaurant) => restaurant.user)
-    restaurant: RestaurantEntity;
+    // @OneToOne(() => RestaurantEntity, (restaurant) => restaurant.user)
+    // restaurant: RestaurantEntity;
 
-    @OneToOne(() => CustomerEntity, (customer) => customer.user)
-    customer: CustomerEntity;
+    // @OneToOne(() => CustomerEntity, (customer) => customer.user)
+    // customer: CustomerEntity;
 
-    @OneToOne(() => RiderEntity, (rider) => rider.user) rider: RiderEntity;
+    // @OneToOne(() => RiderEntity, (rider) => rider.user) rider: RiderEntity;
 }
