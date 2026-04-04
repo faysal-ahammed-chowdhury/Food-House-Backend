@@ -76,8 +76,9 @@ export class AdminService {
             email: createAdminDto.email,
             password: hashedPassword,
             role: UserRoles.ADMIN,
+            isVerified: true,
         });
-        const { password, ...adminWithoutPassword } = admin;
+        const { password, verificationToken, ...adminWithoutPassword } = admin;
 
         return {
             success: true,
@@ -144,15 +145,6 @@ export class AdminService {
             throw new NotFoundException(`Admin not found with id ${userId}`);
         }
 
-        if (updateAdminDto.email && updateAdminDto.email !== admin.email) {
-            const emailTaken = await this.userRepository.findOne({
-                where: { email: updateAdminDto.email },
-            });
-            if (emailTaken) {
-                throw new ConflictException('Email already in use');
-            }
-        }
-
         if (updateAdminDto.password) {
             const salt = await bcrypt.genSalt();
             updateAdminDto.password = await bcrypt.hash(
@@ -162,11 +154,10 @@ export class AdminService {
         }
 
         admin.name = updateAdminDto.name ?? admin.name;
-        admin.email = updateAdminDto.email ?? admin.email;
         admin.password = updateAdminDto.password ?? admin.password;
 
         const updated = await this.userRepository.save(admin);
-        const { password, ...output } = updated;
+        const { password, verificationToken, ...output } = updated;
 
         return {
             success: true,
@@ -221,6 +212,7 @@ export class AdminService {
                 email: createRestaurantDto.email,
                 password: hashedPassword,
                 role: UserRoles.RESTAURANT,
+                isVerified: true,
             },
 
             description: createRestaurantDto.description,
@@ -233,7 +225,8 @@ export class AdminService {
             bankAccount: createRestaurantDto.bankAccount,
         });
 
-        const { password, ...userWithoutPassword } = restaurant.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            restaurant.user;
         const output = { ...restaurant, user: userWithoutPassword };
 
         return {
@@ -324,7 +317,8 @@ export class AdminService {
             );
         }
 
-        const { password, ...userWithoutPassword } = restaurant.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            restaurant.user;
         const output = { ...restaurant, user: userWithoutPassword };
 
         return {
@@ -350,18 +344,6 @@ export class AdminService {
             );
         }
 
-        if (
-            updateRestaurantDto.email &&
-            updateRestaurantDto.email !== restaurant.user.email
-        ) {
-            const emailTaken = await this.userRepository.findOne({
-                where: { email: updateRestaurantDto.email },
-            });
-            if (emailTaken) {
-                throw new ConflictException('Email already in use');
-            }
-        }
-
         if (updateRestaurantDto.password) {
             const salt = await bcrypt.genSalt();
             updateRestaurantDto.password = await bcrypt.hash(
@@ -371,8 +353,6 @@ export class AdminService {
         }
 
         restaurant.user.name = updateRestaurantDto.name ?? restaurant.user.name;
-        restaurant.user.email =
-            updateRestaurantDto.email ?? restaurant.user.email;
         restaurant.user.password =
             updateRestaurantDto.password ?? restaurant.user.password;
 
@@ -393,7 +373,8 @@ export class AdminService {
 
         const updated = await this.restaurantRepository.save(restaurant);
 
-        const { password, ...userWithoutPassword } = updated.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            updated.user;
         const output = { ...updated, user: userWithoutPassword };
 
         return {
@@ -705,13 +686,15 @@ export class AdminService {
                 email: createCustomerDto.email,
                 password: hashedPassword,
                 role: UserRoles.CUSTOMER,
+                isVerified: true,
             },
 
             address: createCustomerDto.address,
             phone: createCustomerDto.phone,
         });
 
-        const { password, ...userWithoutPassword } = customer.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            customer.user;
         const output = { ...customer, user: userWithoutPassword };
 
         return {
@@ -786,18 +769,6 @@ export class AdminService {
             );
         }
 
-        if (
-            updateCustomerDto.email &&
-            updateCustomerDto.email !== customer.user.email
-        ) {
-            const emailTaken = await this.userRepository.findOne({
-                where: { email: updateCustomerDto.email },
-            });
-            if (emailTaken) {
-                throw new ConflictException('Email already in use');
-            }
-        }
-
         if (updateCustomerDto.password) {
             const salt = await bcrypt.genSalt();
             updateCustomerDto.password = await bcrypt.hash(
@@ -807,7 +778,6 @@ export class AdminService {
         }
 
         customer.user.name = updateCustomerDto.name ?? customer.user.name;
-        customer.user.email = updateCustomerDto.email ?? customer.user.email;
         customer.user.password =
             updateCustomerDto.password ?? customer.user.password;
         customer.address = updateCustomerDto.address ?? customer.address;
@@ -815,7 +785,8 @@ export class AdminService {
 
         const updated = await this.customerRepository.save(customer);
 
-        const { password, ...userWithoutPassword } = updated.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            updated.user;
         const output = { ...updated, user: userWithoutPassword };
 
         return {
@@ -869,6 +840,7 @@ export class AdminService {
                 email: createRiderDto.email,
                 password: hashedPassword,
                 role: UserRoles.RIDER,
+                isVerified: true,
             },
 
             phone: createRiderDto.phone,
@@ -879,7 +851,8 @@ export class AdminService {
             bankAccount: createRiderDto.bankAccount,
         });
 
-        const { password, ...userWithoutPassword } = rider.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            rider.user;
         const output = { ...rider, user: userWithoutPassword };
 
         return {
@@ -988,15 +961,6 @@ export class AdminService {
             throw new NotFoundException(`Rider not found with id ${riderId}`);
         }
 
-        if (updateRiderDto.email && updateRiderDto.email !== rider.user.email) {
-            const emailTaken = await this.userRepository.findOne({
-                where: { email: updateRiderDto.email },
-            });
-            if (emailTaken) {
-                throw new ConflictException('Email already in use');
-            }
-        }
-
         if (updateRiderDto.password) {
             const salt = await bcrypt.genSalt();
             updateRiderDto.password = await bcrypt.hash(
@@ -1006,7 +970,6 @@ export class AdminService {
         }
 
         rider.user.name = updateRiderDto.name ?? rider.user.name;
-        rider.user.email = updateRiderDto.email ?? rider.user.email;
         rider.user.password = updateRiderDto.password ?? rider.user.password;
 
         rider.phone = updateRiderDto.phone ?? rider.phone;
@@ -1016,7 +979,8 @@ export class AdminService {
 
         const updated = await this.riderRepository.save(rider);
 
-        const { password, ...userWithoutPassword } = updated.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            updated.user;
         const output = { ...updated, user: userWithoutPassword };
 
         return {

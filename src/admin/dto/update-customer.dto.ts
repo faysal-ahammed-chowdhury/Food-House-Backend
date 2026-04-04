@@ -1,5 +1,4 @@
 import {
-    IsEmail,
     IsOptional,
     IsString,
     Matches,
@@ -11,10 +10,6 @@ export class UpdateCustomerDto {
     @IsOptional()
     @IsString()
     name?: string;
-
-    @IsOptional()
-    @IsEmail()
-    email?: string;
 
     @IsOptional()
     @IsString()

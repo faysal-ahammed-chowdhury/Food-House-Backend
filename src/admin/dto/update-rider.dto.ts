@@ -1,6 +1,5 @@
 import {
     IsBoolean,
-    IsEmail,
     IsNumberString,
     IsOptional,
     IsString,
@@ -13,10 +12,6 @@ export class UpdateRiderDto {
     @IsOptional()
     @IsString()
     name?: string;
-
-    @IsOptional()
-    @IsEmail()
-    email?: string;
 
     @IsOptional()
     @IsString()
