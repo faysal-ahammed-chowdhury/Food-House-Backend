@@ -52,7 +52,7 @@ export class AdminController {
 
     // get admins route
     @Get('admins')
-    async getAdmins(@Query('search') search: string): Promise<object> {
+    async getAdmins(@Query('search') search?: string): Promise<object> {
         return this.adminService.getAdmins(search);
     }
 
@@ -93,7 +93,7 @@ export class AdminController {
 
     // get restaurants route
     @Get('restaurants')
-    async getRestaurants(@Query('search') search: string): Promise<object> {
+    async getRestaurants(@Query('search') search?: string): Promise<object> {
         return this.adminService.getRestaurants(search);
     }
 
@@ -132,8 +132,8 @@ export class AdminController {
     @Get('restaurants/:id/items')
     async getRestaurantItems(
         @Param('id', ParseIntPipe) restaurantId: number,
-        @Query('search') search: string,
-        @Query('category') categoryName: string,
+        @Query('search') search?: string,
+        @Query('category') categoryName?: string,
     ): Promise<object> {
         return this.adminService.getRestaurantItems(
             restaurantId,
@@ -223,11 +223,8 @@ export class AdminController {
 
     // get customers route
     @Get('customers')
-    async getCustomers(
-        @Query('search') search: string,
-        @Query('sortby') sortby: string,
-    ): Promise<object> {
-        return this.adminService.getCustomers(search, sortby);
+    async getCustomers(@Query('search') search?: string): Promise<object> {
+        return this.adminService.getCustomers(search);
     }
 
     // update customers route
@@ -285,11 +282,11 @@ export class AdminController {
 
     // get riders route
     @Get('riders')
-    getRiders(
-        @Query('search') search: string,
-        @Query('filter') filter: string,
-    ): object {
-        return this.adminService.getRiders(search, filter);
+    async getRiders(
+        @Query('search') search?: string,
+        @Query('status') status?: string,
+    ): Promise<object> {
+        return this.adminService.getRiders(search, status);
     }
 
     // update rider route
@@ -315,13 +312,13 @@ export class AdminController {
     // get all order route
     @Get('orders')
     getOrders(
-        @Query('search') search: string,
-        @Query('status') status: OrderStatus,
-        @Query('dateFrom') dateFrom: string,
-        @Query('dateTo') dateTo: string,
-        @Query('paymentMethod') paymentMethod: PaymentMethod,
-        @Query('restaurantId', ParseIntPipe) restaurantId: number,
-        @Query('riderId', ParseIntPipe) riderId: number,
+        @Query('search') search?: string,
+        @Query('status') status?: OrderStatus,
+        @Query('dateFrom') dateFrom?: string,
+        @Query('dateTo') dateTo?: string,
+        @Query('paymentMethod') paymentMethod?: PaymentMethod,
+        @Query('restaurantId', ParseIntPipe) restaurantId?: number,
+        @Query('riderId', ParseIntPipe) riderId?: number,
     ) {
         return this.adminService.getOrders(
             search,

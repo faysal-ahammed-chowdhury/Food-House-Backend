@@ -15,7 +15,7 @@ import { UserEntity } from 'src/common/entities/user.entity';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
 import { UserRoles } from 'src/common/enums/user-roles.enum';
-import { Brackets, Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -87,31 +87,18 @@ export class AdminService {
     }
 
     // get admins
-    async getAdmins(search: string): Promise<object> {
-        const idSearch = Number(search);
+    async getAdmins(search?: string): Promise<object> {
+        search = search?.trim();
 
-        const qb = this.userRepository
-            .createQueryBuilder('user')
-            .select(['user.userId', 'user.name', 'user.email'])
-            .where('user.role = :role', { role: UserRoles.ADMIN });
-
-        if (search?.trim()) {
-            qb.andWhere(
-                new Brackets((qb) => {
-                    qb.where('user.userId = :id', {
-                        id: !isNaN(idSearch) ? idSearch : -1,
-                    })
-                        .orWhere('user.name ILIKE :search', {
-                            search: `%${search.trim()}%`,
-                        })
-                        .orWhere('user.email ILIKE :search', {
-                            search: `%${search.trim()}%`,
-                        });
-                }),
-            );
-        }
-
-        const admins = await qb.getMany();
+        const admins = await this.userRepository.find({
+            select: ['userId', 'email', 'name', 'role'],
+            where: search
+                ? [
+                      { role: UserRoles.ADMIN, name: ILike(`%${search}%`) },
+                      { role: UserRoles.ADMIN, email: ILike(`%${search}%`) },
+                  ]
+                : { role: UserRoles.ADMIN },
+        });
 
         return {
             success: true,
@@ -257,40 +244,66 @@ export class AdminService {
     }
 
     // get restaurants
-    async getRestaurants(search: string): Promise<object> {
-        const idSearch = Number(search);
+    async getRestaurants(search?: string): Promise<object> {
+        search = search?.trim();
 
-        const qb = this.restaurantRepository
-            .createQueryBuilder('restaurant')
-            .innerJoin('restaurant.user', 'user')
-            .select([
-                'restaurant.restaurantId',
-                'restaurant.address',
-                'restaurant.description',
-                'restaurant.isOpen',
-                'restaurant.currentCommissionPercent',
-                'restaurant.currentDeliveryFee',
-                'user.userId',
-                'user.name',
-                'user.email',
-            ]);
-
-        if (search?.trim()) {
-            qb.where(
-                'restaurant.restaurantId = :id OR user.name ILIKE :search OR user.email ILIKE :search OR restaurant.address ILIKE :search',
-                {
-                    id: !isNaN(idSearch) ? idSearch : -1,
-                    search: `%${search.trim()}%`,
+        const restaurants = await this.restaurantRepository.find({
+            select: {
+                restaurantId: true,
+                user: {
+                    userId: true,
+                    name: true,
+                    email: true,
                 },
-            );
-        }
+                address: true,
+                currentCommissionPercent: true,
+                currentDeliveryFee: true,
+                bkashAccount: true,
+                bankAccount: true,
+                isOpen: true,
+                orders: {
+                    total: true,
+                    commissionAmount: true,
+                    deliveryFee: true,
+                    status: true,
+                },
+            },
+            relations: ['user', 'orders'],
+            ...(search
+                ? {
+                      where: [
+                          { user: { name: ILike(`%${search}%`) } },
+                          { user: { email: ILike(`%${search}%`) } },
+                      ],
+                  }
+                : {}),
+        });
 
-        const restaurants = await qb.getMany();
+        const output = restaurants.map((restaurant) => {
+            const totalEarning: number = restaurant.orders.reduce(
+                (total, cur) => {
+                    return (
+                        total +
+                        (cur.status === OrderStatus.DELIVERED
+                            ? cur.total - cur.commissionAmount - cur.deliveryFee
+                            : 0)
+                    );
+                },
+                0,
+            );
+
+            const { orders, ...restaurantWithoutOrders } = restaurant;
+
+            return {
+                ...restaurantWithoutOrders,
+                totalEarning,
+            };
+        });
 
         return {
             success: true,
             message: 'Restaurants Fetched',
-            data: restaurants,
+            data: output,
         };
     }
 
@@ -418,8 +431,8 @@ export class AdminService {
     // get restaurant items
     async getRestaurantItems(
         restaurantId: number,
-        search: string,
-        categoryName: string,
+        search?: string,
+        categoryName?: string,
     ): Promise<object> {
         const restaurant = await this.restaurantRepository.findOneBy({
             restaurantId: restaurantId,
@@ -429,35 +442,38 @@ export class AdminService {
             throw new NotFoundException('Restaurant Not Exists');
         }
 
-        const qb = this.itemRepository
-            .createQueryBuilder('item')
-            .innerJoin('item.category', 'category')
-            .select([
-                'item.itemId',
-                'item.name',
-                'item.description',
-                'item.price',
-                'item.imageUrl',
-                'item.isAvailable',
-                'item.preparationTime',
-                'category.categoryId',
-                'category.name',
-            ])
-            .where('item.restaurantId = :restaurantId', { restaurantId });
+        search = search?.trim();
+        categoryName = categoryName?.trim();
 
-        if (search?.trim()) {
-            qb.andWhere('item.name ILIKE :search', {
-                search: `%${search.trim()}%`,
-            });
-        }
-
-        if (categoryName?.trim()) {
-            qb.andWhere('category.name ILIKE :categoryName', {
-                categoryName: `%${categoryName.trim()}%`,
-            });
-        }
-
-        const items = await qb.getMany();
+        const items = await this.itemRepository.find({
+            select: {
+                itemId: true,
+                name: true,
+                description: true,
+                price: true,
+                imageUrl: true,
+                isAvailable: true,
+                preparationTime: true,
+                category: {
+                    categoryId: true,
+                    name: true,
+                },
+            },
+            relations: ['category'],
+            where: {
+                restaurant: {
+                    restaurantId: restaurantId,
+                },
+                ...(search ? { name: ILike(`%${search}%`) } : {}),
+                ...(categoryName
+                    ? {
+                          category: {
+                              name: ILike(`%${categoryName}%`),
+                          },
+                      }
+                    : {}),
+            },
+        });
 
         return {
             success: true,
@@ -532,7 +548,7 @@ export class AdminService {
         const item = await this.itemRepository.findOneBy({ itemId: itemId });
 
         if (!item) {
-            throw new NotFoundException('Item Not Found');
+            throw new NotFoundException('Item Not Exists');
         }
         item.isAvailable = isAvailable;
         const output = await this.itemRepository.save(item);
@@ -706,54 +722,51 @@ export class AdminService {
     }
 
     // get customers
-    async getCustomers(search: string, sortby: string): Promise<object> {
-        const idSearch = Number(search?.trim());
+    async getCustomers(search?: string): Promise<object> {
+        search = search?.trim();
 
-        const query = this.customerRepository
-            .createQueryBuilder('customer')
-            .innerJoin('customer.user', 'user')
-            .loadRelationCountAndMap('customer.orderCount', 'customer.orders')
-            .select([
-                'customer.customerId',
-                'customer.address',
-                'customer.phone',
-                'user.userId',
-                'user.name',
-                'user.email',
-            ]);
-
-        if (search?.trim()) {
-            query.where(
-                'user.name ILIKE :search OR user.email ILIKE :search OR customer.phone ILIKE :search OR (:idSearch > 0 AND customer.customerId = :idSearch)',
-                {
-                    search: `%${search.trim()}%`,
-                    idSearch: isNaN(idSearch) ? 0 : idSearch,
+        const customers = await this.customerRepository.find({
+            select: {
+                customerId: true,
+                user: {
+                    userId: true,
+                    name: true,
+                    email: true,
                 },
-            );
-        }
+                address: true,
+                phone: true,
+                orders: {
+                    status: true,
+                },
+            },
+            relations: ['user', 'orders'],
+            ...(search
+                ? {
+                      where: [
+                          { user: { name: ILike(`%${search}%`) } },
+                          { user: { email: ILike(`%${search}%`) } },
+                          { phone: ILike(`%${search}%`) },
+                      ],
+                  }
+                : {}),
+        });
 
-        if (sortby === 'less_orders' || sortby === 'most_orders') {
-            query
-                .addSelect(
-                    (qb) =>
-                        qb
-                            .select('COUNT(o.orderId)', 'orderCount')
-                            .from('orders', 'o')
-                            .where('o.customerId = customer.customerId'),
-                    'orderCount',
-                )
-                .orderBy(
-                    'orderCount',
-                    sortby === 'most_orders' ? 'DESC' : 'ASC',
-                );
-        }
+        const output = customers.map((customer) => {
+            const totalOrder = customer.orders.filter((cur) => {
+                return cur.status === OrderStatus.DELIVERED;
+            }).length;
 
-        const customers = await query.getMany();
+            const { orders, ...customerWithoutOrders } = customer;
+            return {
+                ...customerWithoutOrders,
+                totalOrder,
+            };
+        });
 
         return {
             success: true,
             message: 'Customers Fetched Successfully',
-            data: customers,
+            data: output,
         };
     }
 
@@ -877,16 +890,87 @@ export class AdminService {
     }
 
     // get riders
-    getRiders(search: string, filter: string): object {
+    async getRiders(search?: string, status?: string): Promise<object> {
+        search = search?.trim();
+
+        const riders = await this.riderRepository.find({
+            select: {
+                riderId: true,
+                user: {
+                    userId: true,
+                    name: true,
+                    email: true,
+                },
+                riderNid: true,
+                phone: true,
+                isOnline: true,
+                bkashAccount: true,
+                bankAccount: true,
+                deliveries: {
+                    deliveryId: true,
+                    order: {
+                        total: true,
+                        commissionAmount: true,
+                        deliveryFee: true,
+                        status: true,
+                        paymentMethod: true,
+                    },
+                },
+            },
+            relations: ['user', 'deliveries', 'deliveries.order'],
+            ...(search || status
+                ? {
+                      where: search
+                          ? [
+                                {
+                                    user: { name: ILike(`%${search}%`) },
+                                    ...(status
+                                        ? { isOnline: status === 'online' }
+                                        : {}),
+                                },
+                                {
+                                    user: { email: ILike(`%${search}%`) },
+                                    ...(status
+                                        ? { isOnline: status === 'online' }
+                                        : {}),
+                                },
+                                {
+                                    phone: ILike(`%${search}%`),
+                                    ...(status
+                                        ? { isOnline: status === 'online' }
+                                        : {}),
+                                },
+                            ]
+                          : { isOnline: status === 'online' },
+                  }
+                : {}),
+        });
+
+        const output = riders.map((rider) => {
+            const { deliveries, ...riderWithoutDeliveries } = rider;
+
+            const totalEarning: number = rider.deliveries.reduce(
+                (total, cur) => {
+                    return (
+                        total +
+                        (cur.order?.status === OrderStatus.DELIVERED
+                            ? (cur.order?.deliveryFee ?? 0)
+                            : 0)
+                    );
+                },
+                0,
+            );
+
+            return {
+                ...riderWithoutDeliveries,
+                totalEarning,
+            };
+        });
+
         return {
             success: true,
-            message: 'Rider Fetched',
-            data: [
-                {
-                    userId: search,
-                    riderId: filter,
-                },
-            ],
+            message: 'Riders Fetched Successfully',
+            data: output,
         };
     }
 
@@ -967,13 +1051,13 @@ export class AdminService {
 
     // get all order
     getOrders(
-        search: string,
-        status: OrderStatus,
-        dateFrom: string,
-        dateTo: string,
-        paymentMethod: PaymentMethod,
-        restaurantId: number,
-        riderId: number,
+        search?: string,
+        status?: OrderStatus,
+        dateFrom?: string,
+        dateTo?: string,
+        paymentMethod?: PaymentMethod,
+        restaurantId?: number,
+        riderId?: number,
     ) {
         return {
             success: true,
@@ -1001,7 +1085,7 @@ export class AdminService {
         };
     }
 
-    // get order
+    // cancel order
     cancelOrder(orderId: number) {
         return {
             success: true,
