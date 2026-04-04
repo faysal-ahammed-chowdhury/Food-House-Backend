@@ -18,6 +18,12 @@ export class UserEntity {
     @Column({ type: 'enum', enum: UserRoles })
     role: UserRoles;
 
+    @Column({ type: 'boolean', default: false })
+    isVerified: boolean;
+
+    @Column({ type: 'varchar', nullable: true })
+    verificationToken: string | null;
+
     // @OneToOne(() => RestaurantEntity, (restaurant) => restaurant.user)
     // restaurant: RestaurantEntity;
 
