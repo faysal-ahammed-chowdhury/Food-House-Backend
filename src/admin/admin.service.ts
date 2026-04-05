@@ -15,7 +15,7 @@ import { UserEntity } from 'src/common/entities/user.entity';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
 import { UserRoles } from 'src/common/enums/user-roles.enum';
-import { Brackets, Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -76,8 +76,9 @@ export class AdminService {
             email: createAdminDto.email,
             password: hashedPassword,
             role: UserRoles.ADMIN,
+            isVerified: true,
         });
-        const { password, ...adminWithoutPassword } = admin;
+        const { password, verificationToken, ...adminWithoutPassword } = admin;
 
         return {
             success: true,
@@ -87,31 +88,18 @@ export class AdminService {
     }
 
     // get admins
-    async getAdmins(search: string): Promise<object> {
-        const idSearch = Number(search);
+    async getAdmins(search?: string): Promise<object> {
+        search = search?.trim();
 
-        const qb = this.userRepository
-            .createQueryBuilder('user')
-            .select(['user.userId', 'user.name', 'user.email'])
-            .where('user.role = :role', { role: UserRoles.ADMIN });
-
-        if (search?.trim()) {
-            qb.andWhere(
-                new Brackets((qb) => {
-                    qb.where('user.userId = :id', {
-                        id: !isNaN(idSearch) ? idSearch : -1,
-                    })
-                        .orWhere('user.name ILIKE :search', {
-                            search: `%${search.trim()}%`,
-                        })
-                        .orWhere('user.email ILIKE :search', {
-                            search: `%${search.trim()}%`,
-                        });
-                }),
-            );
-        }
-
-        const admins = await qb.getMany();
+        const admins = await this.userRepository.find({
+            select: ['userId', 'email', 'name', 'role'],
+            where: search
+                ? [
+                      { role: UserRoles.ADMIN, name: ILike(`%${search}%`) },
+                      { role: UserRoles.ADMIN, email: ILike(`%${search}%`) },
+                  ]
+                : { role: UserRoles.ADMIN },
+        });
 
         return {
             success: true,
@@ -157,15 +145,6 @@ export class AdminService {
             throw new NotFoundException(`Admin not found with id ${userId}`);
         }
 
-        if (updateAdminDto.email && updateAdminDto.email !== admin.email) {
-            const emailTaken = await this.userRepository.findOne({
-                where: { email: updateAdminDto.email },
-            });
-            if (emailTaken) {
-                throw new ConflictException('Email already in use');
-            }
-        }
-
         if (updateAdminDto.password) {
             const salt = await bcrypt.genSalt();
             updateAdminDto.password = await bcrypt.hash(
@@ -175,11 +154,10 @@ export class AdminService {
         }
 
         admin.name = updateAdminDto.name ?? admin.name;
-        admin.email = updateAdminDto.email ?? admin.email;
         admin.password = updateAdminDto.password ?? admin.password;
 
         const updated = await this.userRepository.save(admin);
-        const { password, ...output } = updated;
+        const { password, verificationToken, ...output } = updated;
 
         return {
             success: true,
@@ -234,6 +212,7 @@ export class AdminService {
                 email: createRestaurantDto.email,
                 password: hashedPassword,
                 role: UserRoles.RESTAURANT,
+                isVerified: true,
             },
 
             description: createRestaurantDto.description,
@@ -246,7 +225,8 @@ export class AdminService {
             bankAccount: createRestaurantDto.bankAccount,
         });
 
-        const { password, ...userWithoutPassword } = restaurant.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            restaurant.user;
         const output = { ...restaurant, user: userWithoutPassword };
 
         return {
@@ -257,40 +237,66 @@ export class AdminService {
     }
 
     // get restaurants
-    async getRestaurants(search: string): Promise<object> {
-        const idSearch = Number(search);
+    async getRestaurants(search?: string): Promise<object> {
+        search = search?.trim();
 
-        const qb = this.restaurantRepository
-            .createQueryBuilder('restaurant')
-            .innerJoin('restaurant.user', 'user')
-            .select([
-                'restaurant.restaurantId',
-                'restaurant.address',
-                'restaurant.description',
-                'restaurant.isOpen',
-                'restaurant.currentCommissionPercent',
-                'restaurant.currentDeliveryFee',
-                'user.userId',
-                'user.name',
-                'user.email',
-            ]);
-
-        if (search?.trim()) {
-            qb.where(
-                'restaurant.restaurantId = :id OR user.name ILIKE :search OR user.email ILIKE :search OR restaurant.address ILIKE :search',
-                {
-                    id: !isNaN(idSearch) ? idSearch : -1,
-                    search: `%${search.trim()}%`,
+        const restaurants = await this.restaurantRepository.find({
+            select: {
+                restaurantId: true,
+                user: {
+                    userId: true,
+                    name: true,
+                    email: true,
                 },
-            );
-        }
+                address: true,
+                currentCommissionPercent: true,
+                currentDeliveryFee: true,
+                bkashAccount: true,
+                bankAccount: true,
+                isOpen: true,
+                orders: {
+                    total: true,
+                    commissionAmount: true,
+                    deliveryFee: true,
+                    status: true,
+                },
+            },
+            relations: ['user', 'orders'],
+            ...(search
+                ? {
+                      where: [
+                          { user: { name: ILike(`%${search}%`) } },
+                          { user: { email: ILike(`%${search}%`) } },
+                      ],
+                  }
+                : {}),
+        });
 
-        const restaurants = await qb.getMany();
+        const output = restaurants.map((restaurant) => {
+            const totalEarning: number = restaurant.orders.reduce(
+                (total, cur) => {
+                    return (
+                        total +
+                        (cur.status === OrderStatus.DELIVERED
+                            ? cur.total - cur.commissionAmount - cur.deliveryFee
+                            : 0)
+                    );
+                },
+                0,
+            );
+
+            const { orders, ...restaurantWithoutOrders } = restaurant;
+
+            return {
+                ...restaurantWithoutOrders,
+                totalEarning,
+            };
+        });
 
         return {
             success: true,
             message: 'Restaurants Fetched',
-            data: restaurants,
+            data: output,
         };
     }
 
@@ -311,7 +317,8 @@ export class AdminService {
             );
         }
 
-        const { password, ...userWithoutPassword } = restaurant.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            restaurant.user;
         const output = { ...restaurant, user: userWithoutPassword };
 
         return {
@@ -337,18 +344,6 @@ export class AdminService {
             );
         }
 
-        if (
-            updateRestaurantDto.email &&
-            updateRestaurantDto.email !== restaurant.user.email
-        ) {
-            const emailTaken = await this.userRepository.findOne({
-                where: { email: updateRestaurantDto.email },
-            });
-            if (emailTaken) {
-                throw new ConflictException('Email already in use');
-            }
-        }
-
         if (updateRestaurantDto.password) {
             const salt = await bcrypt.genSalt();
             updateRestaurantDto.password = await bcrypt.hash(
@@ -358,8 +353,6 @@ export class AdminService {
         }
 
         restaurant.user.name = updateRestaurantDto.name ?? restaurant.user.name;
-        restaurant.user.email =
-            updateRestaurantDto.email ?? restaurant.user.email;
         restaurant.user.password =
             updateRestaurantDto.password ?? restaurant.user.password;
 
@@ -380,7 +373,8 @@ export class AdminService {
 
         const updated = await this.restaurantRepository.save(restaurant);
 
-        const { password, ...userWithoutPassword } = updated.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            updated.user;
         const output = { ...updated, user: userWithoutPassword };
 
         return {
@@ -418,38 +412,49 @@ export class AdminService {
     // get restaurant items
     async getRestaurantItems(
         restaurantId: number,
-        search: string,
-        categoryName: string,
+        search?: string,
+        categoryName?: string,
     ): Promise<object> {
-        const qb = this.itemRepository
-            .createQueryBuilder('item')
-            .innerJoin('item.category', 'category')
-            .select([
-                'item.itemId',
-                'item.name',
-                'item.description',
-                'item.price',
-                'item.imageUrl',
-                'item.isAvailable',
-                'item.preparationTime',
-                'category.categoryId',
-                'category.name',
-            ])
-            .where('item.restaurantId = :restaurantId', { restaurantId });
+        const restaurant = await this.restaurantRepository.findOneBy({
+            restaurantId: restaurantId,
+        });
 
-        if (search?.trim()) {
-            qb.andWhere('item.name ILIKE :search', {
-                search: `%${search.trim()}%`,
-            });
+        if (!restaurant) {
+            throw new NotFoundException('Restaurant Not Exists');
         }
 
-        if (categoryName?.trim()) {
-            qb.andWhere('category.name ILIKE :categoryName', {
-                categoryName: `%${categoryName.trim()}%`,
-            });
-        }
+        search = search?.trim();
+        categoryName = categoryName?.trim();
 
-        const items = await qb.getMany();
+        const items = await this.itemRepository.find({
+            select: {
+                itemId: true,
+                name: true,
+                description: true,
+                price: true,
+                imageUrl: true,
+                isAvailable: true,
+                preparationTime: true,
+                category: {
+                    categoryId: true,
+                    name: true,
+                },
+            },
+            relations: ['category'],
+            where: {
+                restaurant: {
+                    restaurantId: restaurantId,
+                },
+                ...(search ? { name: ILike(`%${search}%`) } : {}),
+                ...(categoryName
+                    ? {
+                          category: {
+                              name: ILike(`%${categoryName}%`),
+                          },
+                      }
+                    : {}),
+            },
+        });
 
         return {
             success: true,
@@ -524,7 +529,7 @@ export class AdminService {
         const item = await this.itemRepository.findOneBy({ itemId: itemId });
 
         if (!item) {
-            throw new NotFoundException('Item Not Found');
+            throw new NotFoundException('Item Not Exists');
         }
         item.isAvailable = isAvailable;
         const output = await this.itemRepository.save(item);
@@ -599,12 +604,35 @@ export class AdminService {
         categoryId: number,
         updateCategoryDto: UpdateCategoryDto,
     ): Promise<object> {
-        const category = await this.categoryRepository.findOneBy({
-            categoryId: categoryId,
+        const category = await this.categoryRepository.findOne({
+            relations: ['restaurant'],
+            where: {
+                categoryId: categoryId,
+            },
         });
 
         if (!category) {
             throw new NotFoundException('Category Not Found');
+        }
+
+        if (updateCategoryDto.name) {
+            const categoryNameExist = await this.categoryRepository.findOne({
+                where: {
+                    name: updateCategoryDto.name,
+                    restaurant: {
+                        restaurantId: category.restaurant.restaurantId,
+                    },
+                },
+            });
+
+            if (
+                categoryNameExist &&
+                categoryNameExist.categoryId !== categoryId
+            ) {
+                throw new ConflictException(
+                    'Category already exist to the Restaurant',
+                );
+            }
         }
 
         category.name = updateCategoryDto.name ?? category.name;
@@ -658,13 +686,15 @@ export class AdminService {
                 email: createCustomerDto.email,
                 password: hashedPassword,
                 role: UserRoles.CUSTOMER,
+                isVerified: true,
             },
 
             address: createCustomerDto.address,
             phone: createCustomerDto.phone,
         });
 
-        const { password, ...userWithoutPassword } = customer.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            customer.user;
         const output = { ...customer, user: userWithoutPassword };
 
         return {
@@ -675,54 +705,51 @@ export class AdminService {
     }
 
     // get customers
-    async getCustomers(search: string, sortby: string): Promise<object> {
-        const idSearch = Number(search?.trim());
+    async getCustomers(search?: string): Promise<object> {
+        search = search?.trim();
 
-        const query = this.customerRepository
-            .createQueryBuilder('customer')
-            .innerJoin('customer.user', 'user')
-            .loadRelationCountAndMap('customer.orderCount', 'customer.orders')
-            .select([
-                'customer.customerId',
-                'customer.address',
-                'customer.phone',
-                'user.userId',
-                'user.name',
-                'user.email',
-            ]);
-
-        if (search?.trim()) {
-            query.where(
-                'user.name ILIKE :search OR user.email ILIKE :search OR customer.phone ILIKE :search OR (:idSearch > 0 AND customer.customerId = :idSearch)',
-                {
-                    search: `%${search.trim()}%`,
-                    idSearch: isNaN(idSearch) ? 0 : idSearch,
+        const customers = await this.customerRepository.find({
+            select: {
+                customerId: true,
+                user: {
+                    userId: true,
+                    name: true,
+                    email: true,
                 },
-            );
-        }
+                address: true,
+                phone: true,
+                orders: {
+                    status: true,
+                },
+            },
+            relations: ['user', 'orders'],
+            ...(search
+                ? {
+                      where: [
+                          { user: { name: ILike(`%${search}%`) } },
+                          { user: { email: ILike(`%${search}%`) } },
+                          { phone: ILike(`%${search}%`) },
+                      ],
+                  }
+                : {}),
+        });
 
-        if (sortby === 'less_orders' || sortby === 'most_orders') {
-            query
-                .addSelect(
-                    (qb) =>
-                        qb
-                            .select('COUNT(o.orderId)', 'orderCount')
-                            .from('orders', 'o')
-                            .where('o.customerId = customer.customerId'),
-                    'orderCount',
-                )
-                .orderBy(
-                    'orderCount',
-                    sortby === 'most_orders' ? 'DESC' : 'ASC',
-                );
-        }
+        const output = customers.map((customer) => {
+            const totalOrder = customer.orders.filter((cur) => {
+                return cur.status === OrderStatus.DELIVERED;
+            }).length;
 
-        const customers = await query.getMany();
+            const { orders, ...customerWithoutOrders } = customer;
+            return {
+                ...customerWithoutOrders,
+                totalOrder,
+            };
+        });
 
         return {
             success: true,
             message: 'Customers Fetched Successfully',
-            data: customers,
+            data: output,
         };
     }
 
@@ -742,18 +769,6 @@ export class AdminService {
             );
         }
 
-        if (
-            updateCustomerDto.email &&
-            updateCustomerDto.email !== customer.user.email
-        ) {
-            const emailTaken = await this.userRepository.findOne({
-                where: { email: updateCustomerDto.email },
-            });
-            if (emailTaken) {
-                throw new ConflictException('Email already in use');
-            }
-        }
-
         if (updateCustomerDto.password) {
             const salt = await bcrypt.genSalt();
             updateCustomerDto.password = await bcrypt.hash(
@@ -763,7 +778,6 @@ export class AdminService {
         }
 
         customer.user.name = updateCustomerDto.name ?? customer.user.name;
-        customer.user.email = updateCustomerDto.email ?? customer.user.email;
         customer.user.password =
             updateCustomerDto.password ?? customer.user.password;
         customer.address = updateCustomerDto.address ?? customer.address;
@@ -771,7 +785,8 @@ export class AdminService {
 
         const updated = await this.customerRepository.save(customer);
 
-        const { password, ...userWithoutPassword } = updated.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            updated.user;
         const output = { ...updated, user: userWithoutPassword };
 
         return {
@@ -825,6 +840,7 @@ export class AdminService {
                 email: createRiderDto.email,
                 password: hashedPassword,
                 role: UserRoles.RIDER,
+                isVerified: true,
             },
 
             phone: createRiderDto.phone,
@@ -835,7 +851,8 @@ export class AdminService {
             bankAccount: createRiderDto.bankAccount,
         });
 
-        const { password, ...userWithoutPassword } = rider.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            rider.user;
         const output = { ...rider, user: userWithoutPassword };
 
         return {
@@ -846,16 +863,87 @@ export class AdminService {
     }
 
     // get riders
-    getRiders(search: string, filter: string): object {
+    async getRiders(search?: string, status?: string): Promise<object> {
+        search = search?.trim();
+
+        const riders = await this.riderRepository.find({
+            select: {
+                riderId: true,
+                user: {
+                    userId: true,
+                    name: true,
+                    email: true,
+                },
+                riderNid: true,
+                phone: true,
+                isOnline: true,
+                bkashAccount: true,
+                bankAccount: true,
+                deliveries: {
+                    deliveryId: true,
+                    order: {
+                        total: true,
+                        commissionAmount: true,
+                        deliveryFee: true,
+                        status: true,
+                        paymentMethod: true,
+                    },
+                },
+            },
+            relations: ['user', 'deliveries', 'deliveries.order'],
+            ...(search || status
+                ? {
+                      where: search
+                          ? [
+                                {
+                                    user: { name: ILike(`%${search}%`) },
+                                    ...(status
+                                        ? { isOnline: status === 'online' }
+                                        : {}),
+                                },
+                                {
+                                    user: { email: ILike(`%${search}%`) },
+                                    ...(status
+                                        ? { isOnline: status === 'online' }
+                                        : {}),
+                                },
+                                {
+                                    phone: ILike(`%${search}%`),
+                                    ...(status
+                                        ? { isOnline: status === 'online' }
+                                        : {}),
+                                },
+                            ]
+                          : { isOnline: status === 'online' },
+                  }
+                : {}),
+        });
+
+        const output = riders.map((rider) => {
+            const { deliveries, ...riderWithoutDeliveries } = rider;
+
+            const totalEarning: number = rider.deliveries.reduce(
+                (total, cur) => {
+                    return (
+                        total +
+                        (cur.order?.status === OrderStatus.DELIVERED
+                            ? (cur.order?.deliveryFee ?? 0)
+                            : 0)
+                    );
+                },
+                0,
+            );
+
+            return {
+                ...riderWithoutDeliveries,
+                totalEarning,
+            };
+        });
+
         return {
             success: true,
-            message: 'Rider Fetched',
-            data: [
-                {
-                    userId: search,
-                    riderId: filter,
-                },
-            ],
+            message: 'Riders Fetched Successfully',
+            data: output,
         };
     }
 
@@ -873,15 +961,6 @@ export class AdminService {
             throw new NotFoundException(`Rider not found with id ${riderId}`);
         }
 
-        if (updateRiderDto.email && updateRiderDto.email !== rider.user.email) {
-            const emailTaken = await this.userRepository.findOne({
-                where: { email: updateRiderDto.email },
-            });
-            if (emailTaken) {
-                throw new ConflictException('Email already in use');
-            }
-        }
-
         if (updateRiderDto.password) {
             const salt = await bcrypt.genSalt();
             updateRiderDto.password = await bcrypt.hash(
@@ -891,7 +970,6 @@ export class AdminService {
         }
 
         rider.user.name = updateRiderDto.name ?? rider.user.name;
-        rider.user.email = updateRiderDto.email ?? rider.user.email;
         rider.user.password = updateRiderDto.password ?? rider.user.password;
 
         rider.phone = updateRiderDto.phone ?? rider.phone;
@@ -901,7 +979,8 @@ export class AdminService {
 
         const updated = await this.riderRepository.save(rider);
 
-        const { password, ...userWithoutPassword } = updated.user;
+        const { password, verificationToken, ...userWithoutPassword } =
+            updated.user;
         const output = { ...updated, user: userWithoutPassword };
 
         return {
@@ -936,13 +1015,13 @@ export class AdminService {
 
     // get all order
     getOrders(
-        search: string,
-        status: OrderStatus,
-        dateFrom: string,
-        dateTo: string,
-        paymentMethod: PaymentMethod,
-        restaurantId: number,
-        riderId: number,
+        search?: string,
+        status?: OrderStatus,
+        dateFrom?: string,
+        dateTo?: string,
+        paymentMethod?: PaymentMethod,
+        restaurantId?: number,
+        riderId?: number,
     ) {
         return {
             success: true,
@@ -970,7 +1049,7 @@ export class AdminService {
         };
     }
 
-    // get order
+    // cancel order
     cancelOrder(orderId: number) {
         return {
             success: true,

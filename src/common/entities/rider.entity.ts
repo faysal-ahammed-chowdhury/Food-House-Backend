@@ -6,7 +6,6 @@ import {
     OneToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
-import { CODSubmissionEntity } from './cod-submission.entity';
 import { DeliveryEntity } from './delivery.entity';
 import { UserEntity } from './user.entity';
 
@@ -39,7 +38,4 @@ export class RiderEntity {
 
     @OneToMany(() => DeliveryEntity, (delivery) => delivery.rider)
     deliveries: DeliveryEntity[];
-
-    @OneToMany(() => CODSubmissionEntity, (cod) => cod.rider)
-    codSubmissions: CODSubmissionEntity[];
 }

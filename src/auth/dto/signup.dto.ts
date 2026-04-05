@@ -1,30 +1,33 @@
 import {
-    IsOptional,
+    IsEmail,
+    IsNotEmpty,
     IsString,
     Matches,
     MaxLength,
     MinLength,
 } from 'class-validator';
 
-export class UpdateCustomerDto {
-    @IsOptional()
+export class SignUpDto {
+    @IsNotEmpty()
     @IsString()
-    name?: string;
+    name: string;
 
-    @IsOptional()
+    @IsNotEmpty()
+    @IsEmail()
+    email: string;
+
     @IsString()
     @MinLength(6)
     @MaxLength(32)
-    password?: string;
+    password: string;
 
-    @IsOptional()
+    @IsNotEmpty()
     @IsString()
     @MaxLength(100)
-    address?: string;
+    address: string;
 
-    @IsOptional()
     @Matches(/^(?:\+88)?01[0-9]{9}$/, {
         message: 'Invalid Bangladesh phone number',
     })
-    phone?: string;
+    phone: string;
 }
