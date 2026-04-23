@@ -240,6 +240,8 @@ export class AdminService {
     async getRestaurants(search?: string): Promise<object> {
         search = search?.trim();
 
+        const isNumeric = !isNaN(Number(search));
+
         const restaurants = await this.restaurantRepository.find({
             select: {
                 restaurantId: true,
@@ -249,6 +251,7 @@ export class AdminService {
                     email: true,
                 },
                 address: true,
+                description: true,
                 currentCommissionPercent: true,
                 currentDeliveryFee: true,
                 bkashAccount: true,
@@ -267,9 +270,16 @@ export class AdminService {
                       where: [
                           { user: { name: ILike(`%${search}%`) } },
                           { user: { email: ILike(`%${search}%`) } },
+                          ...(isNumeric
+                              ? [{ restaurantId: Number(search) }]
+                              : [{}]),
                       ],
                   }
                 : {}),
+
+            order: {
+                restaurantId: 'ASC',
+            },
         });
 
         const output = restaurants.map((restaurant) => {

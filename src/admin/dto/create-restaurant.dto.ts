@@ -6,6 +6,7 @@ import {
     IsNumberString,
     IsOptional,
     IsString,
+    Length,
     Matches,
     Max,
     MaxLength,
@@ -14,50 +15,54 @@ import {
 } from 'class-validator';
 
 export class CreateRestaurantDto {
-    @IsNotEmpty()
-    @IsString()
-    @MaxLength(45)
+    @IsNotEmpty({ message: 'Restaurant name is required.' })
+    @IsString({ message: 'Name must be a valid text.' })
+    @MaxLength(100, { message: 'Name must not exceed 100 characters.' })
     name: string;
 
-    @IsNotEmpty()
-    @IsEmail()
-    @MaxLength(30)
+    @IsNotEmpty({ message: 'Email is required.' })
+    @IsEmail({}, { message: 'Email must be valid.' })
+    @MaxLength(100, { message: 'Email must not exceed 100 characters.' })
     email: string;
 
-    @IsString()
-    @MinLength(6)
-    @MaxLength(32)
+    @IsNotEmpty({ message: 'Password is required.' })
+    @IsString({ message: 'Password must be valid text.' })
+    @MinLength(6, { message: 'Password must be at least 6 characters.' })
+    @MaxLength(32, { message: 'Password must not exceed 32 characters.' })
     password: string;
 
     @IsOptional()
-    @MaxLength(100)
+    @IsString({ message: 'Description must be valid text.' })
+    @MaxLength(500, { message: 'Description must not exceed 500 characters.' })
     description?: string;
 
-    @IsNotEmpty()
-    @IsString()
-    @MaxLength(100)
+    @IsNotEmpty({ message: 'Address is required.' })
+    @IsString({ message: 'Address must be valid text.' })
+    @MaxLength(100, { message: 'Address must not exceed 100 characters.' })
     address: string;
 
-    @IsBoolean()
+    @IsBoolean({ message: 'isOpen must be a boolean value.' })
     isOpen: boolean;
 
-    @IsNumber()
-    @Max(100)
-    @Min(0)
+    @IsNumber({}, { message: 'Commission must be a number.' })
+    @Min(0, { message: 'Commission cannot be less than 0.' })
+    @Max(100, { message: 'Commission cannot exceed 100.' })
     currentCommissionPercent: number;
 
-    @IsNumber()
-    @Min(0)
+    @IsNumber({}, { message: 'Delivery fee must be a number.' })
+    @Min(0, { message: 'Delivery fee cannot be negative.' })
     currentDeliveryFee: number;
 
     @IsOptional()
     @Matches(/^(?:\+88)?01[0-9]{9}$/, {
-        message: 'Invalid Bangladesh phone number',
+        message: 'bKash number is invalid.',
     })
     bkashAccount?: string;
 
     @IsOptional()
-    @IsNumberString()
-    @MinLength(10)
+    @IsNumberString({}, { message: 'Bank account must contain only numbers.' })
+    @Length(10, 20, {
+        message: 'Bank account must be between 10 and 20 digits.',
+    })
     bankAccount?: string;
 }

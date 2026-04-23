@@ -12,17 +12,14 @@ import {
     Put,
     Query,
     UploadedFile,
-    UseGuards,
     UseInterceptors,
     UsePipes,
     ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { AuthGuard } from 'src/auth/auth.guard';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
-import { AdminGuard } from './admin.guard';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -37,7 +34,7 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { UpdateRiderDto } from './dto/update-rider.dto';
 
-@UseGuards(AuthGuard, AdminGuard)
+// @UseGuards(AuthGuard, AdminGuard)
 @Controller('admin')
 export class AdminController {
     constructor(private readonly adminService: AdminService) {
@@ -48,7 +45,7 @@ export class AdminController {
 
     // create admin route
     @Post('admins')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     createAdmin(@Body() createAdminDto: CreateAdminDto): object {
         return this.adminService.createAdmin(createAdminDto);
     }
@@ -67,7 +64,7 @@ export class AdminController {
 
     // update admin route
     @Put('admins/:id')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async updateAdmin(
         @Param('id', ParseIntPipe) userId: number,
         @Body() updateAdminDto: UpdateAdminDto,
@@ -87,7 +84,7 @@ export class AdminController {
 
     // create a restaurant route
     @Post('restaurants')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async createRestaurant(
         @Body() createRestaurantDto: CreateRestaurantDto,
     ): Promise<object> {
@@ -110,7 +107,7 @@ export class AdminController {
 
     // update restaurant route
     @Put('restaurants/:id')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async updateRestaurant(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() updateRestaurantDto: UpdateRestaurantDto,
@@ -147,7 +144,7 @@ export class AdminController {
 
     // add new item route
     @Post('restaurants/:id/items')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async addNewItem(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() createItemDto: CreateItemDto,
@@ -157,7 +154,7 @@ export class AdminController {
 
     // update item route
     @Put('items/:id')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async updateItem(
         @Param('id', ParseIntPipe) itemId: number,
         @Body() updateItemDto: UpdateItemDto,
@@ -184,7 +181,7 @@ export class AdminController {
 
     // add new category route
     @Post('restaurants/:id/categories')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async addNewCategory(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() createCategoryDto: CreateCategoryDto,
@@ -197,7 +194,7 @@ export class AdminController {
 
     // update category
     @Put('categories/:id')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async updateCategory(
         @Param('id', ParseIntPipe) categoryId: number,
         @Body() updateCategoryDto: UpdateCategoryDto,
@@ -294,7 +291,7 @@ export class AdminController {
 
     // update rider route
     @Put('riders/:id')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async updateRider(
         @Param('id', ParseIntPipe) riderId: number,
         @Body() updateRiderDto: UpdateRiderDto,

@@ -8,26 +8,30 @@ import {
 } from 'class-validator';
 
 export class CreateCustomerDto {
-    @IsNotEmpty()
-    @IsString()
+    @IsNotEmpty({ message: 'Name is required.' })
+    @IsString({ message: 'Name must be valid text.' })
+    @MaxLength(100, { message: 'Name must not exceed 100 characters.' })
     name: string;
 
-    @IsNotEmpty()
-    @IsEmail()
+    @IsNotEmpty({ message: 'Email is required.' })
+    @IsEmail({}, { message: 'Email must be valid.' })
+    @MaxLength(100, { message: 'Email must not exceed 100 characters.' })
     email: string;
 
-    @IsString()
-    @MinLength(6)
-    @MaxLength(32)
+    @IsNotEmpty({ message: 'Password is required.' })
+    @IsString({ message: 'Password must be valid text.' })
+    @MinLength(6, { message: 'Password must be at least 6 characters long.' })
+    @MaxLength(32, { message: 'Password must not exceed 32 characters.' })
     password: string;
 
-    @IsNotEmpty()
-    @IsString()
-    @MaxLength(100)
+    @IsNotEmpty({ message: 'Address is required.' })
+    @IsString({ message: 'Address must be valid text.' })
+    @MaxLength(100, { message: 'Address must not exceed 100 characters.' })
     address: string;
 
+    @IsNotEmpty({ message: 'Phone number is required.' })
     @Matches(/^(?:\+88)?01[0-9]{9}$/, {
-        message: 'Invalid Bangladesh phone number',
+        message: 'Phone number must be a valid Bangladeshi number.',
     })
     phone: string;
 }
