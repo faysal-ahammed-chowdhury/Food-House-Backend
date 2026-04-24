@@ -158,8 +158,21 @@ export class AdminService {
             );
         }
 
+        admin.email = updateAdminDto?.email ?? admin.email;
         admin.name = updateAdminDto.name ?? admin.name;
         admin.password = updateAdminDto.password ?? admin.password;
+
+        const newEmailUser = await this.userRepository.findOne({
+            where: {
+                email: admin.email,
+            },
+            select: {
+                userId: true,
+            },
+        });
+        if (newEmailUser && newEmailUser.userId !== admin.userId) {
+            throw new ConflictException('Email already exists');
+        }
 
         const updated = await this.userRepository.save(admin);
         const { password, verificationToken, ...output } = updated;
@@ -368,6 +381,8 @@ export class AdminService {
         }
 
         restaurant.user.name = updateRestaurantDto.name ?? restaurant.user.name;
+        restaurant.user.email =
+            updateRestaurantDto.email ?? restaurant.user.email;
         restaurant.user.password =
             updateRestaurantDto.password ?? restaurant.user.password;
 
@@ -385,6 +400,18 @@ export class AdminService {
             updateRestaurantDto.bkashAccount ?? restaurant.bkashAccount;
         restaurant.bankAccount =
             updateRestaurantDto.bankAccount ?? restaurant.bankAccount;
+
+        const newEmailUser = await this.userRepository.findOne({
+            where: {
+                email: restaurant.user.email,
+            },
+            select: {
+                userId: true,
+            },
+        });
+        if (newEmailUser && newEmailUser.userId !== restaurant.user.userId) {
+            throw new ConflictException('Email already exists');
+        }
 
         const updated = await this.restaurantRepository.save(restaurant);
 
@@ -805,10 +832,23 @@ export class AdminService {
         customer.user.isVerified =
             updateCustomerDto.isVerified ?? customer.user.isVerified;
         customer.user.name = updateCustomerDto.name ?? customer.user.name;
+        customer.user.email = updateCustomerDto.email ?? customer.user.email;
         customer.user.password =
             updateCustomerDto.password ?? customer.user.password;
         customer.address = updateCustomerDto.address ?? customer.address;
         customer.phone = updateCustomerDto.phone ?? customer.phone;
+
+        const newEmailUser = await this.userRepository.findOne({
+            where: {
+                email: customer.user.email,
+            },
+            select: {
+                userId: true,
+            },
+        });
+        if (newEmailUser && newEmailUser.userId !== customer.user.userId) {
+            throw new ConflictException('Email already exists');
+        }
 
         const updated = await this.customerRepository.save(customer);
 
@@ -997,12 +1037,25 @@ export class AdminService {
         }
 
         rider.user.name = updateRiderDto.name ?? rider.user.name;
+        rider.user.email = updateRiderDto.email ?? rider.user.email;
         rider.user.password = updateRiderDto.password ?? rider.user.password;
 
         rider.phone = updateRiderDto.phone ?? rider.phone;
         rider.isOnline = updateRiderDto.isOnline ?? rider.isOnline;
         rider.bkashAccount = updateRiderDto.bkashAccount ?? rider.bkashAccount;
         rider.bankAccount = updateRiderDto.bankAccount ?? rider.bankAccount;
+
+        const newEmailUser = await this.userRepository.findOne({
+            where: {
+                email: rider.user.email,
+            },
+            select: {
+                userId: true,
+            },
+        });
+        if (newEmailUser && newEmailUser.userId !== rider.user.userId) {
+            throw new ConflictException('Email already exists');
+        }
 
         const updated = await this.riderRepository.save(rider);
 

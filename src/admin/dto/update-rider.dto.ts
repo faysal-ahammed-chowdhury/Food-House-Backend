@@ -1,5 +1,6 @@
 import {
     IsBoolean,
+    IsEmail,
     IsNumberString,
     IsOptional,
     IsString,
@@ -14,6 +15,11 @@ export class UpdateRiderDto {
     @IsString({ message: 'Name must be valid text.' })
     @MaxLength(100, { message: 'Name cannot exceed 100 characters.' })
     name?: string;
+
+    @IsOptional()
+    @IsEmail({}, { message: 'Email must be valid.' })
+    @MaxLength(100, { message: 'Email must not exceed 100 characters.' })
+    email?: string;
 
     @IsOptional()
     @IsString({ message: 'Password must be valid text.' })

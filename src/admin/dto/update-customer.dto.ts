@@ -1,5 +1,6 @@
 import {
     IsBoolean,
+    IsEmail,
     IsNotEmpty,
     IsOptional,
     IsString,
@@ -14,6 +15,11 @@ export class UpdateCustomerDto {
     @IsString({ message: 'Name must be valid text.' })
     @MaxLength(100, { message: 'Name cannot exceed 100 characters.' })
     name?: string;
+
+    @IsOptional()
+    @IsEmail({}, { message: 'Email must be valid.' })
+    @MaxLength(100, { message: 'Email must not exceed 100 characters.' })
+    email?: string;
 
     @IsOptional()
     @IsNotEmpty({ message: 'Password cannot be empty.' })
