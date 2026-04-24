@@ -1,4 +1,5 @@
 import {
+    IsBoolean,
     IsNotEmpty,
     IsOptional,
     IsString,
@@ -33,4 +34,7 @@ export class UpdateCustomerDto {
             'Please enter a valid Bangladeshi phone number (e.g. 01XXXXXXXXX).',
     })
     phone?: string;
+
+    @IsBoolean()
+    isVerified?: boolean;
 }

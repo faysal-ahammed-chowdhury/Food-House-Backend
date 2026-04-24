@@ -91,12 +91,17 @@ export class AdminService {
     async getAdmins(search?: string): Promise<object> {
         search = search?.trim();
 
+        const isNumeric = !isNaN(Number(search));
+
         const admins = await this.userRepository.find({
             select: ['userId', 'email', 'name', 'role'],
             where: search
                 ? [
                       { role: UserRoles.ADMIN, name: ILike(`%${search}%`) },
                       { role: UserRoles.ADMIN, email: ILike(`%${search}%`) },
+                      ...(isNumeric
+                          ? [{ role: UserRoles.ADMIN, userId: Number(search) }]
+                          : []),
                   ]
                 : { role: UserRoles.ADMIN },
         });
@@ -718,6 +723,8 @@ export class AdminService {
     async getCustomers(search?: string): Promise<object> {
         search = search?.trim();
 
+        const isNumeric = !isNaN(Number(search));
+
         const customers = await this.customerRepository.find({
             select: {
                 customerId: true,
@@ -725,6 +732,7 @@ export class AdminService {
                     userId: true,
                     name: true,
                     email: true,
+                    isVerified: true,
                 },
                 address: true,
                 phone: true,
@@ -739,9 +747,16 @@ export class AdminService {
                           { user: { name: ILike(`%${search}%`) } },
                           { user: { email: ILike(`%${search}%`) } },
                           { phone: ILike(`%${search}%`) },
+                          ...(isNumeric
+                              ? [{ customerId: Number(search) }]
+                              : [{}]),
                       ],
                   }
                 : {}),
+
+            order: {
+                customerId: 'ASC',
+            },
         });
 
         const output = customers.map((customer) => {
@@ -787,6 +802,8 @@ export class AdminService {
             );
         }
 
+        customer.user.isVerified =
+            updateCustomerDto.isVerified ?? customer.user.isVerified;
         customer.user.name = updateCustomerDto.name ?? customer.user.name;
         customer.user.password =
             updateCustomerDto.password ?? customer.user.password;
