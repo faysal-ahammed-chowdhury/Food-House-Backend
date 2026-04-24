@@ -104,6 +104,9 @@ export class AdminService {
                           : []),
                   ]
                 : { role: UserRoles.ADMIN },
+            order: {
+                userId: 'ASC',
+            },
         });
 
         return {
@@ -898,6 +901,14 @@ export class AdminService {
             throw new ConflictException('Email already exists');
         }
 
+        if (
+            await this.riderRepository.findOneBy({
+                riderNid: createRiderDto.riderNid,
+            })
+        ) {
+            throw new ConflictException('NID already exists');
+        }
+
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(createRiderDto.password, salt);
 
@@ -932,8 +943,13 @@ export class AdminService {
     // get riders
     async getRiders(search?: string, status?: string): Promise<object> {
         search = search?.trim();
+        status = status?.trim();
+        status = status?.toLowerCase();
 
         const riders = await this.riderRepository.find({
+            order: {
+                riderId: 'ASC',
+            },
             select: {
                 riderId: true,
                 user: {
@@ -989,8 +1005,11 @@ export class AdminService {
         const output = riders.map((rider) => {
             const { deliveries, ...riderWithoutDeliveries } = rider;
 
+            let totalDelivery = 0;
             const totalEarning: number = rider.deliveries.reduce(
                 (total, cur) => {
+                    totalDelivery +=
+                        cur.order?.status === OrderStatus.DELIVERED ? 1 : 0;
                     return (
                         total +
                         (cur.order?.status === OrderStatus.DELIVERED
@@ -1004,6 +1023,7 @@ export class AdminService {
             return {
                 ...riderWithoutDeliveries,
                 totalEarning,
+                totalDelivery,
             };
         });
 
