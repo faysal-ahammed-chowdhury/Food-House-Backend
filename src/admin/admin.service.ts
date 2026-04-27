@@ -602,6 +602,50 @@ export class AdminService {
         };
     }
 
+    // get restaurant categories
+    async getRestaurantCategories(
+        restaurantId: number,
+        search?: string,
+    ): Promise<object> {
+        const restaurant = await this.restaurantRepository.findOneBy({
+            restaurantId: restaurantId,
+        });
+
+        if (!restaurant) {
+            throw new NotFoundException('Restaurant Not Exists');
+        }
+        search = search?.trim();
+
+        const categories = await this.categoryRepository.find({
+            select: {
+                categoryId: true,
+                name: true,
+            },
+            relations: ['items'],
+            where: {
+                restaurant: {
+                    restaurantId: restaurantId,
+                },
+                ...(search ? { name: ILike(`%${search}%`) } : {}),
+            },
+        });
+
+        const output = categories.map((category) => {
+            const count = category.items.length;
+            const { items, ...categoryWithoutItems } = category;
+            return {
+                ...categoryWithoutItems,
+                itemsCount: count,
+            };
+        });
+
+        return {
+            success: true,
+            message: 'Categories Fetched Successfully',
+            data: output,
+        };
+    }
+
     // add new category
     async addNewCategory(
         restaurantId: number,

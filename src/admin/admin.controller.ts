@@ -179,6 +179,15 @@ export class AdminController {
         return this.adminService.deleteItem(itemId);
     }
 
+    // get restaurant categories route
+    @Get('restaurants/:id/categories')
+    async getRestaurantCategories(
+        @Param('id', ParseIntPipe) restaurantId: number,
+        @Query('search') search?: string,
+    ): Promise<object> {
+        return this.adminService.getRestaurantCategories(restaurantId, search);
+    }
+
     // add new category route
     @Post('restaurants/:id/categories')
     @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
