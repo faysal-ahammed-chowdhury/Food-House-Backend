@@ -1,0 +1,208 @@
+-- ============================================================
+-- USERS
+-- ============================================================
+-- Passwords are all: Password@123 (bcrypt hashed)
+INSERT INTO users ("userId", "name", "email", "password", "role", "isVerified", "verificationToken") VALUES
+(1, 'Super Admin', 'admin@foodhouse.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ADMIN', true, null),
+(2, 'Admin Two', 'admin2@foodhouse.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ADMIN', true, null),
+
+(3, 'Burger House Owner', 'burger@foodhouse.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true, null),
+(4, 'Pizza Palace Owner', 'pizza@foodhouse.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true, null),
+(5, 'Deshi Khana Owner', 'deshi@foodhouse.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true, null),
+
+(6, 'Rider Karim', 'karim@rider.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true, null),
+(7, 'Rider Rahim', 'rahim@rider.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true, null),
+(8, 'Rider Jamal', 'jamal@rider.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true, null),
+
+(9, 'Customer Anika', 'anika@gmail.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true, null),
+(10, 'Customer Rafi', 'rafi@gmail.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true, null),
+(11, 'Customer Mim', 'mim@gmail.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true, null),
+(12, 'Customer Unverified', 'unverified@gmail.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', false, 'abc123token');
+
+SELECT setval(pg_get_serial_sequence('users', 'userId'), 12);
+
+
+-- ============================================================
+-- RESTAURANTS
+-- ============================================================
+INSERT INTO restaurants ("restaurantId", "userId", "description", "address", "isOpen", "currentCommissionPercent", "currentDeliveryFee", "bkashAccount", "bankAccount") VALUES
+(1, 3, 'Best burgers in town', 'Gulshan, Dhaka', true, 15, 50, '01780000001', null),
+(2, 4, 'Authentic Italian pizza', 'Banani, Dhaka', true, 12, 40, '01780000002', '1234567890'),
+(3, 5, 'Traditional Bangladeshi cuisine', 'Mirpur, Dhaka', false, 10, 30, null, '0987654321');
+
+SELECT setval(pg_get_serial_sequence('restaurants', 'restaurantId'), 3);
+
+
+-- ============================================================
+-- RIDERS
+-- ============================================================
+INSERT INTO riders ("riderId", "userId", "phone", "riderNid", "nidImageUrl", "isOnline", "bkashAccount", "bankAccount") VALUES
+(1, 6, '01711111111', 'NID1234567890', 'uploads/nid1.jpg', true, '01711111111', null),
+(2, 7, '01722222222', 'NID0987654321', 'uploads/nid2.jpg', false, '01722222222', '1122334455'),
+(3, 8, '01733333333', 'NID1122334455', 'uploads/nid3.jpg', true, null, null);
+
+SELECT setval(pg_get_serial_sequence('riders', 'riderId'), 3);
+
+
+-- ============================================================
+-- CUSTOMERS
+-- ============================================================
+INSERT INTO customers ("customerId", "userId", "address", "phone") VALUES
+(1, 9, 'Uttara, Dhaka', '01811111111'),
+(2, 10, 'Dhanmondi, Dhaka', '01822222222'),
+(3, 11, 'Mohammadpur, Dhaka', '01833333333'),
+(4, 12, 'Bashundhara, Dhaka', '01844444444');
+
+SELECT setval(pg_get_serial_sequence('customers', 'customerId'), 4);
+
+
+-- ============================================================
+-- CATEGORIES
+-- ============================================================
+INSERT INTO categories ("categoryId", "restaurantId", "name") VALUES
+-- Burger House (restaurantId: 1)
+(1, 1, 'Burgers'),
+(2, 1, 'Sides'),
+(3, 1, 'Drinks'),
+
+-- Pizza Palace (restaurantId: 2)
+(4, 2, 'Pizza'),
+(5, 2, 'Pasta'),
+(6, 2, 'Drinks'),
+
+-- Deshi Khana (restaurantId: 3)
+(7, 3, 'Rice & Biryani'),
+(8, 3, 'Curry'),
+(9, 3, 'Drinks');
+
+SELECT setval(pg_get_serial_sequence('categories', 'categoryId'), 9);
+
+
+-- ============================================================
+-- ITEMS
+-- ============================================================
+INSERT INTO items ("itemId", "restaurantId", "categoryId", "name", "description", "price", "imageUrl", "isAvailable", "preparationTime") VALUES
+-- Burger House items
+(1, 1, 1, 'Classic Beef Burger', 'Juicy beef patty with lettuce and tomato', 180, null, true, 15),
+(2, 1, 1, 'Chicken Zinger', 'Crispy chicken fillet burger', 160, null, true, 12),
+(3, 1, 1, 'Double Smash Burger', 'Double beef smash patty', 250, null, true, 18),
+(4, 1, 2, 'French Fries', 'Crispy golden fries', 80, null, true, 8),
+(5, 1, 2, 'Onion Rings', 'Crispy battered onion rings', 70, null, false, 8),
+(6, 1, 3, 'Coca Cola', 'Chilled 330ml can', 40, null, true, 2),
+(7, 1, 3, 'Fresh Lemonade', 'Freshly squeezed lemonade', 60, null, true, 5),
+
+-- Pizza Palace items
+(8, 2, 4, 'Margherita Pizza', 'Classic tomato and mozzarella', 420, null, true, 25),
+(9, 2, 4, 'BBQ Chicken Pizza', 'BBQ sauce with grilled chicken', 520, null, true, 28),
+(10, 2, 4, 'Pepperoni Pizza', 'Loaded with pepperoni', 560, null, true, 28),
+(11, 2, 5, 'Spaghetti Bolognese', 'Classic meat sauce pasta', 380, null, true, 20),
+(12, 2, 5, 'Penne Arabiatta', 'Spicy tomato pasta', 320, null, true, 18),
+(13, 2, 6, 'Pepsi', 'Chilled 330ml can', 40, null, true, 2),
+
+-- Deshi Khana items
+(14, 3, 7, 'Kacchi Biryani', 'Traditional mutton kacchi', 280, null, true, 45),
+(15, 3, 7, 'Beef Tehari', 'Spiced beef tehari', 220, null, true, 40),
+(16, 3, 8, 'Mutton Curry', 'Slow cooked mutton', 350, null, true, 50),
+(17, 3, 8, 'Dal Fry', 'Yellow dal with spices', 80, null, true, 20),
+(18, 3, 9, 'Mango Lassi', 'Fresh mango lassi', 60, null, false, 5);
+
+SELECT setval(pg_get_serial_sequence('items', 'itemId'), 18);
+
+
+-- ============================================================
+-- VOUCHERS
+-- ============================================================
+INSERT INTO vouchers ("voucherId", "restaurantId", "voucherCode", "percent", "maxDiscount", "minOrderAmount", "expiresAt") VALUES
+(1, 1, 'BURGER10', 10, 50, 200, '2026-12-31 23:59:59'),
+(2, 1, 'BURGER20', 20, 80, 400, '2026-06-30 23:59:59'),
+(3, 2, 'PIZZA15', 15, 100, 500, '2026-12-31 23:59:59'),
+(4, 2, 'PIZZA25', 25, 150, 800, null),
+(5, 3, 'DESHI10', 10, 40, 300, '2026-09-30 23:59:59');
+
+SELECT setval(pg_get_serial_sequence('vouchers', 'voucherId'), 5);
+
+
+-- ============================================================
+-- ORDERS
+-- ============================================================
+INSERT INTO orders (
+    "orderId", "restaurantId", "customerId", "orderAt",
+    "subtotal", "voucherCode", "discountAmount", "deliveryFee", "total",
+    "paymentMethod", "restaurantAddress", "customerAddress",
+    "status", "commissionAmount", "commissionPercentage", "estimatedDeliveryTime", "restaurantName", "customerName", "riderName"
+) VALUES
+-- Delivered orders
+(1, 1, 1, '2026-03-01 12:00:00', 340, 'BURGER10', 34, 50, 356, 'COD', 'Gulshan, Dhaka', 'Uttara, Dhaka', 'DELIVERED', 53.4, 15, 30, 'A', 'B', 'C'),
+(2, 2, 2, '2026-03-05 13:00:00', 520, null, 0, 40, 560, 'BKASH', 'Banani, Dhaka', 'Dhanmondi, Dhaka', 'DELIVERED', 67.2, 12, 53, 'A', 'B', 'C'),
+(3, 1, 1, '2026-03-10 19:00:00', 250, null, 0, 50, 300, 'COD', 'Gulshan, Dhaka', 'Uttara, Dhaka', 'DELIVERED', 45, 15, 33, 'A', 'B', 'C'),
+(4, 2, 3, '2026-03-12 20:00:00', 900, 'PIZZA15', 100, 40, 840, 'BKASH', 'Banani, Dhaka', 'Mohammadpur, Dhaka', 'DELIVERED', 100.8, 12, 58, 'A', 'B', 'C'),
+(5, 3, 2, '2026-03-15 14:00:00', 500, 'DESHI10', 40, 30, 490, 'COD', 'Mirpur, Dhaka', 'Dhanmondi, Dhaka', 'DELIVERED', 49, 10, 65, 'A', 'B', 'C'),
+
+-- Active orders
+(6, 1, 2, '2026-04-01 18:00:00', 410, null, 0, 50, 460, 'COD', 'Gulshan, Dhaka', 'Dhanmondi, Dhaka', 'PREPARING', 69, 15, 33, 'A', 'B', 'C'),
+(7, 2, 1, '2026-04-01 19:00:00', 560, null, 0, 40, 600, 'BKASH', 'Banani, Dhaka', 'Uttara, Dhaka', 'ACCEPTED', 72, 12, 58, 'A', 'B', 'C'),
+
+-- Cancelled order
+(8, 1, 3, '2026-03-20 12:00:00', 180, null, 0, 50, 230, 'COD', 'Gulshan, Dhaka', 'Mohammadpur, Dhaka', 'CANCELLED', 27, 15, 30, 'A', 'B', 'C'),
+
+-- Pending order
+(9, 2, 3, '2026-04-01 20:00:00', 420, null, 0, 40, 460, 'BKASH', 'Banani, Dhaka', 'Mohammadpur, Dhaka', 'PENDING', 55.2, 12, 53, 'A', 'B', 'C');
+
+SELECT setval(pg_get_serial_sequence('orders', 'orderId'), 9);
+
+
+-- ============================================================
+-- ORDER ITEMS
+-- ============================================================
+INSERT INTO order_items ("orderItemId", "orderId", "itemId", "itemName", "itemPrice", "quantity", "total") VALUES
+-- Order 1 (Burger House, Customer Anika)
+(1, 1, 1, 'Classic Beef Burger', 180, 1, 180),
+(2, 1, 4, 'French Fries', 80, 2, 160),
+
+-- Order 2 (Pizza Palace, Customer Rafi)
+(3, 2, 9, 'BBQ Chicken Pizza', 520, 1, 520),
+
+-- Order 3 (Burger House, Customer Anika)
+(4, 3, 3, 'Double Smash Burger', 250, 1, 250),
+
+-- Order 4 (Pizza Palace, Customer Mim)
+(5, 4, 8, 'Margherita Pizza', 420, 1, 420),
+(6, 4, 10, 'Pepperoni Pizza', 560, 1, 560),
+
+-- Order 5 (Deshi Khana, Customer Rafi)
+(7, 5, 14, 'Kacchi Biryani', 280, 1, 280),
+(8, 5, 17, 'Dal Fry', 80, 2, 160),
+(9, 5, 16, 'Mutton Curry', 350, 1, 350),
+
+-- Order 6 (Burger House, Customer Rafi - active)
+(10, 6, 1, 'Classic Beef Burger', 180, 2, 360),
+(11, 6, 4, 'French Fries', 80, 1, 80),
+
+-- Order 7 (Pizza Palace, Customer Anika - active)
+(12, 7, 10, 'Pepperoni Pizza', 560, 1, 560),
+
+-- Order 8 (Burger House, Customer Mim - cancelled)
+(13, 8, 1, 'Classic Beef Burger', 180, 1, 180),
+
+-- Order 9 (Pizza Palace, Customer Mim - pending)
+(14, 9, 8, 'Margherita Pizza', 420, 1, 420);
+
+SELECT setval(pg_get_serial_sequence('order_items', 'orderItemId'), 14);
+
+
+-- ============================================================
+-- DELIVERIES (only for orders that reached RIDER_ASSIGNED or beyond)
+-- ============================================================
+INSERT INTO deliveries ("deliveryId", "orderId", "riderId", "acceptedAt", "otp", "pickUpTime", "deliveredTime") VALUES
+-- Delivered orders
+(1, 1, 1, '2026-03-01 12:10:00', null, '2026-03-01 12:25:00', '2026-03-01 12:55:00'),
+(2, 2, 2, '2026-03-05 13:10:00', null, '2026-03-05 13:30:00', '2026-03-05 14:00:00'),
+(3, 3, 1, '2026-03-10 19:10:00', null, '2026-03-10 19:25:00', '2026-03-10 19:55:00'),
+(4, 4, 3, '2026-03-12 20:10:00', null, '2026-03-12 20:35:00', '2026-03-12 21:10:00'),
+(5, 5, 2, '2026-03-15 14:10:00', null, '2026-03-15 14:30:00', '2026-03-15 15:05:00'),
+
+-- Active order (PREPARING — rider assigned, not picked yet)
+(6, 6, 3, '2026-04-01 18:10:00', 4521, null, null);
+
+SELECT setval(pg_get_serial_sequence('deliveries', 'deliveryId'), 6);
+

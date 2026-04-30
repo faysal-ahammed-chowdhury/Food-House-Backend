@@ -1,5 +1,6 @@
 import {
     Column,
+    CreateDateColumn,
     Entity,
     JoinColumn,
     ManyToOne,
@@ -27,7 +28,7 @@ export class OrderEntity {
     @JoinColumn({ name: 'customerId' })
     customer: CustomerEntity;
 
-    @Column('timestamp')
+    @CreateDateColumn()
     orderAt: Date;
 
     @Column('float')
@@ -53,6 +54,15 @@ export class OrderEntity {
 
     @Column()
     customerAddress: string;
+
+    @Column()
+    restaurantName: string;
+
+    @Column()
+    customerName: string;
+
+    @Column({ nullable: true })
+    riderName: string;
 
     @Column({ type: 'enum', enum: OrderStatus })
     status: OrderStatus;

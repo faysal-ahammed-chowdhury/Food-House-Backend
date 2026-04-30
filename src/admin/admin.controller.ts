@@ -320,35 +320,41 @@ export class AdminController {
 
     // get all order route
     @Get('orders')
-    getOrders(
-        @Query('search') search?: string,
+    async getOrders(
+        @Query('orderId') orderId?: number,
         @Query('status') status?: OrderStatus,
-        @Query('dateFrom') dateFrom?: string,
-        @Query('dateTo') dateTo?: string,
+        @Query('dateFrom') dateFrom?: Date,
+        @Query('dateTo') dateTo?: Date,
         @Query('paymentMethod') paymentMethod?: PaymentMethod,
-        @Query('restaurantId', ParseIntPipe) restaurantId?: number,
-        @Query('riderId', ParseIntPipe) riderId?: number,
-    ) {
+        @Query('restaurantId') restaurantId?: number,
+        @Query('riderId') riderId?: number,
+        @Query('cusomterId') cusomterId?: number,
+    ): Promise<object> {
         return this.adminService.getOrders(
-            search,
+            orderId,
             status,
             dateFrom,
             dateTo,
             paymentMethod,
             restaurantId,
             riderId,
+            cusomterId,
         );
     }
 
     // get order route
     @Get('orders/:id')
-    getOrder(@Param('id', ParseIntPipe) orderId: number) {
+    async getOrder(
+        @Param('id', ParseIntPipe) orderId: number,
+    ): Promise<object> {
         return this.adminService.getOrder(orderId);
     }
 
     // cancel order route
     @Patch('orders/:id/cancel')
-    cancelOrder(@Param('id', ParseIntPipe) orderId: number) {
+    async cancelOrder(
+        @Param('id', ParseIntPipe) orderId: number,
+    ): Promise<object> {
         return this.adminService.cancelOrder(orderId);
     }
 }

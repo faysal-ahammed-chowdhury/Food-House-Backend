@@ -1,5 +1,7 @@
 import {
+    BadRequestException,
     ConflictException,
+    ForbiddenException,
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
@@ -1158,49 +1160,99 @@ export class AdminService {
     /* ========== Manage Order ========== */
 
     // get all order
-    getOrders(
-        search?: string,
+    async getOrders(
+        orderId?: number,
         status?: OrderStatus,
-        dateFrom?: string,
-        dateTo?: string,
+        dateFrom?: Date,
+        dateTo?: Date,
         paymentMethod?: PaymentMethod,
         restaurantId?: number,
         riderId?: number,
-    ) {
+        cusomterId?: number,
+    ): Promise<object> {
+        const orders = await this.orderRepository.find({
+            where: {
+                ...(orderId ? { orderId: orderId } : {}),
+                ...(status ? { status: status } : {}),
+                ...(dateFrom ? { orderAt: dateFrom } : {}),
+                ...(paymentMethod ? { paymentMethod: paymentMethod } : {}),
+                ...(restaurantId ? { restaurantId: restaurantId } : {}),
+                ...(riderId ? { riderId: riderId } : {}),
+                ...(cusomterId ? { cusomterId: cusomterId } : {}),
+            },
+
+            select: {
+                customerName: true,
+                restaurantName: true,
+                riderName: true,
+                orderId: true,
+                orderAt: true,
+                subtotal: true,
+                deliveryFee: true,
+                discountAmount: true,
+                voucherCode: true,
+                total: true,
+                paymentMethod: true,
+                status: true,
+                commissionAmount: true,
+                delivery: true,
+            },
+
+            order: {
+                orderId: 'asc',
+            },
+        });
+
         return {
             success: true,
-            message: 'Dummy Successfully',
-            data: {
-                search,
-                status,
-                dateFrom,
-                dateTo,
-                paymentMethod,
-                restaurantId,
-                riderId,
-            },
+            message: `Order Fetched Successfully`,
+            data: orders,
         };
     }
 
     // get order
-    getOrder(orderId: number) {
+    async getOrder(orderId: number): Promise<object> {
+        const order = await this.orderRepository.findOne({
+            where: {
+                orderId: orderId,
+            },
+            relations: {
+                orderItems: true,
+            },
+        });
+
         return {
             success: true,
-            message: 'Dummy Successfully',
-            data: {
-                orderId,
-            },
+            message: `Order Fetched Successfully`,
+            data: order,
         };
     }
 
     // cancel order
-    cancelOrder(orderId: number) {
+    async cancelOrder(orderId: number): Promise<object> {
+        const order = await this.orderRepository.findOne({
+            where: { orderId: orderId },
+        });
+
+        if (!order) {
+            throw new BadRequestException('Invalid Order ID');
+        }
+
+        if (order.status === OrderStatus.DELIVERED) {
+            throw new ForbiddenException('Order Already Delivered');
+        }
+
+        if (order.status === OrderStatus.CANCELLED) {
+            throw new ForbiddenException('Order Already Cancelled');
+        }
+
+        order.status = OrderStatus.CANCELLED;
+        const updated = await this.orderRepository.save(order);
+
         return {
             success: true,
-            message: 'Dummy Successfully',
-            data: {
-                orderId,
-            },
+            message: `Order Updated Successfully`,
+            data: updated,
         };
     }
 }

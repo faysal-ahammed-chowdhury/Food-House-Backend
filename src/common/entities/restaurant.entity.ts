@@ -24,6 +24,9 @@ export class RestaurantEntity {
     @Column({ nullable: true })
     description?: string;
 
+    @Column({ nullable: true })
+    bannerUrl?: string;
+
     @Column()
     address: string;
 
