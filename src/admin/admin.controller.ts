@@ -45,7 +45,7 @@ export class AdminController {
 
     // create admin route
     @Post('admins')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     createAdmin(@Body() createAdminDto: CreateAdminDto): object {
         return this.adminService.createAdmin(createAdminDto);
     }
@@ -64,7 +64,7 @@ export class AdminController {
 
     // update admin route
     @Put('admins/:id')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async updateAdmin(
         @Param('id', ParseIntPipe) userId: number,
         @Body() updateAdminDto: UpdateAdminDto,
@@ -84,7 +84,7 @@ export class AdminController {
 
     // create a restaurant route
     @Post('restaurants')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async createRestaurant(
         @Body() createRestaurantDto: CreateRestaurantDto,
     ): Promise<object> {
@@ -107,7 +107,7 @@ export class AdminController {
 
     // update restaurant route
     @Put('restaurants/:id')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async updateRestaurant(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() updateRestaurantDto: UpdateRestaurantDto,
@@ -144,7 +144,7 @@ export class AdminController {
 
     // add new item route
     @Post('restaurants/:id/items')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async addNewItem(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() createItemDto: CreateItemDto,
@@ -154,7 +154,7 @@ export class AdminController {
 
     // update item route
     @Put('items/:id')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async updateItem(
         @Param('id', ParseIntPipe) itemId: number,
         @Body() updateItemDto: UpdateItemDto,
@@ -179,9 +179,18 @@ export class AdminController {
         return this.adminService.deleteItem(itemId);
     }
 
+    // get restaurant categories route
+    @Get('restaurants/:id/categories')
+    async getRestaurantCategories(
+        @Param('id', ParseIntPipe) restaurantId: number,
+        @Query('search') search?: string,
+    ): Promise<object> {
+        return this.adminService.getRestaurantCategories(restaurantId, search);
+    }
+
     // add new category route
     @Post('restaurants/:id/categories')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async addNewCategory(
         @Param('id', ParseIntPipe) restaurantId: number,
         @Body() createCategoryDto: CreateCategoryDto,
@@ -194,7 +203,7 @@ export class AdminController {
 
     // update category
     @Put('categories/:id')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async updateCategory(
         @Param('id', ParseIntPipe) categoryId: number,
         @Body() updateCategoryDto: UpdateCategoryDto,
@@ -291,7 +300,7 @@ export class AdminController {
 
     // update rider route
     @Put('riders/:id')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async updateRider(
         @Param('id', ParseIntPipe) riderId: number,
         @Body() updateRiderDto: UpdateRiderDto,
@@ -311,35 +320,41 @@ export class AdminController {
 
     // get all order route
     @Get('orders')
-    getOrders(
-        @Query('search') search?: string,
+    async getOrders(
+        @Query('orderId') orderId?: number,
         @Query('status') status?: OrderStatus,
-        @Query('dateFrom') dateFrom?: string,
-        @Query('dateTo') dateTo?: string,
+        @Query('dateFrom') dateFrom?: Date,
+        @Query('dateTo') dateTo?: Date,
         @Query('paymentMethod') paymentMethod?: PaymentMethod,
-        @Query('restaurantId', ParseIntPipe) restaurantId?: number,
-        @Query('riderId', ParseIntPipe) riderId?: number,
-    ) {
+        @Query('restaurantId') restaurantId?: number,
+        @Query('riderId') riderId?: number,
+        @Query('cusomterId') cusomterId?: number,
+    ): Promise<object> {
         return this.adminService.getOrders(
-            search,
+            orderId,
             status,
             dateFrom,
             dateTo,
             paymentMethod,
             restaurantId,
             riderId,
+            cusomterId,
         );
     }
 
     // get order route
     @Get('orders/:id')
-    getOrder(@Param('id', ParseIntPipe) orderId: number) {
+    async getOrder(
+        @Param('id', ParseIntPipe) orderId: number,
+    ): Promise<object> {
         return this.adminService.getOrder(orderId);
     }
 
     // cancel order route
     @Patch('orders/:id/cancel')
-    cancelOrder(@Param('id', ParseIntPipe) orderId: number) {
+    async cancelOrder(
+        @Param('id', ParseIntPipe) orderId: number,
+    ): Promise<object> {
         return this.adminService.cancelOrder(orderId);
     }
 }

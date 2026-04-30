@@ -1,5 +1,7 @@
 import {
+    BadRequestException,
     ConflictException,
+    ForbiddenException,
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
@@ -91,14 +93,22 @@ export class AdminService {
     async getAdmins(search?: string): Promise<object> {
         search = search?.trim();
 
+        const isNumeric = !isNaN(Number(search));
+
         const admins = await this.userRepository.find({
             select: ['userId', 'email', 'name', 'role'],
             where: search
                 ? [
                       { role: UserRoles.ADMIN, name: ILike(`%${search}%`) },
                       { role: UserRoles.ADMIN, email: ILike(`%${search}%`) },
+                      ...(isNumeric
+                          ? [{ role: UserRoles.ADMIN, userId: Number(search) }]
+                          : []),
                   ]
                 : { role: UserRoles.ADMIN },
+            order: {
+                userId: 'ASC',
+            },
         });
 
         return {
@@ -153,8 +163,21 @@ export class AdminService {
             );
         }
 
+        admin.email = updateAdminDto?.email ?? admin.email;
         admin.name = updateAdminDto.name ?? admin.name;
         admin.password = updateAdminDto.password ?? admin.password;
+
+        const newEmailUser = await this.userRepository.findOne({
+            where: {
+                email: admin.email,
+            },
+            select: {
+                userId: true,
+            },
+        });
+        if (newEmailUser && newEmailUser.userId !== admin.userId) {
+            throw new ConflictException('Email already exists');
+        }
 
         const updated = await this.userRepository.save(admin);
         const { password, verificationToken, ...output } = updated;
@@ -240,6 +263,8 @@ export class AdminService {
     async getRestaurants(search?: string): Promise<object> {
         search = search?.trim();
 
+        const isNumeric = !isNaN(Number(search));
+
         const restaurants = await this.restaurantRepository.find({
             select: {
                 restaurantId: true,
@@ -249,6 +274,7 @@ export class AdminService {
                     email: true,
                 },
                 address: true,
+                description: true,
                 currentCommissionPercent: true,
                 currentDeliveryFee: true,
                 bkashAccount: true,
@@ -267,9 +293,16 @@ export class AdminService {
                       where: [
                           { user: { name: ILike(`%${search}%`) } },
                           { user: { email: ILike(`%${search}%`) } },
+                          ...(isNumeric
+                              ? [{ restaurantId: Number(search) }]
+                              : [{}]),
                       ],
                   }
                 : {}),
+
+            order: {
+                restaurantId: 'ASC',
+            },
         });
 
         const output = restaurants.map((restaurant) => {
@@ -353,6 +386,8 @@ export class AdminService {
         }
 
         restaurant.user.name = updateRestaurantDto.name ?? restaurant.user.name;
+        restaurant.user.email =
+            updateRestaurantDto.email ?? restaurant.user.email;
         restaurant.user.password =
             updateRestaurantDto.password ?? restaurant.user.password;
 
@@ -370,6 +405,18 @@ export class AdminService {
             updateRestaurantDto.bkashAccount ?? restaurant.bkashAccount;
         restaurant.bankAccount =
             updateRestaurantDto.bankAccount ?? restaurant.bankAccount;
+
+        const newEmailUser = await this.userRepository.findOne({
+            where: {
+                email: restaurant.user.email,
+            },
+            select: {
+                userId: true,
+            },
+        });
+        if (newEmailUser && newEmailUser.userId !== restaurant.user.userId) {
+            throw new ConflictException('Email already exists');
+        }
 
         const updated = await this.restaurantRepository.save(restaurant);
 
@@ -557,6 +604,50 @@ export class AdminService {
         };
     }
 
+    // get restaurant categories
+    async getRestaurantCategories(
+        restaurantId: number,
+        search?: string,
+    ): Promise<object> {
+        const restaurant = await this.restaurantRepository.findOneBy({
+            restaurantId: restaurantId,
+        });
+
+        if (!restaurant) {
+            throw new NotFoundException('Restaurant Not Exists');
+        }
+        search = search?.trim();
+
+        const categories = await this.categoryRepository.find({
+            select: {
+                categoryId: true,
+                name: true,
+            },
+            relations: ['items'],
+            where: {
+                restaurant: {
+                    restaurantId: restaurantId,
+                },
+                ...(search ? { name: ILike(`%${search}%`) } : {}),
+            },
+        });
+
+        const output = categories.map((category) => {
+            const count = category.items.length;
+            const { items, ...categoryWithoutItems } = category;
+            return {
+                ...categoryWithoutItems,
+                itemsCount: count,
+            };
+        });
+
+        return {
+            success: true,
+            message: 'Categories Fetched Successfully',
+            data: output,
+        };
+    }
+
     // add new category
     async addNewCategory(
         restaurantId: number,
@@ -708,6 +799,8 @@ export class AdminService {
     async getCustomers(search?: string): Promise<object> {
         search = search?.trim();
 
+        const isNumeric = !isNaN(Number(search));
+
         const customers = await this.customerRepository.find({
             select: {
                 customerId: true,
@@ -715,6 +808,7 @@ export class AdminService {
                     userId: true,
                     name: true,
                     email: true,
+                    isVerified: true,
                 },
                 address: true,
                 phone: true,
@@ -729,9 +823,16 @@ export class AdminService {
                           { user: { name: ILike(`%${search}%`) } },
                           { user: { email: ILike(`%${search}%`) } },
                           { phone: ILike(`%${search}%`) },
+                          ...(isNumeric
+                              ? [{ customerId: Number(search) }]
+                              : [{}]),
                       ],
                   }
                 : {}),
+
+            order: {
+                customerId: 'ASC',
+            },
         });
 
         const output = customers.map((customer) => {
@@ -777,11 +878,26 @@ export class AdminService {
             );
         }
 
+        customer.user.isVerified =
+            updateCustomerDto.isVerified ?? customer.user.isVerified;
         customer.user.name = updateCustomerDto.name ?? customer.user.name;
+        customer.user.email = updateCustomerDto.email ?? customer.user.email;
         customer.user.password =
             updateCustomerDto.password ?? customer.user.password;
         customer.address = updateCustomerDto.address ?? customer.address;
         customer.phone = updateCustomerDto.phone ?? customer.phone;
+
+        const newEmailUser = await this.userRepository.findOne({
+            where: {
+                email: customer.user.email,
+            },
+            select: {
+                userId: true,
+            },
+        });
+        if (newEmailUser && newEmailUser.userId !== customer.user.userId) {
+            throw new ConflictException('Email already exists');
+        }
 
         const updated = await this.customerRepository.save(customer);
 
@@ -831,6 +947,14 @@ export class AdminService {
             throw new ConflictException('Email already exists');
         }
 
+        if (
+            await this.riderRepository.findOneBy({
+                riderNid: createRiderDto.riderNid,
+            })
+        ) {
+            throw new ConflictException('NID already exists');
+        }
+
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(createRiderDto.password, salt);
 
@@ -865,8 +989,13 @@ export class AdminService {
     // get riders
     async getRiders(search?: string, status?: string): Promise<object> {
         search = search?.trim();
+        status = status?.trim();
+        status = status?.toLowerCase();
 
         const riders = await this.riderRepository.find({
+            order: {
+                riderId: 'ASC',
+            },
             select: {
                 riderId: true,
                 user: {
@@ -922,8 +1051,11 @@ export class AdminService {
         const output = riders.map((rider) => {
             const { deliveries, ...riderWithoutDeliveries } = rider;
 
+            let totalDelivery = 0;
             const totalEarning: number = rider.deliveries.reduce(
                 (total, cur) => {
+                    totalDelivery +=
+                        cur.order?.status === OrderStatus.DELIVERED ? 1 : 0;
                     return (
                         total +
                         (cur.order?.status === OrderStatus.DELIVERED
@@ -937,6 +1069,7 @@ export class AdminService {
             return {
                 ...riderWithoutDeliveries,
                 totalEarning,
+                totalDelivery,
             };
         });
 
@@ -970,12 +1103,25 @@ export class AdminService {
         }
 
         rider.user.name = updateRiderDto.name ?? rider.user.name;
+        rider.user.email = updateRiderDto.email ?? rider.user.email;
         rider.user.password = updateRiderDto.password ?? rider.user.password;
 
         rider.phone = updateRiderDto.phone ?? rider.phone;
         rider.isOnline = updateRiderDto.isOnline ?? rider.isOnline;
         rider.bkashAccount = updateRiderDto.bkashAccount ?? rider.bkashAccount;
         rider.bankAccount = updateRiderDto.bankAccount ?? rider.bankAccount;
+
+        const newEmailUser = await this.userRepository.findOne({
+            where: {
+                email: rider.user.email,
+            },
+            select: {
+                userId: true,
+            },
+        });
+        if (newEmailUser && newEmailUser.userId !== rider.user.userId) {
+            throw new ConflictException('Email already exists');
+        }
 
         const updated = await this.riderRepository.save(rider);
 
@@ -1014,49 +1160,99 @@ export class AdminService {
     /* ========== Manage Order ========== */
 
     // get all order
-    getOrders(
-        search?: string,
+    async getOrders(
+        orderId?: number,
         status?: OrderStatus,
-        dateFrom?: string,
-        dateTo?: string,
+        dateFrom?: Date,
+        dateTo?: Date,
         paymentMethod?: PaymentMethod,
         restaurantId?: number,
         riderId?: number,
-    ) {
+        cusomterId?: number,
+    ): Promise<object> {
+        const orders = await this.orderRepository.find({
+            where: {
+                ...(orderId ? { orderId: orderId } : {}),
+                ...(status ? { status: status } : {}),
+                ...(dateFrom ? { orderAt: dateFrom } : {}),
+                ...(paymentMethod ? { paymentMethod: paymentMethod } : {}),
+                ...(restaurantId ? { restaurantId: restaurantId } : {}),
+                ...(riderId ? { riderId: riderId } : {}),
+                ...(cusomterId ? { cusomterId: cusomterId } : {}),
+            },
+
+            select: {
+                customerName: true,
+                restaurantName: true,
+                riderName: true,
+                orderId: true,
+                orderAt: true,
+                subtotal: true,
+                deliveryFee: true,
+                discountAmount: true,
+                voucherCode: true,
+                total: true,
+                paymentMethod: true,
+                status: true,
+                commissionAmount: true,
+                delivery: true,
+            },
+
+            order: {
+                orderId: 'asc',
+            },
+        });
+
         return {
             success: true,
-            message: 'Dummy Successfully',
-            data: {
-                search,
-                status,
-                dateFrom,
-                dateTo,
-                paymentMethod,
-                restaurantId,
-                riderId,
-            },
+            message: `Order Fetched Successfully`,
+            data: orders,
         };
     }
 
     // get order
-    getOrder(orderId: number) {
+    async getOrder(orderId: number): Promise<object> {
+        const order = await this.orderRepository.findOne({
+            where: {
+                orderId: orderId,
+            },
+            relations: {
+                orderItems: true,
+            },
+        });
+
         return {
             success: true,
-            message: 'Dummy Successfully',
-            data: {
-                orderId,
-            },
+            message: `Order Fetched Successfully`,
+            data: order,
         };
     }
 
     // cancel order
-    cancelOrder(orderId: number) {
+    async cancelOrder(orderId: number): Promise<object> {
+        const order = await this.orderRepository.findOne({
+            where: { orderId: orderId },
+        });
+
+        if (!order) {
+            throw new BadRequestException('Invalid Order ID');
+        }
+
+        if (order.status === OrderStatus.DELIVERED) {
+            throw new ForbiddenException('Order Already Delivered');
+        }
+
+        if (order.status === OrderStatus.CANCELLED) {
+            throw new ForbiddenException('Order Already Cancelled');
+        }
+
+        order.status = OrderStatus.CANCELLED;
+        const updated = await this.orderRepository.save(order);
+
         return {
             success: true,
-            message: 'Dummy Successfully',
-            data: {
-                orderId,
-            },
+            message: `Order Updated Successfully`,
+            data: updated,
         };
     }
 }

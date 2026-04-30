@@ -19,14 +19,14 @@ export class AuthController {
 
     // Sign In route for any user
     @Post('login')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async signIn(@Body() loginDto: LoginDto): Promise<object> {
         return this.authService.signIn(loginDto.email, loginDto.password);
     }
 
     // signup route for customer
     @Post('signup')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
+    @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
     async signUp(@Body() signUpDto: SignUpDto): Promise<object> {
         return this.authService.signUp(signUpDto);
     }
