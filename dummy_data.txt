@@ -1,208 +1,804 @@
 -- ============================================================
--- USERS
+-- TRUNCATE ALL (safe reset)
 -- ============================================================
--- Passwords are all: Password@123 (bcrypt hashed)
+TRUNCATE TABLE deliveries, order_items, orders, vouchers, items, categories, customers, riders, restaurants, users RESTART IDENTITY CASCADE;
+
+-- ============================================================
+-- USERS (2 admins + 20 restaurants + 30 riders + 50 customers = 102)
+-- ============================================================
+-- Passwords are all: Password@123
 INSERT INTO users ("userId", "name", "email", "password", "role", "isVerified", "verificationToken") VALUES
+-- Admins
 (1, 'Super Admin', 'admin@foodhouse.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ADMIN', true, null),
 (2, 'Admin Two', 'admin2@foodhouse.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ADMIN', true, null),
 
-(3, 'Burger House Owner', 'burger@foodhouse.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true, null),
-(4, 'Pizza Palace Owner', 'pizza@foodhouse.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true, null),
-(5, 'Deshi Khana Owner', 'deshi@foodhouse.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true, null),
+-- Restaurant owners (userId 3–22)
+(3,  'Burger House Owner',    'burger@foodhouse.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(4,  'Pizza Palace Owner',    'pizza@foodhouse.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(5,  'Deshi Khana Owner',     'deshi@foodhouse.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(6,  'Noodle House Owner',    'noodle@foodhouse.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(7,  'Shawarma King Owner',   'shawarma@foodhouse.com',  '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(8,  'Sushi Bar Owner',       'sushi@foodhouse.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(9,  'Kebab Corner Owner',    'kebab@foodhouse.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(10, 'Biryani Express Owner', 'biryani@foodhouse.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(11, 'Sandwich Stop Owner',   'sandwich@foodhouse.com',  '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(12, 'Thai Garden Owner',     'thai@foodhouse.com',      '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(13, 'Fried Chicken Hub Owner','friedchicken@foodhouse.com','$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','RESTAURANT',true, null),
+(14, 'Dessert World Owner',   'dessert@foodhouse.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(15, 'Seafood Shack Owner',   'seafood@foodhouse.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(16, 'Dim Sum Den Owner',     'dimsum@foodhouse.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(17, 'Taco Town Owner',       'taco@foodhouse.com',      '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(18, 'Wrap & Roll Owner',     'wrap@foodhouse.com',      '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(19, 'Pasta House Owner',     'pasta@foodhouse.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', false, 'token_rest_19'),
+(20, 'Salad Bar Owner',       'salad@foodhouse.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(21, 'Paratha Palace Owner',  'paratha@foodhouse.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
+(22, 'Momos World Owner',     'momos@foodhouse.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RESTAURANT', true,  null),
 
-(6, 'Rider Karim', 'karim@rider.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true, null),
-(7, 'Rider Rahim', 'rahim@rider.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true, null),
-(8, 'Rider Jamal', 'jamal@rider.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true, null),
+-- Riders (userId 23–52)
+(23, 'Rider Karim',    'karim@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(24, 'Rider Rahim',    'rahim@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(25, 'Rider Jamal',    'jamal@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(26, 'Rider Babul',    'babul@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(27, 'Rider Sumon',    'sumon@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(28, 'Rider Limon',    'limon@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(29, 'Rider Rubel',    'rubel@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(30, 'Rider Masum',    'masum@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', false, null),
+(31, 'Rider Rony',     'rony@rider.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(32, 'Rider Farhan',   'farhan@rider.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(33, 'Rider Shakil',   'shakil@rider.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(34, 'Rider Imran',    'imran@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(35, 'Rider Nasir',    'nasir@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', false, null),
+(36, 'Rider Polash',   'polash@rider.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(37, 'Rider Khokon',   'khokon@rider.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(38, 'Rider Mizan',    'mizan@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(39, 'Rider Sajib',    'sajib@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(40, 'Rider Tanvir',   'tanvir@rider.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(41, 'Rider Asif',     'asif@rider.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', false, null),
+(42, 'Rider Mahbub',   'mahbub@rider.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(43, 'Rider Delwar',   'delwar@rider.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(44, 'Rider Helal',    'helal@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(45, 'Rider Shamim',   'shamim@rider.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(46, 'Rider Jahid',    'jahid@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(47, 'Rider Raihan',   'raihan@rider.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', false, null),
+(48, 'Rider Jewel',    'jewel@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(49, 'Rider Tushar',   'tushar@rider.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(50, 'Rider Nayan',    'nayan@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(51, 'Rider Pavel',    'pavel@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
+(52, 'Rider Rifat',    'rifat@rider.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'RIDER', true,  null),
 
-(9, 'Customer Anika', 'anika@gmail.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true, null),
-(10, 'Customer Rafi', 'rafi@gmail.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true, null),
-(11, 'Customer Mim', 'mim@gmail.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true, null),
-(12, 'Customer Unverified', 'unverified@gmail.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', false, 'abc123token');
+-- Customers (userId 53–102)
+(53,  'Anika Rahman',    'anika@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(54,  'Rafi Hossain',    'rafi@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(55,  'Mim Akter',       'mim@gmail.com',      '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(56,  'Tanha Islam',     'tanha@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(57,  'Nabil Ahmed',     'nabil@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(58,  'Sadia Sultana',   'sadia@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(59,  'Faruk Hasan',     'faruk@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(60,  'Nasrin Begum',    'nasrin@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(61,  'Emon Khan',       'emon@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(62,  'Lamia Chowdhury', 'lamia@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(63,  'Sabbir Islam',    'sabbir@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(64,  'Puja Das',        'puja@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(65,  'Arif Hossain',    'arif@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(66,  'Ritu Sarker',     'ritu@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', false, 'token_66'),
+(67,  'Zubair Ahmed',    'zubair@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(68,  'Nusrat Jahan',    'nusrat@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(69,  'Rasel Mia',       'rasel@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(70,  'Shimu Begum',     'shimu@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(71,  'Rakib Hasan',     'rakib@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(72,  'Taslima Khatun',  'taslima@gmail.com',  '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(73,  'Mehedi Hasan',    'mehedi@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(74,  'Shirin Akter',    'shirin@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', false, 'token_74'),
+(75,  'Touhid Islam',    'touhid@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(76,  'Maliha Noor',     'maliha@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(77,  'Opu Talukder',    'opu@gmail.com',      '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(78,  'Dipa Roy',        'dipa@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(79,  'Fahim Shahriar',  'fahim@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(80,  'Asha Khanam',     'asha@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(81,  'Ruman Ahmed',     'ruman@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(82,  'Poly Begum',      'poly@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(83,  'Sojib Islam',     'sojib@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(84,  'Munni Akter',     'munni@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', false, 'token_84'),
+(85,  'Kawsar Ali',      'kawsar@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(86,  'Bristy Das',      'bristy@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(87,  'Shuvo Karmakar',  'shuvo@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(88,  'Lima Begum',      'lima@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(89,  'Hanif Sarder',    'hanif@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(90,  'Mou Islam',       'mou@gmail.com',      '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(91,  'Rashed Hossain',  'rashed@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(92,  'Faria Tanni',     'faria@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(93,  'Naim Islam',      'naim@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(94,  'Smrity Akter',    'smrity@gmail.com',   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(95,  'Bokul Chandra',   'bokul@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(96,  'Setu Barua',      'setu@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', false, 'token_96'),
+(97,  'Milon Mia',       'milon@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(98,  'Kohinoor Begum',  'kohinoor@gmail.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(99,  'Zahir Uddin',     'zahir@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(100, 'Sumi Khatun',     'sumi@gmail.com',     '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(101, 'Akash Mondol',    'akash@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null),
+(102, 'Pinky Roy',       'pinky@gmail.com',    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'CUSTOMER', true,  null);
 
-SELECT setval(pg_get_serial_sequence('users', 'userId'), 12);
+SELECT setval(pg_get_serial_sequence('users', 'userId'), 102);
 
 
 -- ============================================================
--- RESTAURANTS
+-- RESTAURANTS (20)
 -- ============================================================
 INSERT INTO restaurants ("restaurantId", "userId", "description", "address", "isOpen", "currentCommissionPercent", "currentDeliveryFee", "bkashAccount", "bankAccount") VALUES
-(1, 3, 'Best burgers in town', 'Gulshan, Dhaka', true, 15, 50, '01780000001', null),
-(2, 4, 'Authentic Italian pizza', 'Banani, Dhaka', true, 12, 40, '01780000002', '1234567890'),
-(3, 5, 'Traditional Bangladeshi cuisine', 'Mirpur, Dhaka', false, 10, 30, null, '0987654321');
+(1,  3,  'Best burgers in town',               'Gulshan, Dhaka',      true,  15, 50, '01780000001', null),
+(2,  4,  'Authentic Italian pizza',             'Banani, Dhaka',       true,  12, 40, '01780000002', '1234567890'),
+(3,  5,  'Traditional Bangladeshi cuisine',     'Mirpur, Dhaka',       false, 10, 30, null,          '0987654321'),
+(4,  6,  'Chinese noodles and dim sum',         'Uttara, Dhaka',       true,  13, 45, '01780000004', null),
+(5,  7,  'Middle Eastern shawarma and grills',  'Dhanmondi, Dhaka',    true,  14, 50, '01780000005', '2233445566'),
+(6,  8,  'Japanese sushi and ramen',            'Gulshan 2, Dhaka',    true,  15, 60, '01780000006', null),
+(7,  9,  'Authentic kebab and tikka',           'Mohammadpur, Dhaka',  true,  12, 35, null,          '3344556677'),
+(8,  10, 'Quick biryani delivery',              'Bashundhara, Dhaka',  true,  10, 30, '01780000008', null),
+(9,  11, 'Fresh sandwiches and wraps',          'Rampura, Dhaka',      true,  13, 40, '01780000009', '4455667788'),
+(10, 12, 'Authentic Thai street food',          'Wari, Dhaka',         false, 14, 50, null,          null),
+(11, 13, 'Crispy fried chicken',                'Tejgaon, Dhaka',      true,  12, 40, '01780000011', '5566778899'),
+(12, 14, 'Cakes, pastries and desserts',        'Lalmatia, Dhaka',     true,  15, 35, '01780000012', null),
+(13, 15, 'Fresh seafood and fish',              'Shyamoli, Dhaka',     true,  13, 55, null,          '6677889900'),
+(14, 16, 'Hong Kong style dim sum',             'Farmgate, Dhaka',     true,  12, 40, '01780000014', null),
+(15, 17, 'Mexican tacos and burritos',          'Panthapath, Dhaka',   false, 14, 45, '01780000015', '7788990011'),
+(16, 18, 'Wraps, rolls and salads',             'Eskaton, Dhaka',      true,  13, 40, null,          null),
+(17, 19, 'Italian pasta and risotto',           'Malibagh, Dhaka',     false, 12, 45, '01780000017', '8899001122'),
+(18, 20, 'Healthy salad bowls',                 'Badda, Dhaka',        true,  10, 35, '01780000018', null),
+(19, 21, 'Bangladeshi paratha and bhorta',      'Khilgaon, Dhaka',     true,  10, 25, null,          '9900112233'),
+(20, 22, 'Nepalese steamed momos',              'Jatrabari, Dhaka',    true,  11, 30, '01780000020', null);
 
-SELECT setval(pg_get_serial_sequence('restaurants', 'restaurantId'), 3);
+SELECT setval(pg_get_serial_sequence('restaurants', 'restaurantId'), 20);
 
 
 -- ============================================================
--- RIDERS
+-- RIDERS (30)
 -- ============================================================
 INSERT INTO riders ("riderId", "userId", "phone", "riderNid", "nidImageUrl", "isOnline", "bkashAccount", "bankAccount") VALUES
-(1, 6, '01711111111', 'NID1234567890', 'uploads/nid1.jpg', true, '01711111111', null),
-(2, 7, '01722222222', 'NID0987654321', 'uploads/nid2.jpg', false, '01722222222', '1122334455'),
-(3, 8, '01733333333', 'NID1122334455', 'uploads/nid3.jpg', true, null, null);
+(1,  23, '01711111111', 'NID1000000001', 'uploads/nid1.jpg',  true,  '01711111111', null),
+(2,  24, '01711111112', 'NID1000000002', 'uploads/nid2.jpg',  false, '01711111112', '1122334455'),
+(3,  25, '01711111113', 'NID1000000003', 'uploads/nid3.jpg',  true,  null,          null),
+(4,  26, '01711111114', 'NID1000000004', 'uploads/nid4.jpg',  true,  '01711111114', '2233445566'),
+(5,  27, '01711111115', 'NID1000000005', 'uploads/nid5.jpg',  true,  '01711111115', null),
+(6,  28, '01711111116', 'NID1000000006', 'uploads/nid6.jpg',  false, '01711111116', '3344556677'),
+(7,  29, '01711111117', 'NID1000000007', 'uploads/nid7.jpg',  true,  '01711111117', null),
+(8,  30, '01711111118', 'NID1000000008', 'uploads/nid8.jpg',  false, null,          '4455667788'),
+(9,  31, '01711111119', 'NID1000000009', 'uploads/nid9.jpg',  true,  '01711111119', null),
+(10, 32, '01711111120', 'NID1000000010', 'uploads/nid10.jpg', true,  '01711111120', '5566778899'),
+(11, 33, '01711111121', 'NID1000000011', 'uploads/nid11.jpg', true,  '01711111121', null),
+(12, 34, '01711111122', 'NID1000000012', 'uploads/nid12.jpg', true,  null,          '6677889900'),
+(13, 35, '01711111123', 'NID1000000013', 'uploads/nid13.jpg', false, '01711111123', null),
+(14, 36, '01711111124', 'NID1000000014', 'uploads/nid14.jpg', true,  '01711111124', '7788990011'),
+(15, 37, '01711111125', 'NID1000000015', 'uploads/nid15.jpg', true,  '01711111125', null),
+(16, 38, '01711111126', 'NID1000000016', 'uploads/nid16.jpg', true,  null,          '8899001122'),
+(17, 39, '01711111127', 'NID1000000017', 'uploads/nid17.jpg', true,  '01711111127', null),
+(18, 40, '01711111128', 'NID1000000018', 'uploads/nid18.jpg', false, '01711111128', '9900112233'),
+(19, 41, '01711111129', 'NID1000000019', 'uploads/nid19.jpg', false, '01711111129', null),
+(20, 42, '01711111130', 'NID1000000020', 'uploads/nid20.jpg', true,  '01711111130', '1011121314'),
+(21, 43, '01711111131', 'NID1000000021', 'uploads/nid21.jpg', true,  null,          null),
+(22, 44, '01711111132', 'NID1000000022', 'uploads/nid22.jpg', true,  '01711111132', '1112131415'),
+(23, 45, '01711111133', 'NID1000000023', 'uploads/nid23.jpg', true,  '01711111133', null),
+(24, 46, '01711111134', 'NID1000000024', 'uploads/nid24.jpg', true,  '01711111134', '1213141516'),
+(25, 47, '01711111135', 'NID1000000025', 'uploads/nid25.jpg', false, null,          null),
+(26, 48, '01711111136', 'NID1000000026', 'uploads/nid26.jpg', true,  '01711111136', '1314151617'),
+(27, 49, '01711111137', 'NID1000000027', 'uploads/nid27.jpg', true,  '01711111137', null),
+(28, 50, '01711111138', 'NID1000000028', 'uploads/nid28.jpg', true,  null,          '1415161718'),
+(29, 51, '01711111139', 'NID1000000029', 'uploads/nid29.jpg', true,  '01711111139', null),
+(30, 52, '01711111140', 'NID1000000030', 'uploads/nid30.jpg', false, '01711111140', '1516171819');
 
-SELECT setval(pg_get_serial_sequence('riders', 'riderId'), 3);
+SELECT setval(pg_get_serial_sequence('riders', 'riderId'), 30);
 
 
 -- ============================================================
--- CUSTOMERS
+-- CUSTOMERS (50)
 -- ============================================================
 INSERT INTO customers ("customerId", "userId", "address", "phone") VALUES
-(1, 9, 'Uttara, Dhaka', '01811111111'),
-(2, 10, 'Dhanmondi, Dhaka', '01822222222'),
-(3, 11, 'Mohammadpur, Dhaka', '01833333333'),
-(4, 12, 'Bashundhara, Dhaka', '01844444444');
+(1,  53,  'Uttara, Dhaka',        '01811111111'),
+(2,  54,  'Dhanmondi, Dhaka',     '01822222222'),
+(3,  55,  'Mohammadpur, Dhaka',   '01833333333'),
+(4,  56,  'Bashundhara, Dhaka',   '01844444444'),
+(5,  57,  'Mirpur, Dhaka',        '01855555555'),
+(6,  58,  'Gulshan, Dhaka',       '01866666666'),
+(7,  59,  'Banani, Dhaka',        '01877777777'),
+(8,  60,  'Rampura, Dhaka',       '01888888888'),
+(9,  61,  'Wari, Dhaka',          '01899999999'),
+(10, 62,  'Tejgaon, Dhaka',       '01810101010'),
+(11, 63,  'Lalmatia, Dhaka',      '01811011011'),
+(12, 64,  'Shyamoli, Dhaka',      '01812121212'),
+(13, 65,  'Farmgate, Dhaka',      '01813131313'),
+(14, 66,  'Panthapath, Dhaka',    '01814141414'),
+(15, 67,  'Eskaton, Dhaka',       '01815151515'),
+(16, 68,  'Malibagh, Dhaka',      '01816161616'),
+(17, 69,  'Badda, Dhaka',         '01817171717'),
+(18, 70,  'Khilgaon, Dhaka',      '01818181818'),
+(19, 71,  'Jatrabari, Dhaka',     '01819191919'),
+(20, 72,  'Motijheel, Dhaka',     '01820202020'),
+(21, 73,  'Pallabi, Dhaka',       '01821212121'),
+(22, 74,  'Savar, Dhaka',         '01822222223'),
+(23, 75,  'Narayanganj, Dhaka',   '01823232323'),
+(24, 76,  'Gazipur, Dhaka',       '01824242424'),
+(25, 77,  'Tongi, Gazipur',       '01825252525'),
+(26, 78,  'Keraniganj, Dhaka',    '01826262626'),
+(27, 79,  'Demra, Dhaka',         '01827272727'),
+(28, 80,  'Shewrapara, Dhaka',    '01828282828'),
+(29, 81,  'Agargaon, Dhaka',      '01829292929'),
+(30, 82,  'Mohakhali, Dhaka',     '01830303030'),
+(31, 83,  'Niketan, Dhaka',       '01831313131'),
+(32, 84,  'Baridhara, Dhaka',     '01832323232'),
+(33, 85,  'Lalbagh, Dhaka',       '01833343434'),
+(34, 86,  'Hazaribagh, Dhaka',    '01834343434'),
+(35, 87,  'Newmarket, Dhaka',     '01835353535'),
+(36, 88,  'Zigatola, Dhaka',      '01836363636'),
+(37, 89,  'Kalabagan, Dhaka',     '01837373737'),
+(38, 90,  'Dilu Road, Dhaka',     '01838383838'),
+(39, 91,  'Nakhalpara, Dhaka',    '01839393939'),
+(40, 92,  'Maghbazar, Dhaka',     '01840404040'),
+(41, 93,  'Siddhirganj, Dhaka',   '01841414141'),
+(42, 94,  'Fatullah, Narayanganj','01842424242'),
+(43, 95,  'Matuail, Dhaka',       '01843434343'),
+(44, 96,  'Kadamtali, Dhaka',     '01844454545'),
+(45, 97,  'Postogola, Dhaka',     '01845454545'),
+(46, 98,  'Gendaria, Dhaka',      '01846464646'),
+(47, 99,  'Sutrapur, Dhaka',      '01847474747'),
+(48, 100, 'Kotwali, Dhaka',       '01848484848'),
+(49, 101, 'Chawkbazar, Dhaka',    '01849494949'),
+(50, 102, 'Sadarghat, Dhaka',     '01850505050');
 
-SELECT setval(pg_get_serial_sequence('customers', 'customerId'), 4);
+SELECT setval(pg_get_serial_sequence('customers', 'customerId'), 50);
 
 
 -- ============================================================
--- CATEGORIES
+-- CATEGORIES (60 — 3 per restaurant)
 -- ============================================================
 INSERT INTO categories ("categoryId", "restaurantId", "name") VALUES
--- Burger House (restaurantId: 1)
-(1, 1, 'Burgers'),
-(2, 1, 'Sides'),
-(3, 1, 'Drinks'),
+-- Burger House (1)
+(1,  1,  'Burgers'), (2, 1, 'Sides'), (3, 1, 'Drinks'),
+-- Pizza Palace (2)
+(4,  2,  'Pizza'), (5, 2, 'Pasta'), (6, 2, 'Drinks'),
+-- Deshi Khana (3)
+(7,  3,  'Rice & Biryani'), (8, 3, 'Curry'), (9, 3, 'Drinks'),
+-- Noodle House (4)
+(10, 4,  'Noodles'), (11, 4, 'Dim Sum'), (12, 4, 'Drinks'),
+-- Shawarma King (5)
+(13, 5,  'Shawarma'), (14, 5, 'Grills'), (15, 5, 'Drinks'),
+-- Sushi Bar (6)
+(16, 6,  'Sushi'), (17, 6, 'Ramen'), (18, 6, 'Drinks'),
+-- Kebab Corner (7)
+(19, 7,  'Kebabs'), (20, 7, 'Tikka'), (21, 7, 'Drinks'),
+-- Biryani Express (8)
+(22, 8,  'Biryani'), (23, 8, 'Sides'), (24, 8, 'Drinks'),
+-- Sandwich Stop (9)
+(25, 9,  'Sandwiches'), (26, 9, 'Wraps'), (27, 9, 'Drinks'),
+-- Thai Garden (10)
+(28, 10, 'Mains'), (29, 10, 'Soups'), (30, 10, 'Drinks'),
+-- Fried Chicken Hub (11)
+(31, 11, 'Chicken'), (32, 11, 'Sides'), (33, 11, 'Drinks'),
+-- Dessert World (12)
+(34, 12, 'Cakes'), (35, 12, 'Ice Cream'), (36, 12, 'Drinks'),
+-- Seafood Shack (13)
+(37, 13, 'Fish'), (38, 13, 'Shrimp'), (39, 13, 'Drinks'),
+-- Dim Sum Den (14)
+(40, 14, 'Dim Sum'), (41, 14, 'Bao'), (42, 14, 'Drinks'),
+-- Taco Town (15)
+(43, 15, 'Tacos'), (44, 15, 'Burritos'), (45, 15, 'Drinks'),
+-- Wrap & Roll (16)
+(46, 16, 'Wraps'), (47, 16, 'Rolls'), (48, 16, 'Drinks'),
+-- Pasta House (17)
+(49, 17, 'Pasta'), (50, 17, 'Risotto'), (51, 17, 'Drinks'),
+-- Salad Bar (18)
+(52, 18, 'Salads'), (53, 18, 'Bowls'), (54, 18, 'Drinks'),
+-- Paratha Palace (19)
+(55, 19, 'Paratha'), (56, 19, 'Bhorta'), (57, 19, 'Drinks'),
+-- Momos World (20)
+(58, 20, 'Momos'), (59, 20, 'Soup'), (60, 20, 'Drinks');
 
--- Pizza Palace (restaurantId: 2)
-(4, 2, 'Pizza'),
-(5, 2, 'Pasta'),
-(6, 2, 'Drinks'),
-
--- Deshi Khana (restaurantId: 3)
-(7, 3, 'Rice & Biryani'),
-(8, 3, 'Curry'),
-(9, 3, 'Drinks');
-
-SELECT setval(pg_get_serial_sequence('categories', 'categoryId'), 9);
+SELECT setval(pg_get_serial_sequence('categories', 'categoryId'), 60);
 
 
 -- ============================================================
--- ITEMS
+-- ITEMS (120 — 6 per restaurant)
 -- ============================================================
 INSERT INTO items ("itemId", "restaurantId", "categoryId", "name", "description", "price", "imageUrl", "isAvailable", "preparationTime") VALUES
--- Burger House items
-(1, 1, 1, 'Classic Beef Burger', 'Juicy beef patty with lettuce and tomato', 180, null, true, 15),
-(2, 1, 1, 'Chicken Zinger', 'Crispy chicken fillet burger', 160, null, true, 12),
-(3, 1, 1, 'Double Smash Burger', 'Double beef smash patty', 250, null, true, 18),
-(4, 1, 2, 'French Fries', 'Crispy golden fries', 80, null, true, 8),
-(5, 1, 2, 'Onion Rings', 'Crispy battered onion rings', 70, null, false, 8),
-(6, 1, 3, 'Coca Cola', 'Chilled 330ml can', 40, null, true, 2),
-(7, 1, 3, 'Fresh Lemonade', 'Freshly squeezed lemonade', 60, null, true, 5),
+-- Burger House (1) — categories 1,2,3
+(1,  1, 1, 'Classic Beef Burger',    'Juicy beef patty with lettuce',        180, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=500', true,  15),
+(2,  1, 1, 'Chicken Zinger',         'Crispy chicken fillet burger',          160, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=500', true,  12),
+(3,  1, 1, 'Double Smash Burger',    'Double beef smash patty',               250, 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?q=80&w=500', true,  18),
+(4,  1, 2, 'French Fries',           'Crispy golden fries',                    80, 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=500', true,   8),
+(5,  1, 2, 'Onion Rings',            'Crispy battered onion rings',            70, 'https://images.unsplash.com/photo-1639024471283-03518883512d?q=80&w=500', false,  8),
+(6,  1, 3, 'Coca Cola',              'Chilled 330ml can',                      40, 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=500', true,   2),
+-- Pizza Palace (2) — categories 4,5,6
+(7,  2, 4, 'Margherita Pizza',       'Classic tomato and mozzarella',         420, 'https://images.unsplash.com/photo-1574071318508-1cdbad80ad50?q=80&w=500', true,  25),
+(8,  2, 4, 'BBQ Chicken Pizza',      'BBQ sauce with grilled chicken',        520, 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=500', true,  28),
+(9,  2, 4, 'Pepperoni Pizza',        'Loaded with pepperoni',                560, 'https://images.unsplash.com/photo-1628840042765-356cda07504e?q=80&w=500', true,  28),
+(10, 2, 5, 'Spaghetti Bolognese',    'Classic meat sauce pasta',              380, 'https://images.unsplash.com/photo-1598866594230-a1a1947057e1?q=80&w=500', true,  20),
+(11, 2, 5, 'Penne Arrabiata',        'Spicy tomato pasta',                    320, 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?q=80&w=500', true,  18),
+(12, 2, 6, 'Pepsi',                  'Chilled 330ml can',                      40, 'https://images.unsplash.com/photo-1546695390-1ce4999f4d45?q=80&w=500', true,   2),
+-- Deshi Khana (3) — categories 7,8,9
+(13, 3, 7, 'Kacchi Biryani',         'Traditional mutton kacchi',             280, 'https://images.unsplash.com/photo-1633945274405-b6c8069047b0?q=80&w=500', true,  45),
+(14, 3, 7, 'Beef Tehari',            'Spiced beef tehari',                    220, 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?q=80&w=500', true,  40),
+(15, 3, 8, 'Mutton Curry',           'Slow cooked mutton',                    350, 'https://images.unsplash.com/photo-1545247181-516773cae754?q=80&w=500', true,  50),
+(16, 3, 8, 'Dal Fry',                'Yellow dal with spices',                 80, 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?q=80&w=500', true,  20),
+(17, 3, 9, 'Mango Lassi',            'Fresh mango lassi',                      60, 'https://images.unsplash.com/photo-1550586678-f7225f03c44b?q=80&w=500', false,  5),
+(18, 3, 9, 'Water',                  'Chilled mineral water',                  20, 'https://images.unsplash.com/photo-1548964856-ac521a159f7b?q=80&w=500', true,   1),
+-- Noodle House (4) — categories 10,11,12
+(19, 4,10, 'Beef Chow Mein',        'Stir fried beef noodles',               220, null, true,  20),
+(20, 4,10, 'Chicken Fried Noodles', 'Wok fried chicken noodles',             200, null, true,  18),
+(21, 4,11, 'Har Gow',               'Steamed shrimp dumplings',              180, null, true,  15),
+(22, 4,11, 'Siu Mai',               'Pork and shrimp dumplings',             160, null, true,  15),
+(23, 4,12, 'Jasmine Tea',           'Hot jasmine tea',                        30, null, true,   5),
+(24, 4,12, 'Lychee Juice',          'Fresh lychee juice',                     50, null, true,   3),
+-- Shawarma King (5) — categories 13,14,15
+(25, 5,13, 'Chicken Shawarma',      'Grilled chicken in pita',               150, null, true,  10),
+(26, 5,13, 'Beef Shawarma',         'Marinated beef in pita',                180, null, true,  12),
+(27, 5,14, 'Mixed Grill Platter',   'Assorted grilled meats',                450, null, true,  25),
+(28, 5,14, 'Shish Tawook',          'Grilled chicken skewers',               280, null, true,  20),
+(29, 5,15, 'Ayran',                 'Turkish yogurt drink',                   50, null, true,   3),
+(30, 5,15, 'Fresh Lemonade',        'Freshly squeezed lemonade',              60, null, true,   5),
+-- Sushi Bar (6) — categories 16,17,18
+(31, 6,16, 'Salmon Nigiri (2pcs)',  'Fresh salmon over rice',                220, null, true,  15),
+(32, 6,16, 'Tuna Roll (8pcs)',      'Tuna maki roll',                        280, null, true,  18),
+(33, 6,16, 'Dragon Roll (8pcs)',    'Prawn tempura dragon roll',             380, null, true,  20),
+(34, 6,17, 'Tonkotsu Ramen',        'Rich pork bone broth ramen',            350, null, true,  25),
+(35, 6,17, 'Shoyu Ramen',           'Soy based chicken ramen',               320, null, true,  22),
+(36, 6,18, 'Matcha Latte',          'Hot matcha green tea latte',             80, null, true,   5),
+-- Kebab Corner (7) — categories 19,20,21
+(37, 7,19, 'Seekh Kebab (4pcs)',    'Minced beef kebab on skewer',           220, null, true,  20),
+(38, 7,19, 'Boti Kebab',            'Marinated beef chunks',                 250, null, true,  25),
+(39, 7,20, 'Chicken Tikka',         'Tandoor grilled chicken',               280, null, true,  25),
+(40, 7,20, 'Paneer Tikka',          'Grilled cottage cheese',                200, null, false, 20),
+(41, 7,21, 'Raita',                 'Yogurt dip',                             40, null, true,   3),
+(42, 7,21, 'Lassi',                 'Sweet yogurt drink',                     60, null, true,   5),
+-- Biryani Express (8) — categories 22,23,24
+(43, 8,22, 'Chicken Biryani',       'Aromatic chicken biryani',              200, null, true,  35),
+(44, 8,22, 'Mutton Biryani',        'Slow cooked mutton biryani',            280, null, true,  40),
+(45, 8,22, 'Egg Biryani',           'Biryani with boiled eggs',              150, null, true,  30),
+(46, 8,23, 'Borhani',               'Spiced yogurt drink',                    40, null, true,   3),
+(47, 8,23, 'Salad',                 'Fresh vegetable salad',                  50, null, true,   5),
+(48, 8,24, 'Water',                 'Mineral water 500ml',                    20, null, true,   1),
+-- Sandwich Stop (9) — categories 25,26,27
+(49, 9,25, 'Club Sandwich',         'Triple decker chicken sandwich',        220, null, true,  10),
+(50, 9,25, 'Tuna Melt',             'Hot tuna and cheese sandwich',          200, null, true,  12),
+(51, 9,26, 'Chicken Caesar Wrap',   'Grilled chicken caesar wrap',           180, null, true,  10),
+(52, 9,26, 'Falafel Wrap',          'Crispy falafel with hummus',            160, null, true,   8),
+(53, 9,27, 'Iced Coffee',           'Cold brew iced coffee',                  80, null, true,   5),
+(54, 9,27, 'Fresh Juice',           'Seasonal fresh juice',                   70, null, false,  5),
+-- Thai Garden (10) — categories 28,29,30
+(55, 10,28,'Pad Thai',              'Classic stir fried rice noodles',       280, null, true,  20),
+(56, 10,28,'Green Curry',           'Spicy Thai green curry with rice',      320, null, true,  25),
+(57, 10,28,'Mango Sticky Rice',     'Sweet glutinous rice with mango',       180, null, false, 15),
+(58, 10,29,'Tom Yum Soup',          'Spicy and sour Thai soup',              220, null, true,  20),
+(59, 10,29,'Tom Kha Gai',           'Coconut milk chicken soup',             240, null, true,  20),
+(60, 10,30,'Thai Iced Tea',         'Creamy orange Thai tea',                 80, null, true,   5),
+-- Fried Chicken Hub (11) — categories 31,32,33
+(61, 11,31,'2pc Fried Chicken',     'Crispy golden fried chicken',           180, null, true,  15),
+(62, 11,31,'Chicken Strips (5pcs)', 'Crispy chicken tenders',                200, null, true,  12),
+(63, 11,31,'Spicy Wings (6pcs)',    'Hot and spicy chicken wings',           220, null, true,  15),
+(64, 11,32,'Coleslaw',              'Creamy coleslaw',                        60, null, true,   3),
+(65, 11,32,'Mashed Potato',         'Creamy mashed potato',                   70, null, true,   5),
+(66, 11,33,'Pepsi',                 'Chilled 330ml can',                      40, null, true,   2),
+-- Dessert World (12) — categories 34,35,36
+(67, 12,34,'Chocolate Truffle Cake','Rich dark chocolate cake slice',        180, null, true,   5),
+(68, 12,34,'Red Velvet Cake',       'Classic red velvet with cream cheese',  160, null, true,   5),
+(69, 12,34,'Tiramisu',              'Italian coffee dessert',                200, null, true,   5),
+(70, 12,35,'Belgian Waffle',        'Crispy waffle with ice cream',          220, null, true,  10),
+(71, 12,35,'Sundae',                'Vanilla ice cream with toppings',       150, null, true,   5),
+(72, 12,36,'Hot Chocolate',         'Rich creamy hot chocolate',              80, null, true,   5),
+-- Seafood Shack (13) — categories 37,38,39
+(73, 13,37,'Grilled Hilsa',         'Whole grilled hilsa fish',              450, null, true,  30),
+(74, 13,37,'Fish Fry',              'Crispy battered fish fillet',           280, null, true,  20),
+(75, 13,37,'Fish Curry',            'Bengali style fish curry with rice',    250, null, true,  25),
+(76, 13,38,'Prawn Bhuna',           'Spicy dry prawn fry',                   380, null, true,  25),
+(77, 13,38,'Garlic Butter Shrimp',  'Pan fried garlic shrimp',               420, null, true,  20),
+(78, 13,39,'Coconut Water',         'Fresh tender coconut',                   60, null, false,  2),
+-- Dim Sum Den (14) — categories 40,41,42
+(79, 14,40,'Crystal Shrimp Dumpling','Translucent shrimp dumpling',          200, null, true,  15),
+(80, 14,40,'Pork Siu Mai',          'Open top pork dumpling',                180, null, true,  15),
+(81, 14,40,'Vegetable Dumpling',    'Mixed vegetable dumpling',              160, null, true,  15),
+(82, 14,41,'BBQ Pork Bao',          'Steamed bun with BBQ pork',             120, null, true,  12),
+(83, 14,41,'Custard Bao',           'Steamed bun with egg custard',          100, null, true,  12),
+(84, 14,42,'Chrysanthemum Tea',     'Floral herbal tea',                      40, null, true,   5),
+-- Taco Town (15) — categories 43,44,45
+(85, 15,43,'Beef Taco (3pcs)',      'Seasoned beef in corn tortilla',        220, null, true,  12),
+(86, 15,43,'Chicken Taco (3pcs)',   'Grilled chicken taco',                  200, null, true,  10),
+(87, 15,44,'Beef Burrito',          'Large beef and rice burrito',           320, null, true,  15),
+(88, 15,44,'Chicken Quesadilla',    'Cheesy grilled chicken quesadilla',     280, null, true,  15),
+(89, 15,45,'Horchata',              'Sweet rice milk drink',                   60, null, false,  5),
+(90, 15,45,'Limonada',              'Mexican lime drink',                      50, null, true,   3),
+-- Wrap & Roll (16) — categories 46,47,48
+(91, 16,46,'Chicken Caesar Wrap',   'Classic caesar with grilled chicken',   180, null, true,  10),
+(92, 16,46,'Falafel Wrap',          'Crispy falafel hummus wrap',            160, null, true,   8),
+(93, 16,47,'Paneer Roll',           'Spiced paneer in paratha roll',         150, null, true,  10),
+(94, 16,47,'Egg Roll',              'Classic Kolkata style egg roll',         80, null, true,   8),
+(95, 16,48,'Lemon Iced Tea',        'Refreshing iced lemon tea',              60, null, true,   3),
+(96, 16,48,'Masala Chai',           'Spiced milk tea',                        40, null, true,   5),
+-- Pasta House (17) — categories 49,50,51
+(97, 17,49,'Carbonara',             'Creamy egg and bacon pasta',            380, null, true,  20),
+(98, 17,49,'Pesto Pasta',           'Basil pesto with pine nuts',            350, null, false, 18),
+(99, 17,50,'Mushroom Risotto',      'Creamy arborio rice with mushroom',     420, null, true,  25),
+(100,17,50,'Truffle Risotto',       'Black truffle and parmesan risotto',    550, null, true,  30),
+(101,17,51,'San Pellegrino',        'Sparkling mineral water',                60, null, true,   2),
+(102,17,51,'Espresso',              'Single shot Italian espresso',           80, null, true,   5),
+-- Salad Bar (18) — categories 52,53,54
+(103,18,52,'Greek Salad',           'Tomato cucumber olive feta salad',      220, null, true,   8),
+(104,18,52,'Caesar Salad',          'Romaine croutons parmesan',             240, null, true,   8),
+(105,18,53,'Grain Bowl',            'Quinoa roasted veg chickpea bowl',      280, null, true,  10),
+(106,18,53,'Protein Bowl',          'Grilled chicken greens avocado bowl',   320, null, true,  10),
+(107,18,54,'Smoothie',              'Mixed berry smoothie',                  120, null, true,   5),
+(108,18,54,'Infused Water',         'Cucumber mint infused water',            40, null, false,  3),
+-- Paratha Palace (19) — categories 55,56,57
+(109,19,55,'Plain Paratha',         'Flaky layered paratha',                  30, null, true,   8),
+(110,19,55,'Egg Paratha',           'Paratha stuffed with egg',               50, null, true,  10),
+(111,19,55,'Beef Paratha',          'Paratha stuffed with spiced beef',       70, null, true,  12),
+(112,19,56,'Aloo Bhorta',           'Mashed potato with mustard oil',         60, null, true,   5),
+(113,19,56,'Begun Bhorta',          'Roasted eggplant mash',                  60, null, true,   5),
+(114,19,57,'Cha',                   'Bangladeshi milk tea',                   20, null, true,   5),
+-- Momos World (20) — categories 58,59,60
+(115,20,58,'Chicken Momo (8pcs)',   'Steamed chicken dumplings',             150, null, true,  20),
+(116,20,58,'Buff Momo (8pcs)',      'Steamed buffalo meat dumplings',        140, null, true,  20),
+(117,20,58,'Veg Momo (8pcs)',       'Steamed vegetable dumplings',           130, null, true,  18),
+(118,20,59,'Thukpa',                'Nepali noodle soup',                    180, null, true,  20),
+(119,20,59,'Tomato Soup',           'Spiced tomato chili soup',              120, null, true,  15),
+(120,20,60,'Masala Chai',           'Nepali spiced tea',                      30, null, true,   5);
 
--- Pizza Palace items
-(8, 2, 4, 'Margherita Pizza', 'Classic tomato and mozzarella', 420, null, true, 25),
-(9, 2, 4, 'BBQ Chicken Pizza', 'BBQ sauce with grilled chicken', 520, null, true, 28),
-(10, 2, 4, 'Pepperoni Pizza', 'Loaded with pepperoni', 560, null, true, 28),
-(11, 2, 5, 'Spaghetti Bolognese', 'Classic meat sauce pasta', 380, null, true, 20),
-(12, 2, 5, 'Penne Arabiatta', 'Spicy tomato pasta', 320, null, true, 18),
-(13, 2, 6, 'Pepsi', 'Chilled 330ml can', 40, null, true, 2),
-
--- Deshi Khana items
-(14, 3, 7, 'Kacchi Biryani', 'Traditional mutton kacchi', 280, null, true, 45),
-(15, 3, 7, 'Beef Tehari', 'Spiced beef tehari', 220, null, true, 40),
-(16, 3, 8, 'Mutton Curry', 'Slow cooked mutton', 350, null, true, 50),
-(17, 3, 8, 'Dal Fry', 'Yellow dal with spices', 80, null, true, 20),
-(18, 3, 9, 'Mango Lassi', 'Fresh mango lassi', 60, null, false, 5);
-
-SELECT setval(pg_get_serial_sequence('items', 'itemId'), 18);
+SELECT setval(pg_get_serial_sequence('items', 'itemId'), 120);
 
 
 -- ============================================================
--- VOUCHERS
+-- VOUCHERS (25)
 -- ============================================================
 INSERT INTO vouchers ("voucherId", "restaurantId", "voucherCode", "percent", "maxDiscount", "minOrderAmount", "expiresAt") VALUES
-(1, 1, 'BURGER10', 10, 50, 200, '2026-12-31 23:59:59'),
-(2, 1, 'BURGER20', 20, 80, 400, '2026-06-30 23:59:59'),
-(3, 2, 'PIZZA15', 15, 100, 500, '2026-12-31 23:59:59'),
-(4, 2, 'PIZZA25', 25, 150, 800, null),
-(5, 3, 'DESHI10', 10, 40, 300, '2026-09-30 23:59:59');
+(1,  1,  'BURGER10',   10, 50,  200, '2026-12-31 23:59:59'),
+(2,  1,  'BURGER20',   20, 80,  400, '2026-06-30 23:59:59'),
+(3,  2,  'PIZZA15',    15, 100, 500, '2026-12-31 23:59:59'),
+(4,  2,  'PIZZA25',    25, 150, 800, null),
+(5,  3,  'DESHI10',    10, 40,  300, '2026-09-30 23:59:59'),
+(6,  4,  'NOODLE15',   15, 60,  300, '2026-12-31 23:59:59'),
+(7,  5,  'SHAWARMA10', 10, 50,  200, '2026-08-31 23:59:59'),
+(8,  6,  'SUSHI20',    20, 120, 500, '2026-12-31 23:59:59'),
+(9,  7,  'KEBAB10',    10, 45,  250, '2026-10-31 23:59:59'),
+(10, 8,  'BIRIYANI15', 15, 70,  350, '2026-12-31 23:59:59'),
+(11, 9,  'SANDO10',    10, 40,  200, null),
+(12, 10, 'THAI20',     20, 100, 400, '2026-11-30 23:59:59'),
+(13, 11, 'CHICKEN10',  10, 50,  250, '2026-12-31 23:59:59'),
+(14, 12, 'SWEET15',    15, 60,  300, '2026-07-31 23:59:59'),
+(15, 13, 'SEAFOOD10',  10, 80,  400, '2026-12-31 23:59:59'),
+(16, 14, 'DIMSUM15',   15, 60,  300, null),
+(17, 15, 'TACO10',     10, 50,  250, '2026-09-30 23:59:59'),
+(18, 16, 'WRAP20',     20, 80,  300, '2026-12-31 23:59:59'),
+(19, 17, 'PASTA10',    10, 60,  400, '2026-10-31 23:59:59'),
+(20, 18, 'SALAD15',    15, 50,  250, '2026-12-31 23:59:59'),
+(21, 19, 'PARATHA10',  10, 30,  100, null),
+(22, 20, 'MOMO15',     15, 50,  200, '2026-12-31 23:59:59'),
+(23, 1,  'BFAST25',    25, 100, 300, '2026-05-31 23:59:59'),
+(24, 2,  'NEWUSER30',  30, 200, 600, '2026-06-30 23:59:59'),
+(25, 8,  'RICE20',     20, 80,  300, '2026-08-31 23:59:59');
 
-SELECT setval(pg_get_serial_sequence('vouchers', 'voucherId'), 5);
+SELECT setval(pg_get_serial_sequence('vouchers', 'voucherId'), 25);
 
 
 -- ============================================================
--- ORDERS
+-- ORDERS (100)
+-- restaurantName/customerName/riderName match actual entity names
 -- ============================================================
 INSERT INTO orders (
     "orderId", "restaurantId", "customerId", "orderAt",
     "subtotal", "voucherCode", "discountAmount", "deliveryFee", "total",
     "paymentMethod", "restaurantAddress", "customerAddress",
-    "status", "commissionAmount", "commissionPercentage", "estimatedDeliveryTime", "restaurantName", "customerName", "riderName"
+    "status", "commissionAmount", "commissionPercentage", "estimatedDeliveryTime",
+    "restaurantName", "customerName", "riderName"
 ) VALUES
--- Delivered orders
-(1, 1, 1, '2026-03-01 12:00:00', 340, 'BURGER10', 34, 50, 356, 'COD', 'Gulshan, Dhaka', 'Uttara, Dhaka', 'DELIVERED', 53.4, 15, 30, 'A', 'B', 'C'),
-(2, 2, 2, '2026-03-05 13:00:00', 520, null, 0, 40, 560, 'BKASH', 'Banani, Dhaka', 'Dhanmondi, Dhaka', 'DELIVERED', 67.2, 12, 53, 'A', 'B', 'C'),
-(3, 1, 1, '2026-03-10 19:00:00', 250, null, 0, 50, 300, 'COD', 'Gulshan, Dhaka', 'Uttara, Dhaka', 'DELIVERED', 45, 15, 33, 'A', 'B', 'C'),
-(4, 2, 3, '2026-03-12 20:00:00', 900, 'PIZZA15', 100, 40, 840, 'BKASH', 'Banani, Dhaka', 'Mohammadpur, Dhaka', 'DELIVERED', 100.8, 12, 58, 'A', 'B', 'C'),
-(5, 3, 2, '2026-03-15 14:00:00', 500, 'DESHI10', 40, 30, 490, 'COD', 'Mirpur, Dhaka', 'Dhanmondi, Dhaka', 'DELIVERED', 49, 10, 65, 'A', 'B', 'C'),
+-- DELIVERED (orders 1-60)
+(1,  1, 1,  '2026-01-05 12:00:00', 340,  'BURGER10', 34,  50, 356,  'COD',   'Gulshan, Dhaka',     'Uttara, Dhaka',        'DELIVERED', 53.4,  15, 30, 'Burger House',    'Anika Rahman',   'Rider Karim'),
+(2,  2, 2,  '2026-01-06 13:00:00', 520,  null,        0,  40, 560,  'BKASH', 'Banani, Dhaka',      'Dhanmondi, Dhaka',     'DELIVERED', 67.2,  12, 53, 'Pizza Palace',    'Rafi Hossain',   'Rider Rahim'),
+(3,  1, 1,  '2026-01-10 19:00:00', 250,  null,        0,  50, 300,  'COD',   'Gulshan, Dhaka',     'Uttara, Dhaka',        'DELIVERED', 45,    15, 33, 'Burger House',    'Anika Rahman',   'Rider Jamal'),
+(4,  2, 3,  '2026-01-12 20:00:00', 900,  'PIZZA15',  100, 40, 840,  'BKASH', 'Banani, Dhaka',      'Mohammadpur, Dhaka',   'DELIVERED', 100.8, 12, 58, 'Pizza Palace',    'Mim Akter',      'Rider Babul'),
+(5,  3, 2,  '2026-01-15 14:00:00', 500,  'DESHI10',  40,  30, 490,  'COD',   'Mirpur, Dhaka',      'Dhanmondi, Dhaka',     'DELIVERED', 49,    10, 65, 'Deshi Khana',     'Rafi Hossain',   'Rider Sumon'),
+(6,  4, 4,  '2026-01-18 11:00:00', 420,  'NOODLE15', 60,  45, 405,  'BANK',  'Uttara, Dhaka',      'Bashundhara, Dhaka',   'DELIVERED', 54.6,  13, 40, 'Noodle House',    'Tanha Islam',    'Rider Limon'),
+(7,  5, 5,  '2026-01-20 18:30:00', 330,  null,        0,  50, 380,  'COD',   'Dhanmondi, Dhaka',   'Mirpur, Dhaka',        'DELIVERED', 53.2,  14, 35, 'Shawarma King',   'Nabil Ahmed',    'Rider Rubel'),
+(8,  6, 6,  '2026-01-22 20:00:00', 600,  'SUSHI20',  120, 60, 540,  'BKASH', 'Gulshan 2, Dhaka',   'Gulshan, Dhaka',       'DELIVERED', 81,    15, 50, 'Sushi Bar',       'Sadia Sultana',  'Rider Masum'),
+(9,  7, 7,  '2026-01-25 13:00:00', 470,  'KEBAB10',  45,  35, 460,  'COD',   'Mohammadpur, Dhaka', 'Banani, Dhaka',        'DELIVERED', 56.4,  12, 45, 'Kebab Corner',    'Faruk Hasan',    'Rider Rony'),
+(10, 8, 8,  '2026-01-28 19:00:00', 480,  'BIRIYANI15',70, 30, 440,  'BANK',  'Bashundhara, Dhaka', 'Rampura, Dhaka',       'DELIVERED', 48,    10, 55, 'Biryani Express', 'Nasrin Begum',   'Rider Farhan'),
+(11, 9, 9,  '2026-02-01 12:30:00', 380,  'SANDO10',  38,  40, 382,  'COD',   'Rampura, Dhaka',     'Wari, Dhaka',          'DELIVERED', 49.4,  13, 30, 'Sandwich Stop',   'Emon Khan',      'Rider Shakil'),
+(12, 10,10, '2026-02-03 20:00:00', 560,  'THAI20',   100, 50, 510,  'BKASH', 'Wari, Dhaka',        'Tejgaon, Dhaka',       'DELIVERED', 78.4,  14, 60, 'Thai Garden',     'Lamia Chowdhury','Rider Imran'),
+(13, 11,11, '2026-02-05 18:00:00', 400,  'CHICKEN10',40,  40, 400,  'COD',   'Tejgaon, Dhaka',     'Lalmatia, Dhaka',      'DELIVERED', 48,    12, 35, 'Fried Chicken Hub','Sabbir Islam',  'Rider Nasir'),
+(14, 12,12, '2026-02-07 15:00:00', 360,  'SWEET15',  54,  35, 341,  'BANK',  'Lalmatia, Dhaka',    'Shyamoli, Dhaka',      'DELIVERED', 51.15, 15, 25, 'Dessert World',   'Puja Das',       'Rider Polash'),
+(15, 13,13, '2026-02-10 21:00:00', 730,  'SEAFOOD10',73,  55, 712,  'BKASH', 'Shyamoli, Dhaka',    'Farmgate, Dhaka',      'DELIVERED', 92.56, 13, 45, 'Seafood Shack',   'Arif Hossain',   'Rider Khokon'),
+(16, 14,14, '2026-02-12 12:00:00', 360,  'DIMSUM15', 54,  40, 346,  'COD',   'Farmgate, Dhaka',    'Panthapath, Dhaka',    'DELIVERED', 43.2,  12, 40, 'Dim Sum Den',     'Ritu Sarker',    'Rider Mizan'),
+(17, 15,15, '2026-02-14 19:30:00', 420,  'TACO10',   42,  45, 423,  'BKASH', 'Panthapath, Dhaka',  'Eskaton, Dhaka',       'DELIVERED', 59.22, 14, 50, 'Taco Town',       'Zubair Ahmed',   'Rider Sajib'),
+(18, 16,16, '2026-02-16 13:00:00', 340,  'WRAP20',   68,  40, 312,  'COD',   'Eskaton, Dhaka',     'Malibagh, Dhaka',      'DELIVERED', 40.56, 13, 35, 'Wrap & Roll',     'Nusrat Jahan',   'Rider Tanvir'),
+(19, 17,17, '2026-02-18 20:00:00', 730,  'PASTA10',  73,  45, 702,  'BANK',  'Malibagh, Dhaka',    'Badda, Dhaka',         'DELIVERED', 84.24, 12, 55, 'Pasta House',     'Rasel Mia',      'Rider Asif'),
+(20, 18,18, '2026-02-20 11:00:00', 560,  'SALAD15',  50,  35, 545,  'BKASH', 'Badda, Dhaka',       'Khilgaon, Dhaka',      'DELIVERED', 56,    10, 30, 'Salad Bar',       'Shimu Begum',    'Rider Mahbub'),
+(21, 19,19, '2026-02-22 08:30:00', 200,  'PARATHA10',20,  25, 205,  'COD',   'Khilgaon, Dhaka',    'Jatrabari, Dhaka',     'DELIVERED', 20.5,  10, 25, 'Paratha Palace',  'Rakib Hasan',    'Rider Delwar'),
+(22, 20,20, '2026-02-24 19:00:00', 280,  'MOMO15',   42,  30, 268,  'COD',   'Jatrabari, Dhaka',   'Motijheel, Dhaka',     'DELIVERED', 29.48, 11, 35, 'Momos World',     'Taslima Khatun', 'Rider Helal'),
+(23, 1, 21, '2026-02-26 20:00:00', 410,  null,        0,  50, 460,  'BKASH', 'Gulshan, Dhaka',     'Pallabi, Dhaka',       'DELIVERED', 69,    15, 38, 'Burger House',    'Mehedi Hasan',   'Rider Shamim'),
+(24, 2, 22, '2026-02-28 13:30:00', 840,  'PIZZA25',  150, 40, 730,  'BANK',  'Banani, Dhaka',      'Savar, Dhaka',         'DELIVERED', 87.6,  12, 60, 'Pizza Palace',    'Shirin Akter',   'Rider Jahid'),
+(25, 3, 23, '2026-03-01 12:00:00', 500,  null,        0,  30, 530,  'COD',   'Mirpur, Dhaka',      'Narayanganj, Dhaka',   'DELIVERED', 53,    10, 70, 'Deshi Khana',     'Touhid Islam',   'Rider Raihan'),
+(26, 4, 24, '2026-03-03 18:00:00', 360,  null,        0,  45, 405,  'BKASH', 'Uttara, Dhaka',      'Gazipur, Dhaka',       'DELIVERED', 52.65, 13, 50, 'Noodle House',    'Maliha Noor',    'Rider Jewel'),
+(27, 5, 25, '2026-03-05 19:30:00', 460,  'SHAWARMA10',46, 50, 464,  'COD',   'Dhanmondi, Dhaka',   'Tongi, Gazipur',       'DELIVERED', 64.96, 14, 45, 'Shawarma King',   'Opu Talukder',   'Rider Tushar'),
+(28, 6, 26, '2026-03-07 21:00:00', 660,  null,        0,  60, 720,  'BANK',  'Gulshan 2, Dhaka',   'Keraniganj, Dhaka',    'DELIVERED', 108,   15, 60, 'Sushi Bar',       'Dipa Roy',       'Rider Nayan'),
+(29, 7, 27, '2026-03-09 13:00:00', 470,  null,        0,  35, 505,  'COD',   'Mohammadpur, Dhaka', 'Demra, Dhaka',         'DELIVERED', 60.6,  12, 50, 'Kebab Corner',    'Fahim Shahriar', 'Rider Pavel'),
+(30, 8, 28, '2026-03-11 12:00:00', 430,  'BIRIYANI15',64, 30, 396,  'BKASH', 'Bashundhara, Dhaka', 'Shewrapara, Dhaka',    'DELIVERED', 43,    10, 45, 'Biryani Express', 'Asha Khanam',    'Rider Rifat'),
+(31, 9, 29, '2026-03-13 11:30:00', 380,  null,        0,  40, 420,  'COD',   'Rampura, Dhaka',     'Agargaon, Dhaka',      'DELIVERED', 54.6,  13, 32, 'Sandwich Stop',   'Ruman Ahmed',    'Rider Karim'),
+(32, 10,30, '2026-03-15 20:00:00', 600,  'THAI20',   100, 50, 550,  'BANK',  'Wari, Dhaka',        'Mohakhali, Dhaka',     'DELIVERED', 77,    14, 65, 'Thai Garden',     'Poly Begum',     'Rider Rahim'),
+(33, 11,31, '2026-03-17 18:00:00', 400,  null,        0,  40, 440,  'COD',   'Tejgaon, Dhaka',     'Niketan, Dhaka',       'DELIVERED', 52.8,  12, 38, 'Fried Chicken Hub','Sojib Islam',   'Rider Jamal'),
+(34, 12,32, '2026-03-19 16:00:00', 380,  null,        0,  35, 415,  'BKASH', 'Lalmatia, Dhaka',    'Baridhara, Dhaka',     'DELIVERED', 62.25, 15, 28, 'Dessert World',   'Munni Akter',    'Rider Babul'),
+(35, 13,33, '2026-03-21 20:30:00', 830,  null,        0,  55, 885,  'COD',   'Shyamoli, Dhaka',    'Lalbagh, Dhaka',       'DELIVERED', 115.05,13, 50, 'Seafood Shack',   'Kawsar Ali',     'Rider Sumon'),
+(36, 14,34, '2026-03-23 12:00:00', 340,  null,        0,  40, 380,  'BANK',  'Farmgate, Dhaka',    'Hazaribagh, Dhaka',    'DELIVERED', 45.6,  12, 42, 'Dim Sum Den',     'Bristy Das',     'Rider Limon'),
+(37, 15,35, '2026-03-25 19:00:00', 500,  null,        0,  45, 545,  'COD',   'Panthapath, Dhaka',  'Newmarket, Dhaka',     'DELIVERED', 76.3,  14, 55, 'Taco Town',       'Shuvo Karmakar', 'Rider Rubel'),
+(38, 16,36, '2026-03-27 13:30:00', 260,  null,        0,  40, 300,  'BKASH', 'Eskaton, Dhaka',     'Zigatola, Dhaka',      'DELIVERED', 39,    13, 30, 'Wrap & Roll',     'Lima Begum',     'Rider Masum'),
+(39, 17,37, '2026-03-29 20:00:00', 770,  null,        0,  45, 815,  'BANK',  'Malibagh, Dhaka',    'Kalabagan, Dhaka',     'DELIVERED', 97.8,  12, 58, 'Pasta House',     'Hanif Sarder',   'Rider Rony'),
+(40, 18,38, '2026-03-31 11:00:00', 520,  'SALAD15',  50,  35, 505,  'COD',   'Badda, Dhaka',       'Dilu Road, Dhaka',     'DELIVERED', 50.5,  10, 28, 'Salad Bar',       'Mou Islam',      'Rider Farhan'),
+(41, 19,39, '2026-04-01 08:00:00', 160,  'PARATHA10',16,  25, 169,  'COD',   'Khilgaon, Dhaka',    'Nakhalpara, Dhaka',    'DELIVERED', 16.9,  10, 22, 'Paratha Palace',  'Rashed Hossain', 'Rider Shakil'),
+(42, 20,40, '2026-04-03 19:30:00', 290,  null,        0,  30, 320,  'BKASH', 'Jatrabari, Dhaka',   'Maghbazar, Dhaka',     'DELIVERED', 35.2,  11, 38, 'Momos World',     'Faria Tanni',    'Rider Imran'),
+(43, 1, 41, '2026-04-05 20:00:00', 410,  'BFAST25',  100, 50, 360,  'BANK',  'Gulshan, Dhaka',     'Siddhirganj, Dhaka',   'DELIVERED', 54,    15, 42, 'Burger House',    'Naim Islam',     'Rider Nasir'),
+(44, 2, 42, '2026-04-07 13:00:00', 560,  null,        0,  40, 600,  'COD',   'Banani, Dhaka',      'Fatullah, Narayanganj','DELIVERED', 72,    12, 55, 'Pizza Palace',    'Smrity Akter',   'Rider Polash'),
+(45, 3, 43, '2026-04-09 18:30:00', 500,  'DESHI10',  40,  30, 490,  'BKASH', 'Mirpur, Dhaka',      'Matuail, Dhaka',       'DELIVERED', 49,    10, 68, 'Deshi Khana',     'Bokul Chandra',  'Rider Khokon'),
+(46, 4, 44, '2026-04-11 12:00:00', 360,  null,        0,  45, 405,  'COD',   'Uttara, Dhaka',      'Kadamtali, Dhaka',     'DELIVERED', 52.65, 13, 48, 'Noodle House',    'Setu Barua',     'Rider Mizan'),
+(47, 5, 45, '2026-04-13 19:00:00', 310,  null,        0,  50, 360,  'BANK',  'Dhanmondi, Dhaka',   'Postogola, Dhaka',     'DELIVERED', 50.4,  14, 40, 'Shawarma King',   'Milon Mia',      'Rider Sajib'),
+(48, 6, 46, '2026-04-15 21:00:00', 880,  'SUSHI20',  120, 60, 820,  'BKASH', 'Gulshan 2, Dhaka',   'Gendaria, Dhaka',      'DELIVERED', 123,   15, 55, 'Sushi Bar',       'Kohinoor Begum', 'Rider Tanvir'),
+(49, 7, 47, '2026-04-17 13:30:00', 500,  null,        0,  35, 535,  'COD',   'Mohammadpur, Dhaka', 'Sutrapur, Dhaka',      'DELIVERED', 64.2,  12, 48, 'Kebab Corner',    'Zahir Uddin',    'Rider Asif'),
+(50, 8, 48, '2026-04-19 12:00:00', 280,  'RICE20',   56,  30, 254,  'BANK',  'Bashundhara, Dhaka', 'Kotwali, Dhaka',       'DELIVERED', 25.4,  10, 42, 'Biryani Express', 'Sumi Khatun',    'Rider Mahbub'),
+(51, 9, 49, '2026-04-20 11:00:00', 400,  null,        0,  40, 440,  'COD',   'Rampura, Dhaka',     'Chawkbazar, Dhaka',    'DELIVERED', 57.2,  13, 33, 'Sandwich Stop',   'Akash Mondol',   'Rider Delwar'),
+(52, 10,50, '2026-04-21 20:30:00', 560,  null,        0,  50, 610,  'BKASH', 'Wari, Dhaka',        'Sadarghat, Dhaka',     'DELIVERED', 85.4,  14, 62, 'Thai Garden',     'Pinky Roy',      'Rider Helal'),
+(53, 11, 1, '2026-04-22 18:00:00', 400,  null,        0,  40, 440,  'COD',   'Tejgaon, Dhaka',     'Uttara, Dhaka',        'DELIVERED', 52.8,  12, 36, 'Fried Chicken Hub','Anika Rahman',  'Rider Shamim'),
+(54, 12, 2, '2026-04-23 16:00:00', 350,  null,        0,  35, 385,  'BKASH', 'Lalmatia, Dhaka',    'Dhanmondi, Dhaka',     'DELIVERED', 57.75, 15, 26, 'Dessert World',   'Rafi Hossain',   'Rider Jahid'),
+(55, 1,  3, '2026-04-24 20:00:00', 250,  null,        0,  50, 300,  'COD',   'Gulshan, Dhaka',     'Mohammadpur, Dhaka',   'DELIVERED', 45,    15, 30, 'Burger House',    'Mim Akter',      'Rider Raihan'),
+(56, 2,  4, '2026-04-24 21:00:00', 560,  'NEWUSER30',168, 40, 432,  'BANK',  'Banani, Dhaka',      'Bashundhara, Dhaka',   'DELIVERED', 51.84, 12, 55, 'Pizza Palace',    'Tanha Islam',    'Rider Jewel'),
+(57, 8,  5, '2026-04-25 12:00:00', 430,  null,        0,  30, 460,  'COD',   'Bashundhara, Dhaka', 'Mirpur, Dhaka',        'DELIVERED', 46,    10, 48, 'Biryani Express', 'Nabil Ahmed',    'Rider Tushar'),
+(58, 19, 6, '2026-04-25 08:30:00', 180,  'PARATHA10',18,  25, 187,  'COD',   'Khilgaon, Dhaka',    'Gulshan, Dhaka',       'DELIVERED', 18.7,  10, 25, 'Paratha Palace',  'Sadia Sultana',  'Rider Nayan'),
+(59, 20, 7, '2026-04-25 19:00:00', 280,  null,        0,  30, 310,  'BKASH', 'Jatrabari, Dhaka',   'Banani, Dhaka',        'DELIVERED', 34.1,  11, 40, 'Momos World',     'Faruk Hasan',    'Rider Pavel'),
+(60, 18, 8, '2026-04-26 11:30:00', 560,  'SALAD15',  50,  35, 545,  'BANK',  'Badda, Dhaka',       'Rampura, Dhaka',       'DELIVERED', 56,    10, 28, 'Salad Bar',       'Nasrin Begum',   'Rider Rifat'),
 
--- Active orders
-(6, 1, 2, '2026-04-01 18:00:00', 410, null, 0, 50, 460, 'COD', 'Gulshan, Dhaka', 'Dhanmondi, Dhaka', 'PREPARING', 69, 15, 33, 'A', 'B', 'C'),
-(7, 2, 1, '2026-04-01 19:00:00', 560, null, 0, 40, 600, 'BKASH', 'Banani, Dhaka', 'Uttara, Dhaka', 'ACCEPTED', 72, 12, 58, 'A', 'B', 'C'),
+-- CANCELLED (orders 61-75)
+(61, 1,  9,  '2026-02-10 12:00:00', 180,  null, 0, 50, 230,  'COD',   'Gulshan, Dhaka',     'Wari, Dhaka',        'CANCELLED', 27,    15, 30, 'Burger House',    'Emon Khan',      null),
+(62, 2,  10, '2026-02-14 18:00:00', 420,  null, 0, 40, 460,  'BKASH', 'Banani, Dhaka',      'Tejgaon, Dhaka',     'CANCELLED', 55.2,  12, 53, 'Pizza Palace',    'Lamia Chowdhury',null),
+(63, 3,  11, '2026-02-18 20:00:00', 280,  null, 0, 30, 310,  'COD',   'Mirpur, Dhaka',      'Lalmatia, Dhaka',    'CANCELLED', 31,    10, 65, 'Deshi Khana',     'Sabbir Islam',   null),
+(64, 5,  12, '2026-03-01 19:00:00', 330,  null, 0, 50, 380,  'COD',   'Dhanmondi, Dhaka',   'Shyamoli, Dhaka',    'CANCELLED', 53.2,  14, 35, 'Shawarma King',   'Puja Das',       null),
+(65, 7,  13, '2026-03-10 13:00:00', 250,  null, 0, 35, 285,  'BANK',  'Mohammadpur, Dhaka', 'Farmgate, Dhaka',    'CANCELLED', 34.2,  12, 45, 'Kebab Corner',    'Arif Hossain',   null),
+(66, 9,  14, '2026-03-15 11:00:00', 200,  null, 0, 40, 240,  'COD',   'Rampura, Dhaka',     'Panthapath, Dhaka',  'CANCELLED', 31.2,  13, 30, 'Sandwich Stop',   'Ritu Sarker',    null),
+(67, 11, 15, '2026-03-20 18:00:00', 180,  null, 0, 40, 220,  'COD',   'Tejgaon, Dhaka',     'Eskaton, Dhaka',     'CANCELLED', 26.4,  12, 35, 'Fried Chicken Hub','Zubair Ahmed',  null),
+(68, 12, 16, '2026-03-25 16:00:00', 160,  null, 0, 35, 195,  'BKASH', 'Lalmatia, Dhaka',    'Malibagh, Dhaka',    'CANCELLED', 29.25, 15, 25, 'Dessert World',   'Nusrat Jahan',   null),
+(69, 13, 17, '2026-04-01 20:00:00', 450,  null, 0, 55, 505,  'COD',   'Shyamoli, Dhaka',    'Badda, Dhaka',       'CANCELLED', 65.65, 13, 50, 'Seafood Shack',   'Rasel Mia',      null),
+(70, 14, 18, '2026-04-05 12:00:00', 180,  null, 0, 40, 220,  'COD',   'Farmgate, Dhaka',    'Khilgaon, Dhaka',    'CANCELLED', 26.4,  12, 40, 'Dim Sum Den',     'Shimu Begum',    null),
+(71, 16, 19, '2026-04-10 13:00:00', 160,  null, 0, 40, 200,  'COD',   'Eskaton, Dhaka',     'Jatrabari, Dhaka',   'CANCELLED', 26,    13, 35, 'Wrap & Roll',     'Rakib Hasan',    null),
+(72, 18, 20, '2026-04-15 11:30:00', 220,  null, 0, 35, 255,  'BANK',  'Badda, Dhaka',       'Motijheel, Dhaka',   'CANCELLED', 25.5,  10, 28, 'Salad Bar',       'Taslima Khatun', null),
+(73, 19, 21, '2026-04-18 08:00:00', 100,  null, 0, 25, 125,  'COD',   'Khilgaon, Dhaka',    'Pallabi, Dhaka',     'CANCELLED', 12.5,  10, 22, 'Paratha Palace',  'Mehedi Hasan',   null),
+(74, 20, 22, '2026-04-20 19:00:00', 130,  null, 0, 30, 160,  'COD',   'Jatrabari, Dhaka',   'Savar, Dhaka',       'CANCELLED', 17.6,  11, 35, 'Momos World',     'Shirin Akter',   null),
+(75, 1,  23, '2026-04-22 20:30:00', 250,  null, 0, 50, 300,  'BKASH', 'Gulshan, Dhaka',     'Narayanganj, Dhaka', 'CANCELLED', 45,    15, 30, 'Burger House',    'Touhid Islam',   null),
 
--- Cancelled order
-(8, 1, 3, '2026-03-20 12:00:00', 180, null, 0, 50, 230, 'COD', 'Gulshan, Dhaka', 'Mohammadpur, Dhaka', 'CANCELLED', 27, 15, 30, 'A', 'B', 'C'),
+-- PENDING (orders 76-82)
+(76, 2,  24, '2026-04-30 20:00:00', 420,  null, 0, 40, 460,  'BKASH', 'Banani, Dhaka',      'Gazipur, Dhaka',     'PENDING', 55.2,  12, 53, 'Pizza Palace',    'Maliha Noor',    null),
+(77, 5,  25, '2026-04-30 19:30:00', 330,  null, 0, 50, 380,  'COD',   'Dhanmondi, Dhaka',   'Tongi, Gazipur',     'PENDING', 53.2,  14, 35, 'Shawarma King',   'Opu Talukder',   null),
+(78, 8,  26, '2026-04-30 19:45:00', 280,  null, 0, 30, 310,  'COD',   'Bashundhara, Dhaka', 'Keraniganj, Dhaka',  'PENDING', 31,    10, 45, 'Biryani Express', 'Dipa Roy',       null),
+(79, 11, 27, '2026-04-30 20:15:00', 400,  null, 0, 40, 440,  'BANK',  'Tejgaon, Dhaka',     'Demra, Dhaka',       'PENDING', 52.8,  12, 38, 'Fried Chicken Hub','Fahim Shahriar', null),
+(80, 19, 28, '2026-04-30 08:45:00', 150,  null, 0, 25, 175,  'COD',   'Khilgaon, Dhaka',    'Shewrapara, Dhaka',  'PENDING', 17.5,  10, 22, 'Paratha Palace',  'Asha Khanam',    null),
+(81, 20, 29, '2026-04-30 19:50:00', 280,  null, 0, 30, 310,  'BKASH', 'Jatrabari, Dhaka',   'Agargaon, Dhaka',    'PENDING', 34.1,  11, 38, 'Momos World',     'Ruman Ahmed',    null),
+(82, 18, 30, '2026-04-30 12:00:00', 320,  null, 0, 35, 355,  'COD',   'Badda, Dhaka',       'Mohakhali, Dhaka',   'PENDING', 35.5,  10, 30, 'Salad Bar',       'Poly Begum',     null),
 
--- Pending order
-(9, 2, 3, '2026-04-01 20:00:00', 420, null, 0, 40, 460, 'BKASH', 'Banani, Dhaka', 'Mohammadpur, Dhaka', 'PENDING', 55.2, 12, 53, 'A', 'B', 'C');
+-- ACCEPTED (orders 83-87)
+(83, 1,  31, '2026-04-30 18:00:00', 340,  null, 0, 50, 390,  'COD',   'Gulshan, Dhaka',     'Niketan, Dhaka',     'ACCEPTED', 58.5,  15, 32, 'Burger House',    'Sojib Islam',    null),
+(84, 4,  32, '2026-04-30 18:30:00', 380,  null, 0, 45, 425,  'BKASH', 'Uttara, Dhaka',      'Baridhara, Dhaka',   'ACCEPTED', 55.25, 13, 45, 'Noodle House',    'Munni Akter',    null),
+(85, 6,  33, '2026-04-30 17:30:00', 660,  null, 0, 60, 720,  'BANK',  'Gulshan 2, Dhaka',   'Lalbagh, Dhaka',     'ACCEPTED', 108,   15, 55, 'Sushi Bar',       'Kawsar Ali',     null),
+(86, 9,  34, '2026-04-30 18:45:00', 400,  null, 0, 40, 440,  'COD',   'Rampura, Dhaka',     'Hazaribagh, Dhaka',  'ACCEPTED', 57.2,  13, 33, 'Sandwich Stop',   'Bristy Das',     null),
+(87, 12, 35, '2026-04-30 19:00:00', 380,  null, 0, 35, 415,  'BKASH', 'Lalmatia, Dhaka',    'Newmarket, Dhaka',   'ACCEPTED', 62.25, 15, 27, 'Dessert World',   'Shuvo Karmakar', null),
 
-SELECT setval(pg_get_serial_sequence('orders', 'orderId'), 9);
+-- RIDER_ASSIGNED (orders 88-91)
+(88, 2,  36, '2026-04-30 17:00:00', 560,  null, 0, 40, 600,  'BKASH', 'Banani, Dhaka',      'Zigatola, Dhaka',    'RIDER_ASSIGNED', 72,   12, 55, 'Pizza Palace',    'Lima Begum',     'Rider Karim'),
+(89, 7,  37, '2026-04-30 17:15:00', 470,  null, 0, 35, 505,  'COD',   'Mohammadpur, Dhaka', 'Kalabagan, Dhaka',   'RIDER_ASSIGNED', 60.6, 12, 48, 'Kebab Corner',    'Hanif Sarder',   'Rider Rahim'),
+(90, 13, 38, '2026-04-30 16:45:00', 700,  null, 0, 55, 755,  'BANK',  'Shyamoli, Dhaka',    'Dilu Road, Dhaka',   'RIDER_ASSIGNED', 98.15,13, 52, 'Seafood Shack',   'Mou Islam',      'Rider Jamal'),
+(91, 16, 39, '2026-04-30 17:30:00', 260,  null, 0, 40, 300,  'COD',   'Eskaton, Dhaka',     'Nakhalpara, Dhaka',  'RIDER_ASSIGNED', 39,   13, 32, 'Wrap & Roll',     'Rashed Hossain', 'Rider Babul'),
+
+-- PREPARING (orders 92-95)
+(92, 3,  40, '2026-04-30 18:00:00', 500,  null, 0, 30, 530,  'COD',   'Mirpur, Dhaka',      'Maghbazar, Dhaka',   'PREPARING', 53,   10, 68, 'Deshi Khana',     'Faria Tanni',    'Rider Sumon'),
+(93, 10, 41, '2026-04-30 18:15:00', 560,  null, 0, 50, 610,  'BKASH', 'Wari, Dhaka',        'Siddhirganj, Dhaka', 'PREPARING', 85.4, 14, 63, 'Thai Garden',     'Naim Islam',     'Rider Limon'),
+(94, 15, 42, '2026-04-30 17:45:00', 420,  null, 0, 45, 465,  'COD',   'Panthapath, Dhaka',  'Fatullah, Narayanganj','PREPARING',65.1,14, 55, 'Taco Town',       'Smrity Akter',   'Rider Rubel'),
+(95, 17, 43, '2026-04-30 18:30:00', 770,  null, 0, 45, 815,  'BANK',  'Malibagh, Dhaka',    'Matuail, Dhaka',     'PREPARING', 97.8, 12, 58, 'Pasta House',     'Bokul Chandra',  'Rider Rony'),
+
+-- READY (orders 96-97)
+(96, 1,  44, '2026-04-30 16:00:00', 430,  null, 0, 50, 480,  'COD',   'Gulshan, Dhaka',     'Kadamtali, Dhaka',   'READY', 72,   15, 35, 'Burger House',    'Setu Barua',     'Rider Farhan'),
+(97, 8,  45, '2026-04-30 16:30:00', 430,  null, 0, 30, 460,  'BKASH', 'Bashundhara, Dhaka', 'Postogola, Dhaka',   'READY', 46,   10, 48, 'Biryani Express', 'Milon Mia',      'Rider Shakil'),
+
+-- PICKED (orders 98-99)
+(98, 6,  46, '2026-04-30 15:00:00', 880,  null, 0, 60, 940,  'BANK',  'Gulshan 2, Dhaka',   'Gendaria, Dhaka',    'PICKED', 141,  15, 55, 'Sushi Bar',       'Kohinoor Begum', 'Rider Imran'),
+(99, 11, 47, '2026-04-30 15:30:00', 400,  null, 0, 40, 440,  'COD',   'Tejgaon, Dhaka',     'Sutrapur, Dhaka',    'PICKED', 52.8, 12, 38, 'Fried Chicken Hub','Zahir Uddin',   'Rider Nasir'),
+
+-- PENDING with voucher
+(100,4, 48, '2026-04-30 20:00:00', 360, 'NOODLE15', 54, 45, 351, 'BKASH', 'Uttara, Dhaka', 'Kotwali, Dhaka', 'PENDING', 45.63, 13, 48, 'Noodle House', 'Sumi Khatun', null);
+
+SELECT setval(pg_get_serial_sequence('orders', 'orderId'), 100);
 
 
 -- ============================================================
--- ORDER ITEMS
+-- ORDER ITEMS (sample — 2-3 items per order, covering all 100 orders)
 -- ============================================================
 INSERT INTO order_items ("orderItemId", "orderId", "itemId", "itemName", "itemPrice", "quantity", "total") VALUES
--- Order 1 (Burger House, Customer Anika)
-(1, 1, 1, 'Classic Beef Burger', 180, 1, 180),
-(2, 1, 4, 'French Fries', 80, 2, 160),
+-- Orders 1-10
+(1,  1,  1,  'Classic Beef Burger', 180, 1, 180), (2,  1,  4,  'French Fries',        80, 2, 160),
+(3,  2,  8,  'BBQ Chicken Pizza',   520, 1, 520),
+(4,  3,  3,  'Double Smash Burger', 250, 1, 250),
+(5,  4,  7,  'Margherita Pizza',    420, 1, 420), (6,  4,  9,  'Pepperoni Pizza',      560, 1, 560), (7, 4, 12, 'Pepsi', 40, 1, 40),
+(8,  5,  13, 'Kacchi Biryani',      280, 1, 280), (9,  5,  17, 'Dal Fry',              80, 2, 160), (10,5, 15, 'Mutton Curry',        350, 1, 350),
+(11, 6,  19, 'Beef Chow Mein',      220, 1, 220), (12, 6,  21, 'Har Gow',              180, 1, 180), (13,6, 24, 'Lychee Juice',         50, 1,  50),
+(14, 7,  25, 'Chicken Shawarma',    150, 2, 300),
+(15, 8,  31, 'Salmon Nigiri (2pcs)',220, 1, 220), (16, 8,  32, 'Tuna Roll (8pcs)',      280, 1, 280), (17,8, 34, 'Tonkotsu Ramen',      350, 1, 350),
+(18, 9,  37, 'Seekh Kebab (4pcs)', 220, 1, 220),  (19, 9,  39, 'Chicken Tikka',         280, 1, 280),
+(20, 10, 43, 'Chicken Biryani',     200, 2, 400), (21, 10, 47, 'Salad',                 50, 1,  50),
+-- Orders 11-20
+(22, 11, 49, 'Club Sandwich',       220, 1, 220), (23, 11, 51, 'Chicken Caesar Wrap',  180, 1, 180),
+(24, 12, 55, 'Pad Thai',            280, 1, 280), (25, 12, 56, 'Green Curry',           320, 1, 320),
+(26, 13, 61, '2pc Fried Chicken',   180, 2, 360),
+(27, 14, 67, 'Chocolate Truffle Cake',180,1,180), (28, 14, 70, 'Belgian Waffle',        220, 1, 220),
+(29, 15, 73, 'Grilled Hilsa',       450, 1, 450), (30, 15, 76, 'Prawn Bhuna',           380, 1, 380),
+(31, 16, 79, 'Crystal Shrimp Dumpling',200,1,200),(32, 16, 82, 'BBQ Pork Bao',          120, 1, 120),
+(33, 17, 85, 'Beef Taco (3pcs)',    220, 1, 220), (34, 17, 87, 'Beef Burrito',           320, 1, 320),
+(35, 18, 91, 'Chicken Caesar Wrap', 180, 1, 180), (36, 18, 94, 'Egg Roll',               80, 2, 160),
+(37, 19, 97, 'Carbonara',           380, 1, 380), (38, 19,100, 'Truffle Risotto',        550, 1, 550),
+(39, 20,103, 'Greek Salad',         220, 1, 220), (40, 20,105, 'Grain Bowl',             280, 1, 280),
+-- Orders 21-30
+(41, 21,109, 'Plain Paratha',        30, 3,  90), (42, 21,112, 'Aloo Bhorta',            60, 1,  60), (43,21,114,'Cha',20,2,40),
+(44, 22,115, 'Chicken Momo (8pcs)', 150, 1, 150), (45, 22,118, 'Thukpa',                180, 1, 180),
+(46, 23,  1, 'Classic Beef Burger', 180, 1, 180), (47, 23,  2, 'Chicken Zinger',         160, 1, 160), (48,23,6,'Coca Cola',40,1,40),
+(49, 24,  7, 'Margherita Pizza',    420, 1, 420), (50, 24, 10, 'Spaghetti Bolognese',    380, 1, 380),
+(51, 25, 13, 'Kacchi Biryani',      280, 1, 280), (52, 25, 14, 'Beef Tehari',            220, 1, 220),
+(53, 26, 19, 'Beef Chow Mein',      220, 1, 220), (54, 26, 22, 'Siu Mai',               160, 1, 160),
+(55, 27, 26, 'Beef Shawarma',       180, 1, 180), (56, 27, 28, 'Shish Tawook',           280, 1, 280),
+(57, 28, 33, 'Dragon Roll (8pcs)',  380, 1, 380), (58, 28, 34, 'Tonkotsu Ramen',         350, 1, 350),
+(59, 29, 38, 'Boti Kebab',          250, 1, 250), (60, 29, 39, 'Chicken Tikka',          280, 1, 280),
+(61, 30, 44, 'Mutton Biryani',      280, 1, 280), (62, 30, 47, 'Salad',                   50, 3, 150),
+-- Orders 31-40
+(63, 31, 50, 'Tuna Melt',           200, 1, 200), (64, 31, 52, 'Falafel Wrap',           160, 1, 160),
+(65, 32, 56, 'Green Curry',         320, 1, 320), (66, 32, 58, 'Tom Yum Soup',           220, 1, 220),
+(67, 33, 62, 'Chicken Strips (5pcs)',200,1, 200), (68, 33, 64, 'Coleslaw',                60, 1,  60),
+(69, 34, 68, 'Red Velvet Cake',     160, 1, 160), (70, 34, 69, 'Tiramisu',               200, 1, 200),
+(71, 35, 74, 'Fish Fry',            280, 1, 280), (72, 35, 77, 'Garlic Butter Shrimp',   420, 1, 420),
+(73, 36, 80, 'Pork Siu Mai',        180, 1, 180), (74, 36, 83, 'Custard Bao',            100, 1, 100),
+(75, 37, 86, 'Chicken Taco (3pcs)', 200, 1, 200), (76, 37, 88, 'Chicken Quesadilla',     280, 1, 280),
+(77, 38, 92, 'Falafel Wrap',        160, 1, 160), (78, 38, 93, 'Paneer Roll',             150, 1, 150),
+(79, 39, 97, 'Carbonara',           380, 1, 380), (80, 39, 99, 'Mushroom Risotto',        420, 1, 420),
+(81, 40,104, 'Caesar Salad',        240, 1, 240), (82, 40,106, 'Protein Bowl',            320, 1, 320),
+-- Orders 41-50
+(83, 41,110, 'Egg Paratha',          50, 2, 100), (84, 41,113, 'Begun Bhorta',            60, 1,  60),
+(85, 42,116, 'Buff Momo (8pcs)',    140, 1, 140), (86, 42,119, 'Tomato Soup',             120, 1, 120),
+(87, 43,  1, 'Classic Beef Burger', 180, 1, 180), (88, 43,  3, 'Double Smash Burger',    250, 1, 250),
+(89, 44,  9, 'Pepperoni Pizza',     560, 1, 560),
+(90, 45, 13, 'Kacchi Biryani',      280, 1, 280), (91, 45, 16, 'Dal Fry',                80, 2, 160),
+(92, 46, 20, 'Chicken Fried Noodles',200,1, 200), (93, 46, 23, 'Jasmine Tea',             30, 1,  30),
+(94, 47, 25, 'Chicken Shawarma',    150, 2, 300),
+(95, 48, 31, 'Salmon Nigiri (2pcs)',220, 2, 440), (96, 48, 35, 'Shoyu Ramen',             320, 1, 320),
+(97, 49, 37, 'Seekh Kebab (4pcs)', 220, 1, 220),  (98, 49, 41, 'Raita',                   40, 1,  40),
+(99, 50, 45, 'Egg Biryani',         150, 1, 150), (100,50, 46, 'Borhani',                  40, 1,  40),
+-- Orders 51-60
+(101,51, 49, 'Club Sandwich',       220, 1, 220), (102,51, 53, 'Iced Coffee',              80, 1,  80),
+(103,52, 55, 'Pad Thai',            280, 1, 280), (104,52, 59, 'Tom Kha Gai',             240, 1, 240),
+(105,53, 63, 'Spicy Wings (6pcs)', 220, 1, 220),  (106,53, 65, 'Mashed Potato',            70, 1,  70),
+(107,54, 67, 'Chocolate Truffle Cake',180,1,180), (108,54, 71, 'Sundae',                  150, 1, 150),
+(109,55,  2, 'Chicken Zinger',      160, 1, 160),
+(110,56,  8, 'BBQ Chicken Pizza',   520, 1, 520),
+(111,57, 43, 'Chicken Biryani',     200, 1, 200), (112,57, 44, 'Mutton Biryani',          280, 1, 280),
+(113,58,109, 'Plain Paratha',        30, 4, 120), (114,58,114, 'Cha',                      20, 3,  60),
+(115,59,115, 'Chicken Momo (8pcs)',150, 1, 150),  (116,59,118, 'Thukpa',                  180, 1, 180),
+(117,60,103, 'Greek Salad',         220, 1, 220), (118,60,107, 'Smoothie',                120, 1, 120),
+-- Orders 61-75 (cancelled)
+(119,61,  1, 'Classic Beef Burger', 180, 1, 180),
+(120,62,  7, 'Margherita Pizza',    420, 1, 420),
+(121,63, 13, 'Kacchi Biryani',      280, 1, 280),
+(122,64, 25, 'Chicken Shawarma',    150, 2, 300),
+(123,65, 37, 'Seekh Kebab (4pcs)', 220, 1, 220),
+(124,66, 49, 'Club Sandwich',       220, 1, 220),
+(125,67, 61, '2pc Fried Chicken',   180, 1, 180),
+(126,68, 67, 'Chocolate Truffle Cake',160,1,160),
+(127,69, 73, 'Grilled Hilsa',       450, 1, 450),
+(128,70, 79, 'Crystal Shrimp Dumpling',200,1,200),
+(129,71, 91, 'Chicken Caesar Wrap', 160, 1, 160),
+(130,72,103, 'Greek Salad',         220, 1, 220),
+(131,73,109, 'Plain Paratha',        30, 3,  90),
+(132,74,115, 'Chicken Momo (8pcs)',130, 1, 130),
+(133,75,  3, 'Double Smash Burger', 250, 1, 250),
+-- Orders 76-100 (active)
+(134,76,  7, 'Margherita Pizza',    420, 1, 420),
+(135,77, 26, 'Beef Shawarma',       180, 1, 180), (136,77, 30, 'Fresh Lemonade',           60, 2, 120),
+(137,78, 43, 'Chicken Biryani',     200, 1, 200), (138,78, 47, 'Salad',                    50, 1,  50),
+(139,79, 61, '2pc Fried Chicken',   180, 2, 360),
+(140,80,110, 'Egg Paratha',          50, 3, 150),
+(141,81,116, 'Buff Momo (8pcs)',    140, 2, 280),
+(142,82,104, 'Caesar Salad',        240, 1, 240),
+(143,83,  1, 'Classic Beef Burger', 180, 1, 180), (144,83,  4, 'French Fries',             80, 2, 160),
+(145,84, 19, 'Beef Chow Mein',      220, 1, 220), (146,84, 22, 'Siu Mai',                 160, 1, 160),
+(147,85, 33, 'Dragon Roll (8pcs)', 380, 1, 380),  (148,85, 36, 'Matcha Latte',              80, 1,  80),
+(149,86, 49, 'Club Sandwich',       220, 1, 220), (150,86, 51, 'Chicken Caesar Wrap',      180, 1, 180),
+(151,87, 67, 'Chocolate Truffle Cake',180,1,180), (152,87, 72, 'Hot Chocolate',             80, 1,  80),
+(153,88,  9, 'Pepperoni Pizza',     560, 1, 560),
+(154,89, 38, 'Boti Kebab',          250, 1, 250), (155,89, 41, 'Raita',                    40, 1,  40),
+(156,90, 74, 'Fish Fry',            280, 1, 280), (157,90, 76, 'Prawn Bhuna',              380, 1, 380),
+(158,91, 91, 'Chicken Caesar Wrap', 180, 1, 180), (159,91, 95, 'Lemon Iced Tea',            60, 1,  60),
+(160,92, 13, 'Kacchi Biryani',      280, 1, 280), (161,92, 14, 'Beef Tehari',              220, 1, 220),
+(162,93, 55, 'Pad Thai',            280, 1, 280), (163,93, 60, 'Thai Iced Tea',             80, 1,  80),
+(164,94, 85, 'Beef Taco (3pcs)',    220, 1, 220), (165,94, 87, 'Beef Burrito',             320, 1, 320),
+(166,95, 97, 'Carbonara',           380, 1, 380), (167,95,100, 'Truffle Risotto',           550, 1, 550),
+(168,96,  1, 'Classic Beef Burger', 180, 1, 180), (169,96,  4, 'French Fries',              80, 2, 160), (170,96,6,'Coca Cola',40,1,40),
+(171,97, 43, 'Chicken Biryani',     200, 2, 400),
+(172,98, 32, 'Tuna Roll (8pcs)',    280, 1, 280), (173,98, 34, 'Tonkotsu Ramen',           350, 1, 350),
+(174,99, 63, 'Spicy Wings (6pcs)', 220, 1, 220),  (175,99, 64, 'Coleslaw',                  60, 1,  60),
+(176,100,19, 'Beef Chow Mein',      220, 1, 220), (177,100,22,'Siu Mai',                   160, 1, 160);
 
--- Order 2 (Pizza Palace, Customer Rafi)
-(3, 2, 9, 'BBQ Chicken Pizza', 520, 1, 520),
-
--- Order 3 (Burger House, Customer Anika)
-(4, 3, 3, 'Double Smash Burger', 250, 1, 250),
-
--- Order 4 (Pizza Palace, Customer Mim)
-(5, 4, 8, 'Margherita Pizza', 420, 1, 420),
-(6, 4, 10, 'Pepperoni Pizza', 560, 1, 560),
-
--- Order 5 (Deshi Khana, Customer Rafi)
-(7, 5, 14, 'Kacchi Biryani', 280, 1, 280),
-(8, 5, 17, 'Dal Fry', 80, 2, 160),
-(9, 5, 16, 'Mutton Curry', 350, 1, 350),
-
--- Order 6 (Burger House, Customer Rafi - active)
-(10, 6, 1, 'Classic Beef Burger', 180, 2, 360),
-(11, 6, 4, 'French Fries', 80, 1, 80),
-
--- Order 7 (Pizza Palace, Customer Anika - active)
-(12, 7, 10, 'Pepperoni Pizza', 560, 1, 560),
-
--- Order 8 (Burger House, Customer Mim - cancelled)
-(13, 8, 1, 'Classic Beef Burger', 180, 1, 180),
-
--- Order 9 (Pizza Palace, Customer Mim - pending)
-(14, 9, 8, 'Margherita Pizza', 420, 1, 420);
-
-SELECT setval(pg_get_serial_sequence('order_items', 'orderItemId'), 14);
+SELECT setval(pg_get_serial_sequence('order_items', 'orderItemId'), 177);
 
 
 -- ============================================================
--- DELIVERIES (only for orders that reached RIDER_ASSIGNED or beyond)
+-- DELIVERIES (for orders with status >= RIDER_ASSIGNED)
 -- ============================================================
 INSERT INTO deliveries ("deliveryId", "orderId", "riderId", "acceptedAt", "otp", "pickUpTime", "deliveredTime") VALUES
--- Delivered orders
-(1, 1, 1, '2026-03-01 12:10:00', null, '2026-03-01 12:25:00', '2026-03-01 12:55:00'),
-(2, 2, 2, '2026-03-05 13:10:00', null, '2026-03-05 13:30:00', '2026-03-05 14:00:00'),
-(3, 3, 1, '2026-03-10 19:10:00', null, '2026-03-10 19:25:00', '2026-03-10 19:55:00'),
-(4, 4, 3, '2026-03-12 20:10:00', null, '2026-03-12 20:35:00', '2026-03-12 21:10:00'),
-(5, 5, 2, '2026-03-15 14:10:00', null, '2026-03-15 14:30:00', '2026-03-15 15:05:00'),
+-- Delivered orders (1-60): riderId maps to riderName in order
+(1,  1,  1,  '2026-01-05 12:10:00', null, '2026-01-05 12:25:00', '2026-01-05 12:55:00'),
+(2,  2,  2,  '2026-01-06 13:10:00', null, '2026-01-06 13:30:00', '2026-01-06 14:00:00'),
+(3,  3,  3,  '2026-01-10 19:10:00', null, '2026-01-10 19:25:00', '2026-01-10 19:55:00'),
+(4,  4,  4,  '2026-01-12 20:10:00', null, '2026-01-12 20:35:00', '2026-01-12 21:10:00'),
+(5,  5,  5,  '2026-01-15 14:10:00', null, '2026-01-15 14:30:00', '2026-01-15 15:05:00'),
+(6,  6,  6,  '2026-01-18 11:10:00', null, '2026-01-18 11:35:00', '2026-01-18 12:05:00'),
+(7,  7,  7,  '2026-01-20 18:40:00', null, '2026-01-20 18:55:00', '2026-01-20 19:25:00'),
+(8,  8,  8,  '2026-01-22 20:10:00', null, '2026-01-22 20:35:00', '2026-01-22 21:10:00'),
+(9,  9,  9,  '2026-01-25 13:10:00', null, '2026-01-25 13:35:00', '2026-01-25 14:10:00'),
+(10, 10, 10, '2026-01-28 19:10:00', null, '2026-01-28 19:40:00', '2026-01-28 20:15:00'),
+(11, 11, 11, '2026-02-01 12:40:00', null, '2026-02-01 13:00:00', '2026-02-01 13:25:00'),
+(12, 12, 12, '2026-02-03 20:10:00', null, '2026-02-03 20:40:00', '2026-02-03 21:25:00'),
+(13, 13, 13, '2026-02-05 18:10:00', null, '2026-02-05 18:30:00', '2026-02-05 19:05:00'),
+(14, 14, 14, '2026-02-07 15:10:00', null, '2026-02-07 15:30:00', '2026-02-07 15:55:00'),
+(15, 15, 15, '2026-02-10 21:10:00', null, '2026-02-10 21:35:00', '2026-02-10 22:20:00'),
+(16, 16, 16, '2026-02-12 12:10:00', null, '2026-02-12 12:35:00', '2026-02-12 13:15:00'),
+(17, 17, 17, '2026-02-14 19:40:00', null, '2026-02-14 20:05:00', '2026-02-14 20:55:00'),
+(18, 18, 18, '2026-02-16 13:10:00', null, '2026-02-16 13:30:00', '2026-02-16 14:05:00'),
+(19, 19, 19, '2026-02-18 20:10:00', null, '2026-02-18 20:40:00', '2026-02-18 21:30:00'),
+(20, 20, 20, '2026-02-20 11:10:00', null, '2026-02-20 11:30:00', '2026-02-20 12:00:00'),
+(21, 21, 21, '2026-02-22 08:40:00', null, '2026-02-22 08:55:00', '2026-02-22 09:20:00'),
+(22, 22, 22, '2026-02-24 19:10:00', null, '2026-02-24 19:30:00', '2026-02-24 20:05:00'),
+(23, 23, 23, '2026-02-26 20:10:00', null, '2026-02-26 20:30:00', '2026-02-26 21:08:00'),
+(24, 24, 24, '2026-02-28 13:40:00', null, '2026-02-28 14:05:00', '2026-02-28 15:05:00'),
+(25, 25, 25, '2026-03-01 12:10:00', null, '2026-03-01 12:40:00', '2026-03-01 13:50:00'),
+(26, 26, 26, '2026-03-03 18:10:00', null, '2026-03-03 18:40:00', '2026-03-03 19:30:00'),
+(27, 27, 27, '2026-03-05 19:40:00', null, '2026-03-05 20:00:00', '2026-03-05 20:45:00'),
+(28, 28, 28, '2026-03-07 21:10:00', null, '2026-03-07 21:40:00', '2026-03-07 22:40:00'),
+(29, 29, 29, '2026-03-09 13:10:00', null, '2026-03-09 13:40:00', '2026-03-09 14:30:00'),
+(30, 30, 30, '2026-03-11 12:10:00', null, '2026-03-11 12:40:00', '2026-03-11 13:25:00'),
+(31, 31,  1, '2026-03-13 11:40:00', null, '2026-03-13 12:00:00', '2026-03-13 12:32:00'),
+(32, 32,  2, '2026-03-15 20:10:00', null, '2026-03-15 20:40:00', '2026-03-15 21:45:00'),
+(33, 33,  3, '2026-03-17 18:10:00', null, '2026-03-17 18:30:00', '2026-03-17 19:08:00'),
+(34, 34,  4, '2026-03-19 16:10:00', null, '2026-03-19 16:30:00', '2026-03-19 16:58:00'),
+(35, 35,  5, '2026-03-21 20:40:00', null, '2026-03-21 21:00:00', '2026-03-21 21:50:00'),
+(36, 36,  6, '2026-03-23 12:10:00', null, '2026-03-23 12:35:00', '2026-03-23 13:17:00'),
+(37, 37,  7, '2026-03-25 19:10:00', null, '2026-03-25 19:40:00', '2026-03-25 20:35:00'),
+(38, 38,  8, '2026-03-27 13:40:00', null, '2026-03-27 14:00:00', '2026-03-27 14:30:00'),
+(39, 39,  9, '2026-03-29 20:10:00', null, '2026-03-29 20:40:00', '2026-03-29 21:38:00'),
+(40, 40, 10, '2026-03-31 11:10:00', null, '2026-03-31 11:30:00', '2026-03-31 11:58:00'),
+(41, 41, 11, '2026-04-01 08:10:00', null, '2026-04-01 08:25:00', '2026-04-01 08:47:00'),
+(42, 42, 12, '2026-04-03 19:40:00', null, '2026-04-03 20:00:00', '2026-04-03 20:38:00'),
+(43, 43, 13, '2026-04-05 20:10:00', null, '2026-04-05 20:35:00', '2026-04-05 21:17:00'),
+(44, 44, 14, '2026-04-07 13:10:00', null, '2026-04-07 13:40:00', '2026-04-07 14:35:00'),
+(45, 45, 15, '2026-04-09 18:40:00', null, '2026-04-09 19:10:00', '2026-04-09 20:18:00'),
+(46, 46, 16, '2026-04-11 12:10:00', null, '2026-04-11 12:40:00', '2026-04-11 13:28:00'),
+(47, 47, 17, '2026-04-13 19:10:00', null, '2026-04-13 19:35:00', '2026-04-13 20:15:00'),
+(48, 48, 18, '2026-04-15 21:10:00', null, '2026-04-15 21:35:00', '2026-04-15 22:30:00'),
+(49, 49, 19, '2026-04-17 13:40:00', null, '2026-04-17 14:05:00', '2026-04-17 14:53:00'),
+(50, 50, 20, '2026-04-19 12:10:00', null, '2026-04-19 12:40:00', '2026-04-19 13:22:00'),
+(51, 51, 21, '2026-04-20 11:10:00', null, '2026-04-20 11:30:00', '2026-04-20 12:03:00'),
+(52, 52, 22, '2026-04-21 20:40:00', null, '2026-04-21 21:05:00', '2026-04-21 22:07:00'),
+(53, 53, 23, '2026-04-22 18:10:00', null, '2026-04-22 18:30:00', '2026-04-22 19:06:00'),
+(54, 54, 24, '2026-04-23 16:10:00', null, '2026-04-23 16:30:00', '2026-04-23 16:56:00'),
+(55, 55, 25, '2026-04-24 20:10:00', null, '2026-04-24 20:25:00', '2026-04-24 20:55:00'),
+(56, 56, 26, '2026-04-24 21:10:00', null, '2026-04-24 21:35:00', '2026-04-24 22:35:00'),
+(57, 57, 27, '2026-04-25 12:10:00', null, '2026-04-25 12:35:00', '2026-04-25 13:23:00'),
+(58, 58, 28, '2026-04-25 08:40:00', null, '2026-04-25 08:55:00', '2026-04-25 09:20:00'),
+(59, 59, 29, '2026-04-25 19:10:00', null, '2026-04-25 19:30:00', '2026-04-25 20:10:00'),
+(60, 60, 30, '2026-04-26 11:40:00', null, '2026-04-26 12:00:00', '2026-04-26 12:28:00'),
+-- Active orders with riders assigned
+(61, 88,  1, '2026-04-30 17:10:00', 3821, null, null),
+(62, 89,  2, '2026-04-30 17:25:00', 4512, null, null),
+(63, 90,  3, '2026-04-30 16:55:00', 7734, null, null),
+(64, 91,  4, '2026-04-30 17:40:00', 2256, null, null),
+(65, 92,  5, '2026-04-30 18:10:00', 9901, null, null),
+(66, 93,  6, '2026-04-30 18:25:00', 1144, null, null),
+(67, 94,  7, '2026-04-30 17:55:00', 6678, null, null),
+(68, 95,  9, '2026-04-30 18:40:00', 3345, null, null),
+(69, 96, 10, '2026-04-30 16:10:00', null, '2026-04-30 16:40:00', null),
+(70, 97, 11, '2026-04-30 16:40:00', null, '2026-04-30 17:10:00', null),
+(71, 98, 12, '2026-04-30 15:10:00', null, '2026-04-30 15:45:00', null),
+(72, 99, 13, '2026-04-30 15:40:00', null, '2026-04-30 16:05:00', null);
 
--- Active order (PREPARING — rider assigned, not picked yet)
-(6, 6, 3, '2026-04-01 18:10:00', 4521, null, null);
-
-SELECT setval(pg_get_serial_sequence('deliveries', 'deliveryId'), 6);
-
+SELECT setval(pg_get_serial_sequence('deliveries', 'deliveryId'), 72);
