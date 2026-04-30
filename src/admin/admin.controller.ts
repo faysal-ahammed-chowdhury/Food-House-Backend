@@ -19,7 +19,6 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
-import { PaymentMethod } from 'src/common/enums/payment-method.enum';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -321,25 +320,12 @@ export class AdminController {
     // get all order route
     @Get('orders')
     async getOrders(
-        @Query('orderId') orderId?: number,
+        @Query('search') search?: string,
         @Query('status') status?: OrderStatus,
         @Query('dateFrom') dateFrom?: Date,
         @Query('dateTo') dateTo?: Date,
-        @Query('paymentMethod') paymentMethod?: PaymentMethod,
-        @Query('restaurantId') restaurantId?: number,
-        @Query('riderId') riderId?: number,
-        @Query('cusomterId') cusomterId?: number,
     ): Promise<object> {
-        return this.adminService.getOrders(
-            orderId,
-            status,
-            dateFrom,
-            dateTo,
-            paymentMethod,
-            restaurantId,
-            riderId,
-            cusomterId,
-        );
+        return this.adminService.getOrders(search, status, dateFrom, dateTo);
     }
 
     // get order route

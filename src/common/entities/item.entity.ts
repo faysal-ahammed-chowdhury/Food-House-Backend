@@ -17,9 +17,6 @@ export class ItemEntity {
     name: string;
 
     @Column({ nullable: true })
-    iamgeUrl?: string;
-
-    @Column({ nullable: true })
     description: string;
 
     @Column('float')

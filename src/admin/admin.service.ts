@@ -15,9 +15,14 @@ import { RestaurantEntity } from 'src/common/entities/restaurant.entity';
 import { RiderEntity } from 'src/common/entities/rider.entity';
 import { UserEntity } from 'src/common/entities/user.entity';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
-import { PaymentMethod } from 'src/common/enums/payment-method.enum';
 import { UserRoles } from 'src/common/enums/user-roles.enum';
-import { ILike, Repository } from 'typeorm';
+import {
+    Between,
+    ILike,
+    LessThanOrEqual,
+    MoreThanOrEqual,
+    Repository,
+} from 'typeorm';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -1161,24 +1166,40 @@ export class AdminService {
 
     // get all order
     async getOrders(
-        orderId?: number,
+        search?: string,
         status?: OrderStatus,
         dateFrom?: Date,
         dateTo?: Date,
-        paymentMethod?: PaymentMethod,
-        restaurantId?: number,
-        riderId?: number,
-        cusomterId?: number,
     ): Promise<object> {
         const orders = await this.orderRepository.find({
             where: {
-                ...(orderId ? { orderId: orderId } : {}),
-                ...(status ? { status: status } : {}),
-                ...(dateFrom ? { orderAt: dateFrom } : {}),
-                ...(paymentMethod ? { paymentMethod: paymentMethod } : {}),
-                ...(restaurantId ? { restaurantId: restaurantId } : {}),
-                ...(riderId ? { riderId: riderId } : {}),
-                ...(cusomterId ? { cusomterId: cusomterId } : {}),
+                ...(search && { orderId: parseInt(search) || 0 }),
+                ...(status && { status }),
+                ...(dateFrom && dateTo
+                    ? {
+                          orderAt: Between(
+                              dateFrom,
+                              new Date(
+                                  new Date(dateTo).setHours(23, 59, 59, 999),
+                              ),
+                          ),
+                      }
+                    : dateFrom
+                      ? { orderAt: MoreThanOrEqual(dateFrom) }
+                      : dateTo
+                        ? {
+                              orderAt: LessThanOrEqual(
+                                  new Date(
+                                      new Date(dateTo).setHours(
+                                          23,
+                                          59,
+                                          59,
+                                          999,
+                                      ),
+                                  ),
+                              ),
+                          }
+                        : {}),
             },
 
             select: {
@@ -1221,6 +1242,10 @@ export class AdminService {
             },
         });
 
+        if (!order) {
+            throw new NotFoundException('Order Not Found');
+        }
+
         return {
             success: true,
             message: `Order Fetched Successfully`,
@@ -1249,10 +1274,19 @@ export class AdminService {
         order.status = OrderStatus.CANCELLED;
         const updated = await this.orderRepository.save(order);
 
+        const updatedOrder = await this.orderRepository.findOne({
+            where: {
+                orderId: orderId,
+            },
+            relations: {
+                orderItems: true,
+            },
+        });
+
         return {
             success: true,
             message: `Order Updated Successfully`,
-            data: updated,
+            data: updatedOrder,
         };
     }
 }
