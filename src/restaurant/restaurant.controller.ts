@@ -47,7 +47,7 @@ export class RestaurantController {
                 cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'image'), false);
             }
         },
-        limits: { fileSize: 10485760 }, // 10MB
+        limits: { fileSize: 2097152 }, // 2MB
         storage: diskStorage({
             destination: './uploads',
             filename: function (req, file, cb) {
