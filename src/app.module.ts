@@ -1,13 +1,15 @@
 import { MailerModule } from '@nestjs-modules/mailer';
-import { Module } from '@nestjs/common';
+import { Module, Res } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
+import { RestaurantModule } from './restaurant/restaurant.module';
 
 @Module({
     imports: [
         AdminModule,
         AuthModule,
+        RestaurantModule,
         TypeOrmModule.forRoot({
             type: 'postgres',
             host: 'localhost',
