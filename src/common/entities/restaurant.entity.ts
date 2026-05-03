@@ -15,11 +15,11 @@ import { VoucherEntity } from './voucher.entity';
 @Entity('restaurants')
 export class RestaurantEntity {
     @PrimaryGeneratedColumn()
-    restaurantId: number;
+    restaurantId!: number;
 
     @OneToOne(() => UserEntity, { cascade: true, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId' })
-    user: UserEntity;
+    user!: UserEntity;
 
     @Column({ nullable: true })
     description?: string;
@@ -28,16 +28,16 @@ export class RestaurantEntity {
     bannerUrl?: string;
 
     @Column()
-    address: string;
+    address!: string;
 
     @Column('boolean')
-    isOpen: boolean;
+    isOpen!: boolean;
 
     @Column('float')
-    currentCommissionPercent: number;
+    currentCommissionPercent!: number;
 
     @Column('float')
-    currentDeliveryFee: number;
+    currentDeliveryFee!: number;
 
     @Column({ nullable: true })
     bkashAccount?: string;
@@ -46,14 +46,14 @@ export class RestaurantEntity {
     bankAccount?: string;
 
     @OneToMany(() => CategoryEntity, (category) => category.restaurant)
-    categories: CategoryEntity[];
+    categories!: CategoryEntity[];
 
     @OneToMany(() => ItemEntity, (item) => item.restaurant)
-    items: ItemEntity[];
+    items!: ItemEntity[];
 
     @OneToMany(() => VoucherEntity, (voucher) => voucher.restaurant)
-    vouchers: VoucherEntity[];
+    vouchers!: VoucherEntity[];
 
     @OneToMany(() => OrderEntity, (order) => order.restaurant)
-    orders: OrderEntity[];
+    orders!: OrderEntity[];
 }

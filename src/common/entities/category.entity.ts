@@ -12,15 +12,15 @@ import { RestaurantEntity } from './restaurant.entity';
 @Entity('categories')
 export class CategoryEntity {
     @PrimaryGeneratedColumn()
-    categoryId: number;
+    categoryId!: number;
 
     @ManyToOne(() => RestaurantEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'restaurantId' })
-    restaurant: RestaurantEntity;
+    restaurant!: RestaurantEntity;
 
     @Column()
-    name: string;
+    name!: string;
 
     @OneToMany(() => ItemEntity, (item) => item.category)
-    items: ItemEntity[];
+    items!: ItemEntity[];
 }

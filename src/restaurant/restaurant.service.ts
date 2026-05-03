@@ -175,6 +175,25 @@ export class RestaurantService {
          return this.restaurantRepository.save(restaurant);
     }
 
+    async getRestaurantPassword(restaurantId: number): Promise<string> {
+        const restaurant = await this.restaurantRepository.findOne({
+            where: { restaurantId: restaurantId },
+            relations: ['user'],
+        });
+        if (!restaurant) {
+            throw new NotFoundException(`Restaurant with id ${restaurantId} doesn't exist`);
+        }
+        return restaurant.user.password;
+    }
+
+    async checkPasswordMatch(restaurantId: number, plainPassword: string): Promise<boolean> {
+        const DBPassword = await this.getRestaurantPassword(restaurantId);
+        return bcrypt.compare(plainPassword, DBPassword);
+    }
+
+
+
+
 
 
     // async createCategory(createCategoryDto: CreateCategoryDto): Promise<CategoryEntity> {

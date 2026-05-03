@@ -10,24 +10,24 @@ import { OrderEntity } from './order.entity';
 @Entity('order_items')
 export class OrderItemEntity {
     @PrimaryGeneratedColumn()
-    orderItemId: number;
+    orderItemId!: number;
 
     @ManyToOne(() => OrderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'orderId' })
-    order: OrderEntity;
+    order!: OrderEntity;
 
     @Column('int')
-    itemId: number;
+    itemId!: number;
 
     @Column()
-    itemName: string;
+    itemName!: string;
 
     @Column('float')
-    itemPrice: number;
+    itemPrice!: number;
 
     @Column('int')
-    quantity: number;
+    quantity!: number;
 
     @Column('float')
-    total: number;
+    total!: number;
 }

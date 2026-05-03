@@ -12,25 +12,25 @@ import { RiderEntity } from './rider.entity';
 @Entity('deliveries')
 export class DeliveryEntity {
     @PrimaryGeneratedColumn()
-    deliveryId: number;
+    deliveryId!: number;
 
     @OneToOne(() => OrderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'orderId' })
-    order: OrderEntity;
+    order!: OrderEntity;
 
     @ManyToOne(() => RiderEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'riderId' })
-    rider: RiderEntity;
+    rider!: RiderEntity;
 
     @Column('timestamp')
-    acceptedAt: Date;
+    acceptedAt!: Date;
 
     @Column('int', { nullable: true })
-    otp: number;
+    otp!: number;
 
     @Column('timestamp', { nullable: true })
-    pickUpTime: Date;
+    pickUpTime!: Date;
 
     @Column('timestamp', { nullable: true })
-    deliveredTime: Date;
+    deliveredTime!: Date;
 }

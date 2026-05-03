@@ -24,20 +24,20 @@ import { AuthGuard } from "../auth/auth.guard";
 export class RestaurantController {
     constructor(private readonly restaurantService: RestaurantService){}
 
-    //CREATE RESTURENT
+    //CREATE RESTURENT   
     @Post('restaurants')
     @UsePipes(new ValidationPipe())
     async createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto,): Promise<object> {
         return this.restaurantService.createRestaurant(createRestaurantDto);
     }
 
-    // GET RESTURENT BY ID
+    //1. GET RESTURENT BY ID
     @Get('restaurants/:id')
     async getRestaurantById(@Param('id', ParseIntPipe) userId: number):Promise<object> {
         return this.restaurantService.getRestaurantById(userId);
     }
 
-    // UPDATE RESTURENT
+    //2. UPDATE RESTURENT
     @Put('restaurants/:id')
     @UseInterceptors(FileInterceptor('myfile', {
         fileFilter: (req, file, cb) => {
@@ -86,6 +86,35 @@ export class RestaurantController {
         return this.restaurantService.updateRestaurantStatus(resturantId, { isOpen } as UpdateRestaurantDto);
     }
 
+
+    //5. Email exist check
+    @Get('checkEmail')
+    async checkEmailExist(@Query('email') email: string): Promise<{ exists: boolean }> {
+        const exists = await this.restaurantService.checkUserExist(email);
+        if(exists) {
+            return { exists: true };
+        }
+        return { exists: false };
+    }
+
+
+    //6. MATCH RESTURENT PASSWORD
+    @Post('matchPassword')
+    async checkPasswordMatch(@Body() Data: { restaurantId: number; password: string }): Promise<{ match: boolean }> {
+        const { restaurantId, password } = Data;
+        const match = await this.restaurantService.checkPasswordMatch(restaurantId, password);
+        return { match };
+    }
+
+
+
+
+
+
+
+
+
+
  
     //CREATE CATEGORY
     // @UseGuards(AuthGuard, RestaurantGuard)
@@ -121,6 +150,7 @@ export class RestaurantController {
     ) {
         return this.restaurantService.deleteCategoryByRestaurant(restaurantId,categoryId,);
     }
+
 
 
     // @Post('items')

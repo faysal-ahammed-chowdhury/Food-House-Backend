@@ -12,23 +12,23 @@ import { UserEntity } from './user.entity';
 @Entity('riders')
 export class RiderEntity {
     @PrimaryGeneratedColumn()
-    riderId: number;
+    riderId!: number;
 
     @OneToOne(() => UserEntity, { cascade: true, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId' })
-    user: UserEntity;
+    user!: UserEntity;
 
     @Column()
-    phone: string;
+    phone!: string;
 
     @Column({ unique: true })
-    riderNid: string;
+    riderNid!: string;
 
     @Column()
-    nidImageUrl: string;
+    nidImageUrl!: string;
 
     @Column('boolean')
-    isOnline: boolean;
+    isOnline!: boolean;
 
     @Column({ nullable: true })
     bkashAccount?: string;
@@ -37,5 +37,5 @@ export class RiderEntity {
     bankAccount?: string;
 
     @OneToMany(() => DeliveryEntity, (delivery) => delivery.rider)
-    deliveries: DeliveryEntity[];
+    deliveries!: DeliveryEntity[];
 }

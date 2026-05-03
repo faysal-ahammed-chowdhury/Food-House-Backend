@@ -11,31 +11,31 @@ import { RestaurantEntity } from './restaurant.entity';
 @Entity('items')
 export class ItemEntity {
     @PrimaryGeneratedColumn()
-    itemId: number;
+    itemId!: number;
 
     @Column()
-    name: string;
+    name!: string;
 
     @Column({ nullable: true })
-    description: string;
+    description!: string;
 
     @Column('float')
-    price: number;
+    price!: number;
 
     @Column({ nullable: true })
-    imageUrl: string;
+    imageUrl!: string;
 
     @Column('boolean')
-    isAvailable: boolean;
+    isAvailable!: boolean;
 
     @Column('float')
-    preparationTime: number;
+    preparationTime!: number;
 
     @ManyToOne(() => CategoryEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'categoryId' })
-    category: CategoryEntity;
+    category!: CategoryEntity;
 
     @ManyToOne(() => RestaurantEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'restaurantId' })
-    restaurant: RestaurantEntity;
+    restaurant!: RestaurantEntity;
 }
