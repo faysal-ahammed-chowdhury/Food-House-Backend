@@ -38,7 +38,13 @@ export class AuthService {
     }
 
     // sign in logic for any user
-    async signIn(email: string, pass: string): Promise<object> {
+    async signIn(
+        email: string,
+        pass: string,
+    ): Promise<{
+        token: string;
+        data: any;
+    }> {
         const user = await this.userRepository.findOne({
             where: {
                 email: email,
@@ -69,11 +75,11 @@ export class AuthService {
 
         const { password, isVerified, verificationToken, ...result } = user;
 
+        const token = await this.jwtService.signAsync(payload);
+
         return {
-            success: true,
-            message: 'Login successful',
             data: result,
-            access_token: await this.jwtService.signAsync(payload),
+            token: token,
         };
     }
 

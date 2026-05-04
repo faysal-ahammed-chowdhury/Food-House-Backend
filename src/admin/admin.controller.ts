@@ -12,13 +12,16 @@ import {
     Put,
     Query,
     UploadedFile,
+    UseGuards,
     UseInterceptors,
     UsePipes,
     ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { AuthGuard } from 'src/auth/auth.guard';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
+import { AdminGuard } from './admin.guard';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -33,7 +36,7 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { UpdateRiderDto } from './dto/update-rider.dto';
 
-// @UseGuards(AuthGuard, AdminGuard)
+@UseGuards(AuthGuard, AdminGuard)
 @Controller('admin')
 export class AdminController {
     constructor(private readonly adminService: AdminService) {

@@ -4,9 +4,11 @@ import {
     Param,
     ParseIntPipe,
     Post,
+    Res,
     UsePipes,
     ValidationPipe,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { SignUpDto } from './dto/signup.dto';
@@ -20,8 +22,27 @@ export class AuthController {
     // Sign In route for any user
     @Post('login')
     @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
-    async signIn(@Body() loginDto: LoginDto): Promise<object> {
-        return this.authService.signIn(loginDto.email, loginDto.password);
+    async signIn(
+        @Body() loginDto: LoginDto,
+        @Res({ passthrough: true }) res: Response,
+    ): Promise<object> {
+        const { token, data } = await this.authService.signIn(
+            loginDto.email,
+            loginDto.password,
+        );
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'lax',
+            maxAge: 1000 * 60 * 60 * 24,
+        });
+
+        return {
+            success: true,
+            message: 'Login successful',
+            data: data,
+        };
     }
 
     // signup route for customer
@@ -38,5 +59,16 @@ export class AuthController {
         @Param('token') token: string,
     ): Promise<object> {
         return this.authService.verifyUser(id, token);
+    }
+
+    @Post('logout')
+    logout(@Res({ passthrough: true }) res: Response) {
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'lax',
+        });
+
+        return { success: true, message: 'Logged out' };
     }
 }
