@@ -1,22 +1,32 @@
 import {
     Body,
     Controller,
+    Get,
     Param,
     ParseIntPipe,
     Post,
+    Req,
     Res,
+    UnauthorizedException,
     UsePipes,
     ValidationPipe,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import { JwtService } from '@nestjs/jwt';
+import type { Request, Response } from 'express';
+import { AdminService } from 'src/admin/admin.service';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { SignUpDto } from './dto/signup.dto';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) {
+    constructor(
+        private readonly adminService: AdminService,
+        private readonly authService: AuthService,
+        private readonly jwtService: JwtService,
+    ) {
         this.authService = authService;
+        this.jwtService = jwtService;
     }
 
     // Sign In route for any user
@@ -52,7 +62,7 @@ export class AuthController {
         return this.authService.signUp(signUpDto);
     }
 
-    // verify user
+    // verify user route
     @Post('verify/:id/:token')
     async verifyUser(
         @Param('id', ParseIntPipe) id: number,
@@ -61,8 +71,9 @@ export class AuthController {
         return this.authService.verifyUser(id, token);
     }
 
+    // logout route
     @Post('logout')
-    logout(@Res({ passthrough: true }) res: Response) {
+    logout(@Res({ passthrough: true }) res: Response): object {
         res.clearCookie('token', {
             httpOnly: true,
             secure: false,
@@ -70,5 +81,26 @@ export class AuthController {
         });
 
         return { success: true, message: 'Logged out' };
+    }
+
+    // get loggedin user route
+    @Get('me')
+    async me(@Req() req: Request) {
+        const token = req.cookies?.token;
+
+        // console.log(token);
+
+        if (!token) {
+            throw new UnauthorizedException();
+        }
+        try {
+            const res = await this.jwtService.verifyAsync(token);
+            const userId: number = res?.userId;
+            // console.log('user id: ', this.adminService.getAdmin(userId));
+            const user = await this.adminService.getAdmin(userId);
+            return user;
+        } catch {
+            throw new UnauthorizedException();
+        }
     }
 }
