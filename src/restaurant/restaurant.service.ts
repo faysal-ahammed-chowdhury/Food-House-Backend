@@ -192,7 +192,77 @@ export class RestaurantService {
     }
 
 
+    async createVoucher(createVoucherDto: CreateVoucherDto): Promise<Object> {
+        const restaurant = await this.restaurantRepository.findOne({
+            where: { restaurantId: createVoucherDto.restaurantId },
+        });
 
+        if (!restaurant) {
+            throw new NotFoundException('Restaurant not found');
+        }
+
+        const voucher = this.voucherRepository.create({
+            restaurant,
+            voucherCode: createVoucherDto.voucherCode,
+            percent: createVoucherDto.percent,
+            maxDiscount: createVoucherDto.maxDiscount,
+            minOrderAmount: createVoucherDto.minOrderAmount,
+            expiresAt: createVoucherDto.expiresAt,
+        });
+
+        const savedVoucher = await this.voucherRepository.save(voucher);
+        return {
+            message: 'Voucher created successfully',
+            data: {
+                restaurant: savedVoucher.restaurant,
+                voucherId: savedVoucher.voucherId,
+                voucherCode: savedVoucher.voucherCode,
+                percent: savedVoucher.percent,
+                maxDiscount: savedVoucher.maxDiscount,
+                minOrderAmount: savedVoucher.minOrderAmount,
+                expiresAt: savedVoucher.expiresAt,
+            },
+        };
+    }
+
+    async getVouchersByRestaurant(restaurantId: number): Promise<VoucherEntity[]> {
+        return this.voucherRepository.find({
+            where: {
+                restaurant: { restaurantId: restaurantId },
+            },
+                order: {expiresAt: 'ASC'},
+        });
+    }
+
+    async deleteVoucher(voucherId: number): Promise<object> {
+        const voucher = await this.voucherRepository.findOne({
+            where: { voucherId },
+            relations: ['restaurant'],
+        });
+
+        if (!voucher) {
+            throw new NotFoundException(`Voucher with id ${voucherId} not found`);
+        }
+
+        await this.voucherRepository.delete(voucherId);
+
+        return {
+            message: 'Voucher deleted successfully',
+            data: {
+                voucherId: voucher.voucherId,
+                restaurantId: voucher.restaurant.restaurantId,
+            },
+        };
+    }
+
+
+
+
+
+
+
+
+    
 
 
 
@@ -302,67 +372,10 @@ export class RestaurantService {
     //     return this.itemRepository.save(item);
     // }
         
-    async createVoucher(createVoucherDto: CreateVoucherDto): Promise<Object> {
-        const restaurant = await this.restaurantRepository.findOne({
-            where: { restaurantId: createVoucherDto.restaurantId },
-        });
+    
 
-        if (!restaurant) {
-            throw new NotFoundException('Restaurant not found');
-        }
+     
 
-        const voucher = this.voucherRepository.create({
-            restaurant,
-            voucherCode: createVoucherDto.voucherCode,
-            percent: createVoucherDto.percent,
-            maxDiscount: createVoucherDto.maxDiscount,
-            minOrderAmount: createVoucherDto.minOrderAmount,
-            expiresAt: createVoucherDto.expiresAt,
-        });
-
-        const savedVoucher = await this.voucherRepository.save(voucher);
-        return {
-            message: 'Voucher created successfully',
-            data: {
-                restaurant: savedVoucher.restaurant,
-                voucherId: savedVoucher.voucherId,
-                voucherCode: savedVoucher.voucherCode,
-                percent: savedVoucher.percent,
-                maxDiscount: savedVoucher.maxDiscount,
-                minOrderAmount: savedVoucher.minOrderAmount,
-                expiresAt: savedVoucher.expiresAt,
-            },
-        };
-    }
-
-     async deleteVoucher(voucherId: number): Promise<object> {
-        const voucher = await this.voucherRepository.findOne({
-            where: { voucherId },
-            relations: ['restaurant'],
-        });
-
-        if (!voucher) {
-            throw new NotFoundException(`Voucher with id ${voucherId} not found`);
-        }
-
-        await this.voucherRepository.delete(voucherId);
-
-        return {
-            message: 'Voucher deleted successfully',
-            data: {
-                voucherId: voucher.voucherId,
-                restaurantId: voucher.restaurant.restaurantId,
-            },
-        };
-    }
-
-    async getVouchersByRestaurant(restaurantId: number): Promise<VoucherEntity[]> {
-    return this.voucherRepository.find({
-        where: {
-            restaurant: { restaurantId: restaurantId },
-        },
-        // relations: ['restaurant'],
-    });
-}
+    
 
 }

@@ -107,6 +107,31 @@ export class RestaurantController {
     }
 
 
+    //CREATE VOUCHER
+    @Post('voucher')
+    @UsePipes(new ValidationPipe())
+    async createVoucher(@Body() createVoucherDto: CreateVoucherDto): Promise<object> {
+        return this.restaurantService.createVoucher(createVoucherDto);
+    }
+
+    //GET VOUCHERS BY RESTURENT ID
+    @Get('voucher/:id')
+    async getVouchersByRestaurant(@Param('id', ParseIntPipe) id: string,): Promise<object> {
+        return this.restaurantService.getVouchersByRestaurant(+id);
+    }
+
+    //DELETE VOUCHER
+    @Delete('voucher/:id')
+    async deleteVoucher(@Param('id') id: string): Promise<object> {
+        return this.restaurantService.deleteVoucher(+id);
+    }  
+
+    
+
+
+
+
+
 
 
 
@@ -186,24 +211,9 @@ export class RestaurantController {
     //     return this.restaurantService.create(createItemDto, imageUrl);
     // }
 
-    //CREATE VOUCHER
-    @Post('voucher')
-    @UsePipes(new ValidationPipe())
-    async createVoucher(@Body() createVoucherDto: CreateVoucherDto): Promise<object> {
-        return this.restaurantService.createVoucher(createVoucherDto);
-    }
+    
 
-    //DELETE VOUCHER
-    @Delete('voucher/:id')
-    async deleteVoucher(@Param('id') id: string): Promise<object> {
-        return this.restaurantService.deleteVoucher(+id);
-    }    
-
-    //GET VOUCHERS BY RESTURENT ID
-    @Get('voucher/:id')
-    async getVouchersByRestaurant(@Param('id', ParseIntPipe) id: string,): Promise<object> {
-        return this.restaurantService.getVouchersByRestaurant(+id);
-    }
+      
 
     
 
