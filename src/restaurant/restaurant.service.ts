@@ -255,6 +255,13 @@ export class RestaurantService {
         };
     }
 
+    async getRestaurantByUserId(userId: number): Promise<RestaurantEntity | null> {
+        const restaurant = await this.restaurantRepository.findOne({
+            where: { user: { userId: userId } },
+        });
+        return restaurant || null;
+    }
+
 
 
 

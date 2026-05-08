@@ -128,12 +128,12 @@ export class RestaurantController {
     }  
 
 
-    // //get restureant id from user id
-    // @Get('getRestaurantId/:userId')
-    // async getRestaurantIdByUserId(@Param('userId', ParseIntPipe) userId: number): Promise<{ restaurantId: number | null }> {
-    //     const restaurant = await this.restaurantService.getRestaurantByUserId(userId);
-    //     return { restaurantId: restaurant ? restaurant.id : null };
-    // }
+    //get restureant id from user id
+    @Get('getRestaurantIdbyuserID/:userId')
+    async getRestaurantIdByUserId(@Param('userId', ParseIntPipe) userId: number): Promise<{ restaurantId: number | null }> {
+        const restaurant = await this.restaurantService.getRestaurantByUserId(userId);
+        return { restaurantId: restaurant ? restaurant.restaurantId : null };
+    }
 
     
 
