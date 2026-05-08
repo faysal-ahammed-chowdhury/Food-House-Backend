@@ -10,23 +10,23 @@ import { RestaurantEntity } from './restaurant.entity';
 @Entity('vouchers')
 export class VoucherEntity {
     @PrimaryGeneratedColumn()
-    voucherId: number;
+    voucherId!: number;
 
     @ManyToOne(() => RestaurantEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'restaurantId' })
-    restaurant: RestaurantEntity;
+    restaurant!: RestaurantEntity;
 
     @Column()
-    voucherCode: string;
+    voucherCode!: string;
 
     @Column('float')
-    percent: number;
+    percent!: number;
 
     @Column('float')
-    maxDiscount: number;
+    maxDiscount!: number;
 
     @Column('float')
-    minOrderAmount: number;
+    minOrderAmount!: number;
 
     @Column('timestamp', { nullable: true })
     expiresAt?: Date;

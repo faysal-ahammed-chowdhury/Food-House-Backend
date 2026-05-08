@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { UserRoles } from '../common/enums/user-roles.enum';
 
-
 @Injectable()
 export class RestaurantGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean {

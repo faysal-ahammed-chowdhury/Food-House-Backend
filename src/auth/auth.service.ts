@@ -84,6 +84,21 @@ export class AuthService {
         };
     }
 
+    async getUserById(userId: number): Promise<object>{
+        const user = await this.userRepository.findOne({
+            select: ['userId', 'name', 'email', 'role'],
+            where: { userId: userId, },
+        });
+        if (!user) {
+            throw new NotFoundException(`User not found with id ${userId}`);
+        }
+        return {
+            success: true,
+            message: 'User Found',
+            data: user,
+        };
+    }
+
     // sign up for any user
     async signUp(signUpDto: SignUpDto): Promise<object> {
         const emailExists = await this.checkEmailExist(signUpDto.email);

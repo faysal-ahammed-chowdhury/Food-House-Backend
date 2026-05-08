@@ -4,25 +4,25 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 @Entity('users')
 export class UserEntity {
     @PrimaryGeneratedColumn()
-    userId: number;
+    userId!: number;
 
     @Column()
-    name: string;
+    name!: string;
 
     @Column({ unique: true })
-    email: string;
+    email!: string;
 
     @Column()
-    password: string;
+    password!: string;
 
     @Column({ type: 'enum', enum: UserRoles })
-    role: UserRoles;
+    role!: UserRoles;
 
     @Column({ type: 'boolean', default: false })
-    isVerified: boolean;
+    isVerified!: boolean;
 
     @Column({ type: 'varchar', nullable: true })
-    verificationToken: string | null;
+    verificationToken!: string | null;
 
     // @OneToOne(() => RestaurantEntity, (restaurant) => restaurant.user)
     // restaurant: RestaurantEntity;

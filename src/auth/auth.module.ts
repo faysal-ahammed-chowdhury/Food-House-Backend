@@ -14,7 +14,6 @@ import { jwtConstants } from './constant';
             secret: jwtConstants.secret,
             signOptions: { expiresIn: '1h' },
         }),
-        AdminModule,
     ],
     controllers: [AuthController],
     providers: [AuthService],

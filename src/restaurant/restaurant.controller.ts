@@ -20,24 +20,25 @@ import { AuthGuard } from "../auth/auth.guard";
 //param     +++
 //body      +++
 
+// @UseGuards(AuthGuard, RestaurantGuard)
 @Controller('restaurant')
 export class RestaurantController {
     constructor(private readonly restaurantService: RestaurantService){}
 
-    //CREATE RESTURENT
+    //CREATE RESTURENT   
     @Post('restaurants')
     @UsePipes(new ValidationPipe())
     async createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto,): Promise<object> {
         return this.restaurantService.createRestaurant(createRestaurantDto);
     }
 
-    // GET RESTURENT BY ID
+    //1. GET RESTURENT BY ID
     @Get('restaurants/:id')
     async getRestaurantById(@Param('id', ParseIntPipe) userId: number):Promise<object> {
         return this.restaurantService.getRestaurantById(userId);
     }
 
-    // UPDATE RESTURENT
+    //2. UPDATE RESTURENT
     @Put('restaurants/:id')
     @UseInterceptors(FileInterceptor('myfile', {
         fileFilter: (req, file, cb) => {
@@ -47,7 +48,7 @@ export class RestaurantController {
                 cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'image'), false);
             }
         },
-        limits: { fileSize: 10485760 }, // 10MB
+        limits: { fileSize: 2097152 }, // 2MB
         storage: diskStorage({
             destination: './uploads',
             filename: function (req, file, cb) {
@@ -86,6 +87,68 @@ export class RestaurantController {
         return this.restaurantService.updateRestaurantStatus(resturantId, { isOpen } as UpdateRestaurantDto);
     }
 
+
+    //5. Email exist check
+    @Get('checkEmail')
+    async checkEmailExist(@Query('email') email: string): Promise<{ exists: boolean }> {
+        const exists = await this.restaurantService.checkUserExist(email);
+        if(exists) {
+            return { exists: true };
+        }
+        return { exists: false };
+    }
+
+
+    //6. MATCH RESTURENT PASSWORD
+    @Post('matchPassword')
+    async checkPasswordMatch(@Body() Data: { restaurantId: number; password: string }): Promise<{ match: boolean }> {
+        const { restaurantId, password } = Data;
+        const match = await this.restaurantService.checkPasswordMatch(restaurantId, password);
+        return { match };
+    }
+
+
+    //CREATE VOUCHER
+    @Post('voucher')
+    @UsePipes(new ValidationPipe())
+    async createVoucher(@Body() createVoucherDto: CreateVoucherDto): Promise<object> {
+        return this.restaurantService.createVoucher(createVoucherDto);
+    }
+
+    //GET VOUCHERS BY RESTURENT ID
+    @Get('voucher/:id')
+    async getVouchersByRestaurant(@Param('id', ParseIntPipe) id: string,): Promise<object> {
+        return this.restaurantService.getVouchersByRestaurant(+id);
+    }
+
+    //DELETE VOUCHER
+    @Delete('voucher/:id')
+    async deleteVoucher(@Param('id') id: string): Promise<object> {
+        return this.restaurantService.deleteVoucher(+id);
+    }  
+
+
+    // //get restureant id from user id
+    // @Get('getRestaurantId/:userId')
+    // async getRestaurantIdByUserId(@Param('userId', ParseIntPipe) userId: number): Promise<{ restaurantId: number | null }> {
+    //     const restaurant = await this.restaurantService.getRestaurantByUserId(userId);
+    //     return { restaurantId: restaurant ? restaurant.id : null };
+    // }
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
  
     //CREATE CATEGORY
     // @UseGuards(AuthGuard, RestaurantGuard)
@@ -123,6 +186,7 @@ export class RestaurantController {
     }
 
 
+
     // @Post('items')
     // @UsePipes(new ValidationPipe({transform: true}))
     // @UseInterceptors(
@@ -156,24 +220,9 @@ export class RestaurantController {
     //     return this.restaurantService.create(createItemDto, imageUrl);
     // }
 
-    //CREATE VOUCHER
-    @Post('voucher')
-    @UsePipes(new ValidationPipe())
-    async createVoucher(@Body() createVoucherDto: CreateVoucherDto): Promise<object> {
-        return this.restaurantService.createVoucher(createVoucherDto);
-    }
+    
 
-    //DELETE VOUCHER
-    @Delete('voucher/:id')
-    async deleteVoucher(@Param('id') id: string): Promise<object> {
-        return this.restaurantService.deleteVoucher(+id);
-    }    
-
-    //GET VOUCHERS BY RESTURENT ID
-    @Get('voucher/:id')
-    async getVouchersByRestaurant(@Param('id', ParseIntPipe) id: string,): Promise<object> {
-        return this.restaurantService.getVouchersByRestaurant(+id);
-    }
+      
 
     
 

@@ -15,7 +15,7 @@ import { RestaurantModule } from './restaurant/restaurant.module';
             host: 'localhost',
             port: 5432,
             username: 'postgres',
-            password: 'root',
+            password: '123456',
             database: 'foodhouse',
             autoLoadEntities: true,
             synchronize: true,
