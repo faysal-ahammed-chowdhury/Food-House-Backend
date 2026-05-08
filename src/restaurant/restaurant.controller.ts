@@ -20,6 +20,7 @@ import { AuthGuard } from "../auth/auth.guard";
 //param     +++
 //body      +++
 
+// @UseGuards(AuthGuard, RestaurantGuard)
 @Controller('restaurant')
 export class RestaurantController {
     constructor(private readonly restaurantService: RestaurantService){}
@@ -125,6 +126,14 @@ export class RestaurantController {
     async deleteVoucher(@Param('id') id: string): Promise<object> {
         return this.restaurantService.deleteVoucher(+id);
     }  
+
+
+    // //get restureant id from user id
+    // @Get('getRestaurantId/:userId')
+    // async getRestaurantIdByUserId(@Param('userId', ParseIntPipe) userId: number): Promise<{ restaurantId: number | null }> {
+    //     const restaurant = await this.restaurantService.getRestaurantByUserId(userId);
+    //     return { restaurantId: restaurant ? restaurant.id : null };
+    // }
 
     
 

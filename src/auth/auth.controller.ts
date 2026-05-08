@@ -13,7 +13,6 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { Request, Response } from 'express';
-import { AdminService } from 'src/admin/admin.service';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { SignUpDto } from './dto/signup.dto';
@@ -21,7 +20,6 @@ import { SignUpDto } from './dto/signup.dto';
 @Controller('auth')
 export class AuthController {
     constructor(
-        private readonly adminService: AdminService,
         private readonly authService: AuthService,
         private readonly jwtService: JwtService,
     ) {
@@ -47,6 +45,8 @@ export class AuthController {
             sameSite: 'lax',
             maxAge: 1000 * 60 * 60 * 24,
         });
+
+        console.log('token: ', data);
 
         return {
             success: true,
@@ -97,7 +97,7 @@ export class AuthController {
             const res = await this.jwtService.verifyAsync(token);
             const userId: number = res?.userId;
             // console.log('user id: ', this.adminService.getAdmin(userId));
-            const user = await this.adminService.getAdmin(userId);
+            const user = await this.authService.getUserById(userId);
             return user;
         } catch {
             throw new UnauthorizedException();
