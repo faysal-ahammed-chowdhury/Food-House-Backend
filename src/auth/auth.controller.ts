@@ -46,8 +46,6 @@ export class AuthController {
             maxAge: 1000 * 60 * 60 * 24,
         });
 
-        console.log('token: ', data);
-
         return {
             success: true,
             message: 'Login successful',

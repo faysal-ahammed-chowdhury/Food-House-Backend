@@ -264,34 +264,24 @@ export class RestaurantService {
 
 
 
+    async createCategory(createCategoryDto: CreateCategoryDto): Promise<CategoryEntity> {
+        const { restaurantId, name } = createCategoryDto;
 
+        const restaurant = await this.restaurantRepository.findOne({
+            where: { restaurantId },
+        });
 
+        if (!restaurant) {
+            throw new NotFoundException('Restaurant not found');
+        }
 
+        const category = this.categoryRepository.create({
+            name,
+            restaurant,
+        });
 
-
-    
-
-
-
-    // async createCategory(createCategoryDto: CreateCategoryDto): Promise<CategoryEntity> {
-    //     const { restaurantId, name, isAvailable } = createCategoryDto;
-
-    //     const restaurant = await this.restaurantRepository.findOne({
-    //         where: { restaurantId },
-    //     });
-
-    //     if (!restaurant) {
-    //         throw new NotFoundException('Restaurant not found');
-    //     }
-
-    //     const category = this.categoryRepository.create({
-    //         name,
-    //         isAvailable,
-    //         restaurant,
-    //     });
-
-    //     return await this.categoryRepository.save(category);
-    // }
+        return await this.categoryRepository.save(category);
+    }
 
     async getCategoriesByRestaurantId(restaurantId: number) {
         const categories = await this.categoryRepository.find({
