@@ -108,63 +108,50 @@ export class RestaurantController {
     }
 
 
-    //CREATE VOUCHER
+    //7.CREATE VOUCHER
     @Post('voucher')
     @UsePipes(new ValidationPipe())
     async createVoucher(@Body() createVoucherDto: CreateVoucherDto): Promise<object> {
         return this.restaurantService.createVoucher(createVoucherDto);
     }
 
-    //GET VOUCHERS BY RESTURENT ID
+    //8.GET VOUCHERS BY RESTURENT ID
     @Get('voucher/:id')
     async getVouchersByRestaurant(@Param('id', ParseIntPipe) id: string,): Promise<object> {
         return this.restaurantService.getVouchersByRestaurant(+id);
     }
 
-    //DELETE VOUCHER
+    //9.DELETE VOUCHER
     @Delete('voucher/:id')
     async deleteVoucher(@Param('id') id: string): Promise<object> {
         return this.restaurantService.deleteVoucher(+id);
     }  
 
 
-    //get restureant id from user id
+    //10.get restureant id from user id
     @Get('getRestaurantIdbyuserID/:userId')
     async getRestaurantIdByUserId(@Param('userId', ParseIntPipe) userId: number): Promise<{ restaurantId: number | null }> {
         const restaurant = await this.restaurantService.getRestaurantByUserId(userId);
         return { restaurantId: restaurant ? restaurant.restaurantId : null };
     }
 
+
+    //11.CREATE CATEGORY
+    @Post('restaurants/category')
+    @UsePipes(new ValidationPipe())
+    createCategory(@Body() createCategoryDto: CreateCategoryDto):Promise<object> {
+        return this.restaurantService.createCategory(createCategoryDto);
+    }      
     
 
 
-
-
-
-
-
-
-
-
-
-
-
- 
-    //CREATE CATEGORY
-    // @UseGuards(AuthGuard, RestaurantGuard)
-    // @Post('restaurants/category')
-    // @UsePipes(new ValidationPipe())
-    // createCategory(@Body() createCategoryDto: CreateCategoryDto):Promise<object> {
-    //     return this.restaurantService.createCategory(createCategoryDto);
-    // }       
-
-    //GET CATEGORIES BY RESTURENT ID WITH ITEMS
+    //12.GET CATEGORIES BY RESTURENT ID WITH ITEMS
     @Get('restaurantcategories/:id')
     async getCategoriesByRestaurant(@Param('id', ParseIntPipe) restaurantId: number): Promise<object> {
         return this.restaurantService.getCategoriesByRestaurantId(restaurantId);
     }
 
-    //UPDATE CATEGORY BY RESTURENT ID ans CATEGORY ID
+    //13.UPDATE CATEGORY BY RESTURENT ID ans CATEGORY ID
     @Patch('category/:restaurantId/:categoryId')
     @UsePipes(new ValidationPipe())
     async updateCategoryByRestaurant(
@@ -176,7 +163,7 @@ export class RestaurantController {
         );
     }
 
-    //DELETE CATEGORY BY RESTURENT ID ans CATEGORY ID
+    //14.DELETE CATEGORY BY RESTURENT ID ans CATEGORY ID
     @Delete('category/:restaurantId/:categoryId')
     async deleteCategoryByRestaurant(
         @Param('restaurantId', ParseIntPipe) restaurantId: number,
