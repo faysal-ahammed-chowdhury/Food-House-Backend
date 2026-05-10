@@ -67,7 +67,6 @@ export class RestaurantController {
         if(file) {
             bannerUrl = `${file.filename}`;
         }
-
         return this.restaurantService.updateRestaurant(resturantId, UpdateRestaurantDto, bannerUrl);
     }
 
@@ -144,7 +143,6 @@ export class RestaurantController {
     }      
     
 
-
     //12.GET CATEGORIES BY RESTURENT ID WITH ITEMS
     @Get('restaurantcategories/:id')
     async getCategoriesByRestaurant(@Param('id', ParseIntPipe) restaurantId: number): Promise<object> {
@@ -172,45 +170,79 @@ export class RestaurantController {
         return this.restaurantService.deleteCategoryByRestaurant(restaurantId,categoryId,);
     }
 
+    //15.Get Catagory by restaurant id and category name
+    @Get('categoryName/:restaurantId/:categoryName')
+    async getCategoryByRestaurantAndName(
+        @Param('restaurantId', ParseIntPipe) restaurantId: number,
+        @Param('categoryName') categoryName: string
+    ): Promise<object> {
+        return this.restaurantService.getCategoryByRestaurantAndName(restaurantId, categoryName);
+    }
+
+    //16.Get Catagoty image
+    @Get('catagoryImage/:id')
+    async getCatagoryImage(@Param('id') id: string, @Res() res: Response) {
+        const name = await this.restaurantService.getCategoryImage(+id);
+        res.sendFile(name,{ root: './uploads' })
+    }
+
+    //17. Get items count by category
+    @Get('items/count/:categoryId')
+    async getItemsCountByCategory(@Param('categoryId', ParseIntPipe) categoryId: number): Promise<number> {
+        return this.restaurantService.getItemsCountByCategory(categoryId);
+    }
+
+    //18. Create Items
+    @Post('createItems')
+    @UseInterceptors(FileInterceptor('myfile', {
+        fileFilter: (req, file, cb) => {
+            if (file.originalname.match(/^.*\.(jpg|webp|png|jpeg)$/))
+                cb(null, true);
+            else {
+                cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'image'), false);
+            }
+        },
+        limits: { fileSize: 2097152 }, // 2MB
+        storage: diskStorage({
+            destination: './uploads',
+            filename: function (req, file, cb) {
+                cb(null, Date.now() + file.originalname)
+            },
+        })
+    }))
+    @UsePipes(new ValidationPipe( { transform: true }))
+    async createItem(
+        @Body() CreateItemDto: CreateItemDto,
+        @UploadedFile() file?: Express.Multer.File,
+    ):Promise<object> {
+        let image: string | undefined = undefined;
+        if(file) {
+            image = `${file.filename}`;
+        }
+        return this.restaurantService.createItem(CreateItemDto, image);
+    }
+
+    //19. Get Item by restaurant id and category id
+    @Get('items/:restaurantId/:categoryId')
+    async getItemsByRestaurantAndCategory(
+        @Param('restaurantId', ParseIntPipe) restaurantId: number,
+        @Param('categoryId', ParseIntPipe) categoryId: number
+    ): Promise<object> {
+        return this.restaurantService.getItemsByRestaurantAndCategory(restaurantId, categoryId);
+    }
+
+    //20. GET ITEMS IMAGE
+    @Get('items/:name')
+    getItemsImage(@Param('name') name: string, @Res() res: Response) {
+        res.sendFile(name,{ root: './uploads' })
+    }
 
 
-    // @Post('items')
-    // @UsePipes(new ValidationPipe({transform: true}))
-    // @UseInterceptors(
-    //     FileInterceptor('image', {
-    //     fileFilter: (req, file, cb) => {
-    //         if (file.originalname.match(/^.*\.(jpg|jpeg|png)$/)) {
-    //         cb(null, true);
-    //         } else {
-    //         cb(new BadRequestException('Only JPG, JPEG, PNG allowed'), false);
-    //         }
-    //     },
-    //     limits: { fileSize: 2 * 1024 * 1024 },
-    //     storage: diskStorage({
-    //         destination: './uploads',
-    //         filename: (req, file, cb) => {
-    //         const filename = `${Date.now()}-${file.originalname}`;
-    //         cb(null, filename);
-    //         },
-    //     }),
-    //     }),
-    // )
-    // async createItem(
-    //     @UploadedFile() file: Express.Multer.File,
-    //     @Body() createItemDto: CreateItemDto,
-    // ) {
-    //     let imageUrl: string = '';
+    //21. Delete Items
 
-    //     if (file) {
-    //         imageUrl = `/${file.filename}`;
-    //     }
-    //     return this.restaurantService.create(createItemDto, imageUrl);
-    // }
-
-    
-
-      
-
-    
+    @Delete('items/:itemsId')
+    async deleteItems(@Param('itemsId', ParseIntPipe) itemsId: number): Promise<object> {
+        return this.restaurantService.deleteItems(itemsId);
+    }
 
 }
