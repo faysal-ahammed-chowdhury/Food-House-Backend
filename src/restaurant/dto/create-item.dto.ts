@@ -12,10 +12,10 @@ export class CreateItemDto {
     price!: number;
 
     @IsOptional()
-    image?: string;
+    imageUrl?: string;
 
-    @IsNotEmpty()
-    isAvailable!: boolean;
+    @IsOptional()
+    isAvailable?: boolean;
 
     @IsNumber()
     preparationTime!: number;
