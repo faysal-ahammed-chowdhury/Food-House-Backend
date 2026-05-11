@@ -43,6 +43,20 @@ export class AdminController {
         this.adminService = adminService;
     }
 
+    /* ========== Dashboard APIs ========== */
+
+    // get stats
+    @Get('stats')
+    async getStats(): Promise<object> {
+        return this.adminService.getStats();
+    }
+
+    // get recent orders
+    @Get('orders/recent')
+    async getRecentOrders(): Promise<object> {
+        return this.adminService.getRecentOrders();
+    }
+
     /* ========== Manage Admin ========== */
 
     // create admin route

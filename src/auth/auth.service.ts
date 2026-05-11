@@ -84,10 +84,10 @@ export class AuthService {
         };
     }
 
-    async getUserById(userId: number): Promise<object>{
+    async getUserById(userId: number): Promise<object> {
         const user = await this.userRepository.findOne({
             select: ['userId', 'name', 'email', 'role'],
-            where: { userId: userId, },
+            where: { userId: userId },
         });
         if (!user) {
             throw new NotFoundException(`User not found with id ${userId}`);
@@ -197,32 +197,28 @@ export class AuthService {
         const user = await this.userRepository.findOne({
             where: {
                 userId: id,
-                verificationToken: token,
             },
         });
 
         if (!user) {
-            throw new UnauthorizedException('Invalid User or Token');
+            throw new UnauthorizedException('Invalid User');
         }
 
         if (user.isVerified) {
             throw new BadRequestException('User already verified');
         }
 
+        if (user.verificationToken != token) {
+            throw new UnauthorizedException('Invalid Token');
+        }
+
         user.isVerified = true;
         user.verificationToken = null;
-        const newUser = await this.userRepository.save(user);
-
-        const payload = {
-            userId: newUser.userId,
-            email: newUser.email,
-            role: newUser.role,
-        };
+        await this.userRepository.save(user);
 
         return {
             success: true,
             message: 'User verified',
-            access_token: await this.jwtService.signAsync(payload),
         };
     }
 }
