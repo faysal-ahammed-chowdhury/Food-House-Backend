@@ -259,4 +259,12 @@ export class RestaurantController {
         return this.restaurantService.getItemById(itemId);
     }
 
+    //24.Get restureant order history (completed and canceled orders)
+    @Get('restaurant/:id/history')
+    async getRestaurantOrderHistory(
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        return this.restaurantService.getCompletedAndCanceledOrdersByRestaurant(id);
+    }
+
 }

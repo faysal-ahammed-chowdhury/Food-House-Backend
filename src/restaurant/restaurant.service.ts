@@ -1,7 +1,7 @@
 import {ConflictException, Injectable, NotFoundException, Res } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { RestaurantEntity } from "../common/entities/restaurant.entity";
-import { MoreThan, OneOrMore, Repository } from "typeorm";
+import { In, MoreThan, OneOrMore, Repository } from "typeorm";
 import { ItemEntity } from "../common/entities/item.entity";
 import { CategoryEntity } from "../common/entities/category.entity";
 import { VoucherEntity } from "../common/entities/voucher.entity";
@@ -15,6 +15,8 @@ import { CreateCategoryDto } from "./dto/create-category.dto";
 import { CreateVoucherDto } from "./dto/create-voucher.dto";
 import { CreateItemDto } from "./dto/create-item.dto";
 import { UpdateItemDto } from "./dto/update-item.dto";
+import { OrderStatus } from "src/common/enums/order-status.enum";
+import { OrderEntity } from "src/common/entities/order.entity";
  
 
 @Injectable()
@@ -31,6 +33,8 @@ export class RestaurantService {
         private readonly itemRepository: Repository<ItemEntity>,
         @InjectRepository(VoucherEntity)
         private readonly voucherRepository: Repository<VoucherEntity>,
+        @InjectRepository(OrderEntity)
+        private readonly orderRepository: Repository<OrderEntity>,  
         
     ){}
 
@@ -86,7 +90,10 @@ export class RestaurantService {
         });
 
         if (!restaurant) {
-            throw new NotFoundException(`Restaurant with id ${restaurantId} doesn't exist`);
+           return {
+                success: false,
+                message: `Restaurant with id ${restaurantId} doesn't exist`,
+            };
         }
         const { password, ...safeUserInfo } = restaurant.user;
         const formattedData = {
@@ -481,4 +488,27 @@ export class RestaurantService {
         return item;
     }
     
+
+    //24
+    async getCompletedAndCanceledOrdersByRestaurant(restaurantId: number) {
+        return this.orderRepository.find({
+            where: {
+                restaurant: {
+                    restaurantId,
+                },
+                status: In([
+                    OrderStatus.DELIVERED,
+                    OrderStatus.CANCELLED,
+                ]),
+            },
+            relations: {
+                orderItems: true,
+                customer: true
+            },
+            order: {
+                orderId: 'DESC',
+            },
+        });
+    }
+
 }
