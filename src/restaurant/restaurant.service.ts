@@ -14,6 +14,7 @@ import { UpdateRestaurantDto } from "./dto/update-restaurant.dto";
 import { CreateCategoryDto } from "./dto/create-category.dto";
 import { CreateVoucherDto } from "./dto/create-voucher.dto";
 import { CreateItemDto } from "./dto/create-item.dto";
+import { UpdateItemDto } from "./dto/update-item.dto";
  
 
 @Injectable()
@@ -385,12 +386,11 @@ export class RestaurantService {
                 category: { categoryId: categoryId },
             },
         });
-        console.log(`Count of items in category ${categoryId}: ${count}`);
         return count;
     }
 
     //18
-    async createItem(createItemDto: CreateItemDto, uploadedImageUrl?: string): Promise<ItemEntity> {
+    async createItem(createItemDto: CreateItemDto): Promise<ItemEntity> {
         const category = await this.categoryRepository.findOne({
             where: { categoryId: createItemDto.categoryId },
         });
@@ -413,7 +413,7 @@ export class RestaurantService {
             name: createItemDto.name,
             description: createItemDto.description,
             price: createItemDto.price,
-            imageUrl: uploadedImageUrl ? uploadedImageUrl : undefined,
+            imageUrl: undefined,
             isAvailable: true,
             preparationTime: createItemDto.preparationTime,
             category,
@@ -455,6 +455,19 @@ export class RestaurantService {
                 itemId: item.itemId,
             },
         };
+    }
+
+
+    //22
+    async updateItem(itemsId: number, updateItemDto: UpdateItemDto): Promise<ItemEntity> {
+        const item = await this.itemRepository.findOne({
+            where: { itemId: itemsId },
+        });
+        if (!item) {
+            throw new NotFoundException(`Item with id ${itemsId} not found`);
+        }
+        Object.assign(item, updateItemDto);
+        return await this.itemRepository.save(item);
     }
     
 }

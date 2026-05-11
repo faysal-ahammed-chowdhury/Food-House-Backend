@@ -11,6 +11,7 @@ import { CreateRestaurantDto } from "./dto/create-restaurant.dto";
 import { UpdateCategoryDto } from "./dto/update-category.dto";
 import { RestaurantGuard } from "./restaurant.guard";
 import { AuthGuard } from "../auth/auth.guard";
+import { UpdateItemDto } from "./dto/update-item.dto";
 //get       ++
 //post      ++
 //put       +
@@ -194,32 +195,9 @@ export class RestaurantController {
 
     //18. Create Items
     @Post('createItems')
-    @UseInterceptors(FileInterceptor('myfile', {
-        fileFilter: (req, file, cb) => {
-            if (file.originalname.match(/^.*\.(jpg|webp|png|jpeg)$/))
-                cb(null, true);
-            else {
-                cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'image'), false);
-            }
-        },
-        limits: { fileSize: 2097152 }, // 2MB
-        storage: diskStorage({
-            destination: './uploads',
-            filename: function (req, file, cb) {
-                cb(null, Date.now() + file.originalname)
-            },
-        })
-    }))
-    @UsePipes(new ValidationPipe( { transform: true }))
-    async createItem(
-        @Body() CreateItemDto: CreateItemDto,
-        @UploadedFile() file?: Express.Multer.File,
-    ):Promise<object> {
-        let image: string | undefined = undefined;
-        if(file) {
-            image = `${file.filename}`;
-        }
-        return this.restaurantService.createItem(CreateItemDto, image);
+    @UsePipes(new ValidationPipe())
+    async createItem(@Body() CreateItemDto: CreateItemDto,):Promise<object>{
+        return this.restaurantService.createItem(CreateItemDto);
     }
 
     //19. Get Item by restaurant id and category id
@@ -237,12 +215,44 @@ export class RestaurantController {
         res.sendFile(name,{ root: './uploads' })
     }
 
-
     //21. Delete Items
-
     @Delete('items/:itemsId')
     async deleteItems(@Param('itemsId', ParseIntPipe) itemsId: number): Promise<object> {
         return this.restaurantService.deleteItems(itemsId);
     }
+
+    //22. Update Items
+    @Put('items/:itemsId')
+    @UseInterceptors(FileInterceptor('myfile', {
+        fileFilter: (req, file, cb) => {
+            if (file.originalname.match(/^.*\.(jpg|webp|png|jpeg)$/))
+                cb(null, true);
+            else {
+                cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'image'), false);
+            }
+        },
+        limits: { fileSize: 2097152 }, // 2MB
+        storage: diskStorage({
+            destination: './uploads',
+            filename: function (req, file, cb) {
+                cb(null, Date.now() + file.originalname)
+            },
+        })
+    }))
+    async updateItem(
+        @Param('itemsId', ParseIntPipe) itemsId: number,
+        @Body() updateItemDto: UpdateItemDto,
+        @UploadedFile() file?: Express.Multer.File,
+    ): Promise<object> {
+        let imageUrl: string | undefined = undefined;
+        if(file) {
+            imageUrl = `${file.filename}`;
+            updateItemDto.imageUrl = imageUrl;
+        }
+
+        return this.restaurantService.updateItem(itemsId, updateItemDto);
+    }
+
+    
 
 }
