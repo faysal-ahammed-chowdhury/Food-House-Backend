@@ -253,6 +253,10 @@ export class RestaurantController {
         return this.restaurantService.updateItem(itemsId, updateItemDto);
     }
 
-    
+    //23.Get Item by item id
+    @Get('item/:itemId')
+    async getItemById(@Param('itemId', ParseIntPipe) itemId: number): Promise<object> {
+        return this.restaurantService.getItemById(itemId);
+    }
 
 }

@@ -469,5 +469,16 @@ export class RestaurantService {
         Object.assign(item, updateItemDto);
         return await this.itemRepository.save(item);
     }
+
+    //23
+    async getItemById(itemId: number): Promise<ItemEntity> {
+        const item = await this.itemRepository.findOne({
+            where: { itemId: itemId },
+        });
+        if (!item) {
+            throw new NotFoundException(`Item with id ${itemId} not found`);
+        }
+        return item;
+    }
     
 }
