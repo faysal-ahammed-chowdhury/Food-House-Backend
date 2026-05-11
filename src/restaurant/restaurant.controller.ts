@@ -253,6 +253,18 @@ export class RestaurantController {
         return this.restaurantService.updateItem(itemsId, updateItemDto);
     }
 
-    
+    //23.Get Item by item id
+    @Get('item/:itemId')
+    async getItemById(@Param('itemId', ParseIntPipe) itemId: number): Promise<object> {
+        return this.restaurantService.getItemById(itemId);
+    }
+
+    //24.Get restureant order history (completed and canceled orders)
+    @Get('restaurant/:id/history')
+    async getRestaurantOrderHistory(
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        return this.restaurantService.getCompletedAndCanceledOrdersByRestaurant(id);
+    }
 
 }
