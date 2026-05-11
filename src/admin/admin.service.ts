@@ -66,6 +66,51 @@ export class AdminService {
         return Boolean(foundEmail);
     }
 
+    /* ========== Dashboard APIs ========== */
+
+    // get stats
+    async getStats(): Promise<object> {
+        const orders = await this.orderRepository.find({
+            where: { status: OrderStatus.DELIVERED },
+        });
+
+        const platformEarnings = orders.reduce((prev, cur) => {
+            return prev + cur.commissionAmount;
+        }, 0);
+
+        const totalOrders = orders.length;
+
+        const restaurants = await this.restaurantRepository.find();
+        const totalRestaurant = restaurants.length;
+
+        const rider = await this.riderRepository.find();
+        const totalRider = rider.length;
+        return {
+            success: true,
+            message: 'Stats Fetched Successfully',
+            data: {
+                platformEarnings,
+                totalOrders,
+                totalRestaurant,
+                totalRider,
+            },
+        };
+    }
+
+    // get recent orders
+    async getRecentOrders(): Promise<object> {
+        const data = await this.orderRepository.find({
+            order: { orderAt: 'DESC' },
+            take: 7,
+        });
+
+        return {
+            success: true,
+            message: 'Stats Fetched Successfully',
+            data,
+        };
+    }
+
     /* ========== Manage Admin ========== */
 
     // create an admin
