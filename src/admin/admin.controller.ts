@@ -45,16 +45,23 @@ export class AdminController {
 
     /* ========== Dashboard APIs ========== */
 
-    // get stats
+    // get stats  route
     @Get('stats')
     async getStats(): Promise<object> {
         return this.adminService.getStats();
     }
 
-    // get recent orders
+    // get recent orders route
     @Get('orders/recent')
     async getRecentOrders(): Promise<object> {
         return this.adminService.getRecentOrders();
+    }
+
+    // get order status count route
+
+    @Get('orders/status_count')
+    async getOrderStatusCount(): Promise<object> {
+        return this.adminService.getOrderStatusCount();
     }
 
     /* ========== Manage Admin ========== */
