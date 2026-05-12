@@ -281,7 +281,18 @@ export class RestaurantController {
         return this.restaurantService.getCompletedAndCanceledOrdersByRestaurant(id);
     }
 
+    //25. Get financial info of restaurant
+    // @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('financialInfo/:restaurantId')
+    async getFinancialInfo(@Param('restaurantId', ParseIntPipe) restaurantId: number){
+        return this.restaurantService.getFinancialInfoByRestaurant(restaurantId);
+    }
 
-    
+    //26. Get restureant items count
+    // @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('itemsCount/:restaurantId')
+    async getItemsCount(@Param('restaurantId', ParseIntPipe) restaurantId: number){
+        return this.restaurantService.getItemsCount(restaurantId);
+    }
 
 }
