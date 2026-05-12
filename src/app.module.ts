@@ -1,5 +1,6 @@
 import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
@@ -12,14 +13,17 @@ import { RiderModule } from './rider/rider.module';
         AdminModule,
         AuthModule,
         RestaurantModule,
-        RiderModule,
+        ConfigModule.forRoot({
+            isGlobal: true,
+        }),
+
         TypeOrmModule.forRoot({
             type: 'postgres',
-            host: 'localhost',
-            port: 5432,
-            username: 'postgres',
-            password: '12345',
-            database: 'foodhouse',
+            host: process.env.DB_HOST,
+            port: Number(process.env.DB_PORT),
+            username: process.env.DB_USERNAME,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME,
             autoLoadEntities: true,
             synchronize: true,
             // dropSchema: true,
@@ -30,8 +34,8 @@ import { RiderModule } from './rider/rider.module';
                 port: 587,
                 secure: false,
                 auth: {
-                    user: 'faysal.a.chowdhury.1@gmail.com',
-                    pass: 'jbpafbyzkunplhba',
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS,
                 },
             },
         }),

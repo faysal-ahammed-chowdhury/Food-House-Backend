@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import Pusher from 'pusher';
 import { CategoryEntity } from 'src/common/entities/category.entity';
 import { CustomerEntity } from 'src/common/entities/customer.entity';
 import { ItemEntity } from 'src/common/entities/item.entity';
@@ -137,6 +138,22 @@ export class AdminService {
 
     /* ========== Manage Admin ========== */
 
+    async adminPusher() {
+        console.log('Look: ', process.env.FAYSAL_PUSHER_APP_ID);
+
+        const pusher = new Pusher({
+            appId: process.env.FAYSAL_PUSHER_APP_ID || '',
+            key: process.env.FAYSAL_PUSHER_KEY || '',
+            secret: process.env.FAYSAL_PUSHER_SECRET || '',
+            cluster: process.env.FAYSAL_PUSHER_CLUSTER || '',
+            useTLS: true,
+        });
+
+        await pusher.trigger('my-channel', 'my-event', {
+            data: await this.getAdmins(),
+        });
+    }
+
     // create an admin
     async createAdmin(createAdminDto: CreateAdminDto): Promise<object> {
         const emailExist = await this.checkEmailExist(createAdminDto.email);
@@ -155,6 +172,8 @@ export class AdminService {
             isVerified: true,
         });
         const { password, verificationToken, ...adminWithoutPassword } = admin;
+
+        await this.adminPusher();
 
         return {
             success: true,
@@ -256,6 +275,8 @@ export class AdminService {
         const updated = await this.userRepository.save(admin);
         const { password, verificationToken, ...output } = updated;
 
+        await this.adminPusher();
+
         return {
             success: true,
             message: `Admin Updated Successfully`,
@@ -277,6 +298,8 @@ export class AdminService {
         }
 
         await this.userRepository.delete(userId);
+
+        await this.adminPusher();
 
         return {
             success: true,

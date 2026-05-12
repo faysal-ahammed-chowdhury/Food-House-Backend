@@ -158,10 +158,10 @@ export class AuthService {
         }
 
         const verificationTokenHere: string = String(Date.now());
-        const verificationLink = `http://localhost:3000/auth/verify/${userId}/${verificationTokenHere}`;
 
         user.verificationToken = verificationTokenHere;
         const newUser = await this.userRepository.save(user);
+        const verificationLink = `http://localhost:3000/auth/verify/${userId}/${newUser.verificationToken}`;
 
         try {
             await this.mailerService.sendMail({
