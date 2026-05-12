@@ -130,7 +130,8 @@ export class RiderService{
 
         if (!match) throw new BadRequestException("Wrong password");
 
-        rider.user.password = await bcrypt.hash(dto.newPassword, 10);
+        const salt = await bcrypt.genSalt();
+        rider.user.password = await bcrypt.hash(dto.newPassword, salt);
 
         await this.userRepository.save(rider.user);
 

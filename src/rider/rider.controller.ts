@@ -55,7 +55,9 @@ export class RiderController{
 
 
         //2. rider profile update without image
+        
         @Put("riders/:id")
+        @UsePipes(new ValidationPipe())
         async updateRider(
             @Param('id', ParseIntPipe) riderId: number,
             @Body() updateRiderDto: UpdateRiderDto,
@@ -90,6 +92,13 @@ export class RiderController{
     }
 
         // 6.change password-
+    @Patch("riders/:id/change-password")
+    async changePassword(
+        @Param("id", ParseIntPipe) riderId: number,
+        @Body() dto: ChangePasswordDto
+    ) {
+        return this.riderService.changePassword(riderId, dto);
+     }
 
     /*
     
