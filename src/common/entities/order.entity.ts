@@ -18,69 +18,69 @@ import { RestaurantEntity } from './restaurant.entity';
 @Entity('orders')
 export class OrderEntity {
     @PrimaryGeneratedColumn()
-    orderId: number;
+    orderId!: number;
 
     @ManyToOne(() => RestaurantEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'restaurantId' })
-    restaurant: RestaurantEntity;
+    restaurant!: RestaurantEntity;
 
     @ManyToOne(() => CustomerEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'customerId' })
-    customer: CustomerEntity;
+    customer!: CustomerEntity;
 
     @CreateDateColumn()
-    orderAt: Date;
+    orderAt!: Date;
 
     @Column('float')
-    subtotal: number;
+    subtotal!: number;
 
     @Column({ nullable: true })
-    voucherCode: string;
+    voucherCode!: string;
 
     @Column('float')
-    discountAmount: number;
+    discountAmount!: number;
 
     @Column('float')
-    deliveryFee: number;
+    deliveryFee!: number;
 
     @Column('float')
-    total: number;
+    total!: number;
 
     @Column({ type: 'enum', enum: PaymentMethod })
-    paymentMethod: PaymentMethod;
+    paymentMethod!: PaymentMethod;
 
     @Column()
-    restaurantAddress: string;
+    restaurantAddress!: string;
 
     @Column()
-    customerAddress: string;
+    customerAddress!: string;
 
     @Column()
-    restaurantName: string;
+    restaurantName!: string;
 
     @Column()
-    customerName: string;
+    customerName!: string;
 
     @Column({ nullable: true })
-    riderName: string;
+    riderName!: string;
 
     @Column({ type: 'enum', enum: OrderStatus })
-    status: OrderStatus;
+    status!: OrderStatus;
 
     @Column('float')
-    commissionAmount: number;
+    commissionAmount!: number;
 
     @Column('float')
-    commissionPercentage: number;
+    commissionPercentage!: number;
 
     @Column('float')
-    estimatedDeliveryTime: number;
+    estimatedDeliveryTime!: number;
 
     @OneToOne(() => DeliveryEntity, (delivery) => delivery.order, {
         nullable: true,
     })
-    delivery: DeliveryEntity;
+    delivery!: DeliveryEntity;
 
     @OneToMany(() => OrderItemEntity, (item) => item.order)
-    orderItems: OrderItemEntity[];
+    orderItems!: OrderItemEntity[];
 }

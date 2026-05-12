@@ -38,7 +38,13 @@ export class AuthService {
     }
 
     // sign in logic for any user
-    async signIn(email: string, pass: string): Promise<object> {
+    async signIn(
+        email: string,
+        pass: string,
+    ): Promise<{
+        token: string;
+        data: any;
+    }> {
         const user = await this.userRepository.findOne({
             where: {
                 email: email,
@@ -62,6 +68,7 @@ export class AuthService {
         }
 
         const payload = {
+            name: user.name,
             userId: user.userId,
             email: user.email,
             role: user.role,
@@ -69,11 +76,26 @@ export class AuthService {
 
         const { password, isVerified, verificationToken, ...result } = user;
 
+        const token = await this.jwtService.signAsync(payload);
+
+        return {
+            data: result,
+            token: token,
+        };
+    }
+
+    async getUserById(userId: number): Promise<object>{
+        const user = await this.userRepository.findOne({
+            select: ['userId', 'name', 'email', 'role'],
+            where: { userId: userId, },
+        });
+        if (!user) {
+            throw new NotFoundException(`User not found with id ${userId}`);
+        }
         return {
             success: true,
-            message: 'Login successful',
-            data: result,
-            access_token: await this.jwtService.signAsync(payload),
+            message: 'User Found',
+            data: user,
         };
     }
 

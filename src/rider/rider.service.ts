@@ -1,17 +1,26 @@
 import { Injectable, ConflictException ,NotFoundException, BadRequestException} from "@nestjs/common";
-import { CreateRiderDto, RiderStatusDto, UpdateRiderDto, AssignDeliveryDto } from "./rider.dto";
+
 import { RiderEntity } from "../common/entities/rider.entity";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Repository, Not, IsNull, Or, In } from "typeorm";
 import { UserEntity } from "../common/entities/user.entity";
 import { DeliveryEntity } from "../common/entities/delivery.entity";
-//import { CODSubmissionEntity } from "../common/entities/cod-submission.entity";
+import { OrderEntity } from "../common/entities/order.entity";
+import {UpdateRiderDto} from "./dto/update-rider.dto";
+import {RiderStatusDto} from "./dto/rider-status.dto";
+import {AssignDeliveryDto} from "./dto/assign-delivery.dto";
+import {ChangePasswordDto} from "./dto/change-password.dto";
 import * as bcrypt from 'bcrypt';
 import { UserRoles } from "../common/enums/user-roles.enum";
+import { OrderStatus } from "src/common/enums/order-status.enum";
 
 
 @Injectable()
 export class RiderService{
+    getImageByRiderId // remove sensitive data
+        (riderId: number): object {
+            throw new Error("Method not implemented.");
+    }
     constructor(
         @InjectRepository(RiderEntity)
         private riderRepository: Repository<RiderEntity>,
@@ -19,74 +28,15 @@ export class RiderService{
         private userRepository: Repository<UserEntity>,
         @InjectRepository(DeliveryEntity)
         private deliveryRepository: Repository<DeliveryEntity>,
-        // @InjectRepository(CODSubmissionEntity)
-        // private codsubmissionEntity: Repository<CODSubmissionEntity>
+        @InjectRepository(OrderEntity)
+        private orderRepository: Repository<OrderEntity>,
     ){}
 
-    //creating
-    async checkUserExist(email: string): Promise<boolean> {
-        const foundEmail = await this.userRepository.findOne({
-            where: {email: email},
-        });
-        return Boolean(foundEmail);
-    }
-    async createRider(createRiderDto: CreateRiderDto): Promise<object> {
+    //---------
     
-    
-    const userExist = await this.checkUserExist(createRiderDto.email);
-    if (userExist) {
-        throw new ConflictException('Email already exists');
-    }
 
-    
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(createRiderDto.password, salt);
-
-    
-    const rider = await this.riderRepository.save({
-        user: {
-            name: createRiderDto.name,
-            email: createRiderDto.email,
-            password: hashedPassword,
-            role: UserRoles.RIDER, 
-        },
-        phone: createRiderDto.phone,
-        riderNid: createRiderDto.riderNid,
-        bkashAccount: createRiderDto.bkashAccount,
-        bankAccount: createRiderDto.bankAccount,
-        isOnline: false, 
-    });
-
-    
-    const { password, ...userWithoutPassword } = rider.user;
-    const output = { ...rider, user: userWithoutPassword };
-
-    
-    return {
-        success: true,
-        message: `Rider ${rider.user.name} created successfully`,
-        data: output,
-    };
-}
-    // -------- GET ALL RIDERS --------
-   async getAllRiders(): Promise<object> {
-        const riders = await this.riderRepository.find({ relations: ['user', 'deliveries'] });
-
-        const output = riders.map(r => {
-            const { password, ...userWithoutPassword } = r.user;
-            return { ...r, user: userWithoutPassword };
-        });
-
-        return {
-            success: true,
-            message: `${riders.length} riders retrieved`,
-            data: output,
-        };
-    }
-
-
-    // -------- GET RIDER BY ID --------
-    async getRiderById(riderId: number): Promise<object> {
+    //get by id---
+   async getRiderById(riderId: number): Promise<object> {
         const rider = await this.riderRepository.findOne({
             where: { riderId },
             relations: ['user', 'deliveries'],
@@ -95,7 +45,18 @@ export class RiderService{
         if (!rider) throw new NotFoundException(`Rider with id ${riderId} not found`);
 
         const { password, ...userWithoutPassword } = rider.user;
-        const output = {  user: userWithoutPassword };
+        const output = {  
+            
+            riderId: rider.riderId,
+            name: userWithoutPassword.name,
+            email: userWithoutPassword.email,
+            phone: rider.phone,
+            riderNid: rider.riderNid,
+            bkashAccount: rider.bkashAccount,
+            bankAccount: rider.bankAccount,
+            nidImageUrl: rider.nidImageUrl,
+            isOnline: rider.isOnline,
+        };
 
         return {
             success: true,
@@ -104,9 +65,29 @@ export class RiderService{
         };
     }
 
+    ///nid image url get by id
+    async getRiderImage(riderId: number): Promise<string> {
+    const rider = await this.riderRepository.findOne({
+        where: { riderId },
+    });
 
-    // -------- UPDATE RIDER INFO --------
-    async updateRider(riderId: number, updateRiderDto: UpdateRiderDto): Promise<object> {
+    if (!rider) throw new NotFoundException("Rider not found");
+
+    if (!rider.nidImageUrl) {
+        throw new NotFoundException("Image not found");
+    }
+
+    return rider.nidImageUrl; 
+}
+
+
+    
+    //Update Rider Profile-----
+    async updateRider(
+        riderId: number,
+        updateRiderDto: UpdateRiderDto,
+        //nidImageUrl?: string,
+    ): Promise<object> {
         const rider = await this.riderRepository.findOne({
             where: { riderId },
             relations: ['user'],
@@ -114,87 +95,143 @@ export class RiderService{
 
         if (!rider) throw new NotFoundException('Rider not found');
 
-        rider.user.name = updateRiderDto.name ?? rider.user.name;
-        rider.phone = updateRiderDto.phone ?? rider.phone;
+        // Update rider information
+        if (updateRiderDto.name) rider.user.name = updateRiderDto.name;
+        if (updateRiderDto.phone) rider.phone = updateRiderDto.phone;
+        if (updateRiderDto.bkashAccount) rider.bkashAccount = updateRiderDto.bkashAccount;
+        if (updateRiderDto.bankAccount) rider.bankAccount = updateRiderDto.bankAccount;
+       // if (nidImageUrl) rider.nidImageUrl = nidImageUrl;
 
-        if (updateRiderDto.password) {
-        const salt = await bcrypt.genSalt();
-        rider.user.password = await bcrypt.hash(updateRiderDto.password, salt);
-    }
-
+        await this.riderRepository.save(rider);
         await this.userRepository.save(rider.user);
-        const updatedRider = await this.riderRepository.save(rider);
-
-        const { password, ...userWithoutPassword } = updatedRider.user;
-        const output = { ...updatedRider, user: userWithoutPassword };
 
         return {
             success: true,
             message: 'Rider updated successfully',
-            data: output,
+            data: {
+                    name: rider.user.name,
+                    phone: rider.phone,
+                    bkashAccount: rider.bkashAccount,
+                    bankAccount: rider.bankAccount,
+                }
         };
     }
 
-    // -------- UPDATE RIDER STATUS --------
-    async updateRiderStatus(riderId: number, riderStatusDto: RiderStatusDto): Promise<object> {
+    //change password
+    async changePassword(id: number, dto: ChangePasswordDto) {
+        const rider = await this.riderRepository.findOne({
+            where: { riderId: id },
+            relations: ["user"],
+        });
+
+        if (!rider) throw new NotFoundException("Rider not found");
+
+        const match = await bcrypt.compare(dto.oldPassword, rider.user.password);
+
+        if (!match) throw new BadRequestException("Wrong password");
+
+        rider.user.password = await bcrypt.hash(dto.newPassword, 10);
+
+        await this.userRepository.save(rider.user);
+
+        return { success: true, message: "Password changed" };
+    }
+
+    //dashboard data get by id
+    async getDashboardData(riderId: number): Promise<object> {
         const rider = await this.riderRepository.findOne({
             where: { riderId },
             relations: ['user'],
         });
+        if (!rider) throw new NotFoundException("Rider not found");
 
-        if (!rider) throw new NotFoundException('Rider not found');
+           // Active deliveries
+    const activeDeliveries = await this.orderRepository.count({
+         where: {
+                status: In([
+                    OrderStatus.RIDER_ASSIGNED,
+                    OrderStatus.PREPARING,
+                    OrderStatus.READY,
+                    OrderStatus.PICKED,
+                ]),
+                delivery: {
+                    rider: { riderId },
+                },
+            },
+    });
 
-        if (riderStatusDto.isOnline !== undefined) rider.isOnline = riderStatusDto.isOnline;
+    // Available requests
+    const availableRequests = await this.orderRepository.count({
+        where: {
+             status: OrderStatus.PENDING,
+        },
+    });
 
-        const updatedRider = await this.riderRepository.save(rider);
+    // Completed
+    const completedOrders = await this.orderRepository.count({
+        where: {
+                status: OrderStatus.DELIVERED,
+                delivery: {
+                    rider: { riderId },
+                },
+            },
+    });
 
-        const { password, ...userWithoutPassword } = updatedRider.user;
-        const output = { ...updatedRider, user: userWithoutPassword };
-
-        return {
-            success: true,
-            message: 'Rider status updated successfully',
-            data: output,
-        };
-    }
-
-    // -------- DELETE RIDER --------
-     async deleteRider(riderId: number): Promise<object> {
-        const rider = await this.riderRepository.findOne({
-            where: { riderId },
-            relations: ['user'],
+    // Earnings 
+    const deliveredOrders = await this.orderRepository.find({
+            where: {
+                status: OrderStatus.DELIVERED,
+                delivery: {
+                    rider: { riderId },
+                },
+            },
         });
 
-        if (!rider) throw new NotFoundException('Rider not found');
+    let todaysEarnings = 0;
 
-        await this.riderRepository.remove(rider);
-
-        return {
-            success: true,
-            message: 'Rider deleted successfully',
-            data: { riderId: rider.riderId, userId: rider.user.userId },
-        };
-    }
-
-     // -------- ASSIGN DELIVERY --------
-     async assignDelivery(assignDeliveryDto: AssignDeliveryDto): Promise<object> {
-        const rider = await this.riderRepository.findOne({ where: { riderId: assignDeliveryDto.riderId } });
-        if (!rider) throw new NotFoundException('Rider not found');
-
-        const delivery = await this.deliveryRepository.findOne({ where: { deliveryId: assignDeliveryDto.deliveryId } });
-        if (!delivery) throw new NotFoundException('Delivery not found');
-
-        delivery.rider = rider;
-        delivery.acceptedAt = new Date();
-        const updatedDelivery = await this.deliveryRepository.save(delivery);
+        for (const order of deliveredOrders) {
+            todaysEarnings += order.deliveryFee || 0;
+        }
 
         return {
             success: true,
-            message: 'Delivery assigned successfully',
-            data: updatedDelivery,
+            data: {
+                isOnline: rider.isOnline,
+                activeDeliveries,
+                availableRequests,
+                completedOrders,
+                todaysEarnings,
+            },
         };
     }
 
-    
+
+    //update rider status
+    async updateRiderStatus(riderId: number, dto: RiderStatusDto) {
+    const rider = await this.riderRepository.findOne({
+        where: { riderId },
+    });
+
+    if (!rider) throw new NotFoundException("Rider not found");
+
+    rider.isOnline = dto.isOnline;
+
+    await this.riderRepository.save(rider);
+
+    return {
+        success: true,
+        message: "Status updated",
+        data: {
+            riderId: rider.riderId,
+            isOnline: rider.isOnline,
+        },
+    };
+}
+
+
+/*
+
+
+    */
 
 }
