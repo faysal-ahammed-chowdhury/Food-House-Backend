@@ -99,7 +99,7 @@ export class AdminService {
 
     // get recent orders
     async getRecentOrders(): Promise<object> {
-        const data = await this.orderRepository.find({
+        const orders = await this.orderRepository.find({
             order: { orderAt: 'DESC' },
             take: 7,
         });
@@ -107,7 +107,31 @@ export class AdminService {
         return {
             success: true,
             message: 'Stats Fetched Successfully',
-            data,
+            data: orders,
+        };
+    }
+
+    // get order status count
+    async getOrderStatusCount(): Promise<object> {
+        const orders = await this.orderRepository.find({
+            order: { orderAt: 'DESC' },
+        });
+
+        const orderStatusCount: Record<string, number> = {};
+        orders.forEach((order) => {
+            orderStatusCount[order.status] =
+                (orderStatusCount[order.status] || 0) + 1;
+        });
+
+        const result = Object.entries(orderStatusCount).map(([key, val]) => [
+            key,
+            val,
+        ]);
+
+        return {
+            success: true,
+            message: 'Order Status Fetched Successfully',
+            data: result,
         };
     }
 
