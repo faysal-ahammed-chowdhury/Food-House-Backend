@@ -43,6 +43,27 @@ export class AdminController {
         this.adminService = adminService;
     }
 
+    /* ========== Dashboard APIs ========== */
+
+    // get stats  route
+    @Get('stats')
+    async getStats(): Promise<object> {
+        return this.adminService.getStats();
+    }
+
+    // get recent orders route
+    @Get('orders/recent')
+    async getRecentOrders(): Promise<object> {
+        return this.adminService.getRecentOrders();
+    }
+
+    // get order status count route
+
+    @Get('orders/status_count')
+    async getOrderStatusCount(): Promise<object> {
+        return this.adminService.getOrderStatusCount();
+    }
+
     /* ========== Manage Admin ========== */
 
     // create admin route
@@ -288,7 +309,7 @@ export class AdminController {
             throw new BadRequestException('NID image is required');
         }
 
-        return this.adminService.createRider(createRiderDto, file.path);
+        return this.adminService.createRider(createRiderDto, file.filename);
     }
 
     // get riders route

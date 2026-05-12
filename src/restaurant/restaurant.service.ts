@@ -1,7 +1,7 @@
 import {ConflictException, Injectable, NotFoundException, Res } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { RestaurantEntity } from "../common/entities/restaurant.entity";
-import { OneOrMore, Repository } from "typeorm";
+import { In, MoreThan, OneOrMore, Repository } from "typeorm";
 import { ItemEntity } from "../common/entities/item.entity";
 import { CategoryEntity } from "../common/entities/category.entity";
 import { VoucherEntity } from "../common/entities/voucher.entity";
@@ -13,6 +13,10 @@ import { UpdateCategoryDto } from "./dto/update-category.dto";
 import { UpdateRestaurantDto } from "./dto/update-restaurant.dto";
 import { CreateCategoryDto } from "./dto/create-category.dto";
 import { CreateVoucherDto } from "./dto/create-voucher.dto";
+import { CreateItemDto } from "./dto/create-item.dto";
+import { UpdateItemDto } from "./dto/update-item.dto";
+import { OrderStatus } from "src/common/enums/order-status.enum";
+import { OrderEntity } from "src/common/entities/order.entity";
  
 
 @Injectable()
@@ -29,9 +33,12 @@ export class RestaurantService {
         private readonly itemRepository: Repository<ItemEntity>,
         @InjectRepository(VoucherEntity)
         private readonly voucherRepository: Repository<VoucherEntity>,
+        @InjectRepository(OrderEntity)
+        private readonly orderRepository: Repository<OrderEntity>,  
         
     ){}
 
+    //5
     async checkUserExist(email: string): Promise<boolean> {
         const foundEmail = await this.userRepository.findOne({
             where: {email: email},
@@ -75,37 +82,40 @@ export class RestaurantService {
         };
     }
 
-
+    //1
     async getRestaurantById(restaurantId: number) {
-    const restaurant = await this.restaurantRepository.findOne({
-        where: { restaurantId: restaurantId },
-        relations: ['user'],
-    });
+        const restaurant = await this.restaurantRepository.findOne({
+            where: { restaurantId: restaurantId },
+            relations: ['user'],
+        });
 
-    if (!restaurant) {
-        throw new NotFoundException(`Restaurant with id ${restaurantId} doesn't exist`);
-    }
-    const { password, ...safeUserInfo } = restaurant.user;
-    const formattedData = {
-        ...restaurant,
-        user: {
-            userId: safeUserInfo.userId,
-            name: safeUserInfo.name,
-            email: safeUserInfo.email,
-            role: safeUserInfo.role,
-            isVerified: safeUserInfo.isVerified,
-            verificationToken: safeUserInfo.verificationToken,
+        if (!restaurant) {
+           return {
+                success: false,
+                message: `Restaurant with id ${restaurantId} doesn't exist`,
+            };
         }
+        const { password, ...safeUserInfo } = restaurant.user;
+        const formattedData = {
+            ...restaurant,
+            user: {
+                userId: safeUserInfo.userId,
+                name: safeUserInfo.name,
+                email: safeUserInfo.email,
+                role: safeUserInfo.role,
+                isVerified: safeUserInfo.isVerified,
+                verificationToken: safeUserInfo.verificationToken,
+            }
     };
 
-    return {
-        success: true,
-        message: `Restaurant with id ${restaurantId} retrieved successfully`,
-        data: formattedData,
-    };
-}
+        return {
+            success: true,
+            message: `Restaurant with id ${restaurantId} retrieved successfully`,
+            data: formattedData,
+        };
+    }
 
-
+    //2
     async updateRestaurant(
         restaurantId: number, 
         updateRestaurantDto: UpdateRestaurantDto,
@@ -163,7 +173,7 @@ export class RestaurantService {
         };
     }
 
-    
+    //4
     async updateRestaurantStatus(restaurantId: number, updateRestaurantDto: UpdateRestaurantDto): Promise<RestaurantEntity> {
         const restaurant = await this.restaurantRepository.preload({
             restaurantId: restaurantId,
@@ -186,12 +196,13 @@ export class RestaurantService {
         return restaurant.user.password;
     }
 
+    //6
     async checkPasswordMatch(restaurantId: number, plainPassword: string): Promise<boolean> {
         const DBPassword = await this.getRestaurantPassword(restaurantId);
         return bcrypt.compare(plainPassword, DBPassword);
     }
 
-
+    //7 
     async createVoucher(createVoucherDto: CreateVoucherDto): Promise<Object> {
         const restaurant = await this.restaurantRepository.findOne({
             where: { restaurantId: createVoucherDto.restaurantId },
@@ -225,6 +236,7 @@ export class RestaurantService {
         };
     }
 
+    //8
     async getVouchersByRestaurant(restaurantId: number): Promise<VoucherEntity[]> {
         return this.voucherRepository.find({
             where: {
@@ -234,6 +246,7 @@ export class RestaurantService {
         });
     }
 
+    //9
     async deleteVoucher(voucherId: number): Promise<object> {
         const voucher = await this.voucherRepository.findOne({
             where: { voucherId },
@@ -255,6 +268,7 @@ export class RestaurantService {
         };
     }
 
+    //10
     async getRestaurantByUserId(userId: number): Promise<RestaurantEntity | null> {
         const restaurant = await this.restaurantRepository.findOne({
             where: { user: { userId: userId } },
@@ -262,8 +276,7 @@ export class RestaurantService {
         return restaurant || null;
     }
 
-
-
+    //11
     async createCategory(createCategoryDto: CreateCategoryDto): Promise<CategoryEntity> {
         const { restaurantId, name } = createCategoryDto;
 
@@ -283,6 +296,7 @@ export class RestaurantService {
         return await this.categoryRepository.save(category);
     }
 
+    //12
     async getCategoriesByRestaurantId(restaurantId: number) {
         const categories = await this.categoryRepository.find({
             where: {
@@ -299,7 +313,8 @@ export class RestaurantService {
         }
         return categories;
     }
-    
+
+    //13    
     async updateCategoryByRestaurant(restaurantId: number,categoryId: number,updateCategoryDto: UpdateCategoryDto){
         const category = await this.categoryRepository.findOne({
             where: {
@@ -321,7 +336,7 @@ export class RestaurantService {
         return await this.categoryRepository.save(category);
     }
 
-
+    //14
     async deleteCategoryByRestaurant(restaurantId: number, categoryId: number) {
         const category = await this.categoryRepository.findOne({
             where: {
@@ -339,40 +354,161 @@ export class RestaurantService {
         return { message: 'Category deleted successfully' };
     }
 
+    //15
+    async getCategoryByRestaurantAndName(restaurantId: number, categoryName: string): Promise<CategoryEntity> {
+        const category = await this.categoryRepository.findOne({
+            where: {
+                name: categoryName,
+                restaurant: { restaurantId: restaurantId },
+            },
+            relations: ['items'],
+        });
 
-    // async create(createItemDto: CreateItemDto, imageUrl: string,): Promise<ItemEntity> {
-    //     const { categoryId, restaurantId } = createItemDto;
+        if (!category) {
+            throw new NotFoundException('Category not found for this restaurant');
+        }
+        return category;
+    }
 
-    //     const category = await this.categoryRepository.findOne({
-    //         where: { categoryId },
-    //     });
-    //     if (!category) {
-    //         throw new NotFoundException('Category not found');
-    //     }
+    //16
+    async getCategoryImage(categoryId: number) {
+        const category = await this.itemRepository.findOne({
+            where: { 
+                imageUrl: MoreThan('.....'),
+                category: { categoryId: categoryId },
+             },
+        });
 
-    //     const restaurant = await this.restaurantRepository.findOne({
-    //         where: { restaurantId },
-    //     });
-    //     if (!restaurant) {
-    //         throw new NotFoundException('Restaurant not found');
-    //     }
-    //     const item = this.itemRepository.create({
-    //         name: createItemDto.name,
-    //         description: createItemDto.description,
-    //         price: createItemDto.price,
-    //         imageUrl: imageUrl,
-    //         isAvailable: true,
-    //         preparationTime: createItemDto.preparationTime,
-    //         category,
-    //         restaurant,
-    //     });
-    //     return this.itemRepository.save(item);
-    // }
-        
+        if (!category) {
+            throw new NotFoundException('Category not found');
+        }
+
+        return category.imageUrl;
+    }
+
+    //17
+    async getItemsCountByCategory(categoryId: number): Promise<number> {
+        const count = await this.itemRepository.count({
+            where: {
+                category: { categoryId: categoryId },
+            },
+        });
+        return count;
+    }
+
+    //18
+    async createItem(createItemDto: CreateItemDto): Promise<ItemEntity> {
+        const category = await this.categoryRepository.findOne({
+            where: { categoryId: createItemDto.categoryId },
+        });
+
+        if (!category) {
+            throw new NotFoundException('Category not found');
+        }
+
+        const restaurant = await this.restaurantRepository.findOne({
+            where: {
+                restaurantId: createItemDto.restaurantId,
+            },
+        });
+
+        if (!restaurant) {
+            throw new NotFoundException('Restaurant not found');
+        }
+
+        const item = this.itemRepository.create({
+            name: createItemDto.name,
+            description: createItemDto.description,
+            price: createItemDto.price,
+            imageUrl: undefined,
+            isAvailable: true,
+            preparationTime: createItemDto.preparationTime,
+            category,
+            restaurant,
+        });
+        return await this.itemRepository.save(item);
+    }
+
+    //19
+    async getItemsByRestaurantAndCategory(restaurantId: number, categoryId: number) {
+        const items = await this.itemRepository.find({
+            where: {
+                restaurant: { restaurantId: restaurantId },
+                category: { categoryId: categoryId },
+            },
+        });
+
+        if (!items.length) {
+            throw new NotFoundException('No items found for this restaurant and category');
+        }
+        return items;
+    }
+
+    //21
+    async deleteItems(itemsId: number): Promise<object> {
+        const item = await this.itemRepository.findOne({
+            where: { itemId: itemsId },
+        });
+
+        if (!item) {
+            throw new NotFoundException(`Item with id ${itemsId} not found`);
+        }
+
+        await this.itemRepository.delete(itemsId);
+
+        return {
+            message: 'Item deleted successfully',
+            data: {
+                itemId: item.itemId,
+            },
+        };
+    }
+
+
+    //22
+    async updateItem(itemsId: number, updateItemDto: UpdateItemDto): Promise<ItemEntity> {
+        const item = await this.itemRepository.findOne({
+            where: { itemId: itemsId },
+        });
+        if (!item) {
+            throw new NotFoundException(`Item with id ${itemsId} not found`);
+        }
+        Object.assign(item, updateItemDto);
+        return await this.itemRepository.save(item);
+    }
+
+    //23
+    async getItemById(itemId: number): Promise<ItemEntity> {
+        const item = await this.itemRepository.findOne({
+            where: { itemId: itemId },
+        });
+        if (!item) {
+            throw new NotFoundException(`Item with id ${itemId} not found`);
+        }
+        return item;
+    }
     
 
-     
-
-    
+    //24
+    async getCompletedAndCanceledOrdersByRestaurant(restaurantId: number) {
+        return this.orderRepository.find({
+            where: {
+                restaurant: {
+                    restaurantId,
+                },
+                status: In([
+                    OrderStatus.DELIVERED,
+                    OrderStatus.CANCELLED,
+                ]),
+            },
+            relations: {
+                orderItems: true,
+                customer: true
+            },
+            order: {
+                orderAt: 'DESC',
+            },
+        });
+    }
 
 }

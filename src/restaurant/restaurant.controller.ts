@@ -11,16 +11,9 @@ import { CreateRestaurantDto } from "./dto/create-restaurant.dto";
 import { UpdateCategoryDto } from "./dto/update-category.dto";
 import { RestaurantGuard } from "./restaurant.guard";
 import { AuthGuard } from "../auth/auth.guard";
-//get       ++
-//post      ++
-//put       +
-//patch     +
-//delete    +
-//query     +
-//param     +++
-//body      +++
+import { UpdateItemDto } from "./dto/update-item.dto";
 
-// @UseGuards(AuthGuard, RestaurantGuard)
+
 @Controller('restaurant')
 export class RestaurantController {
     constructor(private readonly restaurantService: RestaurantService){}
@@ -33,12 +26,14 @@ export class RestaurantController {
     }
 
     //1. GET RESTURENT BY ID
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('restaurants/:id')
     async getRestaurantById(@Param('id', ParseIntPipe) userId: number):Promise<object> {
         return this.restaurantService.getRestaurantById(userId);
     }
 
     //2. UPDATE RESTURENT
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Put('restaurants/:id')
     @UseInterceptors(FileInterceptor('myfile', {
         fileFilter: (req, file, cb) => {
@@ -67,7 +62,6 @@ export class RestaurantController {
         if(file) {
             bannerUrl = `${file.filename}`;
         }
-
         return this.restaurantService.updateRestaurant(resturantId, UpdateRestaurantDto, bannerUrl);
     }
 
@@ -78,6 +72,7 @@ export class RestaurantController {
     }
 
     //4. UPDATE RESTURENT STATUS
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Patch('updateStatus/:id/:status')
     async updateOpenStatus(
         @Param('id', ParseIntPipe) resturantId: number,
@@ -89,6 +84,7 @@ export class RestaurantController {
 
 
     //5. Email exist check
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('checkEmail')
     async checkEmailExist(@Query('email') email: string): Promise<{ exists: boolean }> {
         const exists = await this.restaurantService.checkUserExist(email);
@@ -100,6 +96,7 @@ export class RestaurantController {
 
 
     //6. MATCH RESTURENT PASSWORD
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Post('matchPassword')
     async checkPasswordMatch(@Body() Data: { restaurantId: number; password: string }): Promise<{ match: boolean }> {
         const { restaurantId, password } = Data;
@@ -109,6 +106,7 @@ export class RestaurantController {
 
 
     //7.CREATE VOUCHER
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Post('voucher')
     @UsePipes(new ValidationPipe())
     async createVoucher(@Body() createVoucherDto: CreateVoucherDto): Promise<object> {
@@ -116,12 +114,14 @@ export class RestaurantController {
     }
 
     //8.GET VOUCHERS BY RESTURENT ID
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('voucher/:id')
     async getVouchersByRestaurant(@Param('id', ParseIntPipe) id: string,): Promise<object> {
         return this.restaurantService.getVouchersByRestaurant(+id);
     }
 
     //9.DELETE VOUCHER
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Delete('voucher/:id')
     async deleteVoucher(@Param('id') id: string): Promise<object> {
         return this.restaurantService.deleteVoucher(+id);
@@ -129,6 +129,7 @@ export class RestaurantController {
 
 
     //10.get restureant id from user id
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('getRestaurantIdbyuserID/:userId')
     async getRestaurantIdByUserId(@Param('userId', ParseIntPipe) userId: number): Promise<{ restaurantId: number | null }> {
         const restaurant = await this.restaurantService.getRestaurantByUserId(userId);
@@ -137,21 +138,23 @@ export class RestaurantController {
 
 
     //11.CREATE CATEGORY
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Post('restaurants/category')
     @UsePipes(new ValidationPipe())
     createCategory(@Body() createCategoryDto: CreateCategoryDto):Promise<object> {
         return this.restaurantService.createCategory(createCategoryDto);
     }      
     
-
-
+    
     //12.GET CATEGORIES BY RESTURENT ID WITH ITEMS
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('restaurantcategories/:id')
     async getCategoriesByRestaurant(@Param('id', ParseIntPipe) restaurantId: number): Promise<object> {
         return this.restaurantService.getCategoriesByRestaurantId(restaurantId);
     }
 
     //13.UPDATE CATEGORY BY RESTURENT ID ans CATEGORY ID
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Patch('category/:restaurantId/:categoryId')
     @UsePipes(new ValidationPipe())
     async updateCategoryByRestaurant(
@@ -164,6 +167,7 @@ export class RestaurantController {
     }
 
     //14.DELETE CATEGORY BY RESTURENT ID ans CATEGORY ID
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Delete('category/:restaurantId/:categoryId')
     async deleteCategoryByRestaurant(
         @Param('restaurantId', ParseIntPipe) restaurantId: number,
@@ -172,44 +176,111 @@ export class RestaurantController {
         return this.restaurantService.deleteCategoryByRestaurant(restaurantId,categoryId,);
     }
 
+    //15.Get Catagory by restaurant id and category name
+    @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('categoryName/:restaurantId/:categoryName')
+    async getCategoryByRestaurantAndName(
+        @Param('restaurantId', ParseIntPipe) restaurantId: number,
+        @Param('categoryName') categoryName: string
+    ): Promise<object> {
+        return this.restaurantService.getCategoryByRestaurantAndName(restaurantId, categoryName);
+    }
 
+    //16.Get Catagoty image
+    @Get('catagoryImage/:id')
+    async getCatagoryImage(@Param('id') id: string, @Res() res: Response) {
+        const name = await this.restaurantService.getCategoryImage(+id);
+        res.sendFile(name,{ root: './uploads' })
+    }
 
-    // @Post('items')
-    // @UsePipes(new ValidationPipe({transform: true}))
-    // @UseInterceptors(
-    //     FileInterceptor('image', {
-    //     fileFilter: (req, file, cb) => {
-    //         if (file.originalname.match(/^.*\.(jpg|jpeg|png)$/)) {
-    //         cb(null, true);
-    //         } else {
-    //         cb(new BadRequestException('Only JPG, JPEG, PNG allowed'), false);
-    //         }
-    //     },
-    //     limits: { fileSize: 2 * 1024 * 1024 },
-    //     storage: diskStorage({
-    //         destination: './uploads',
-    //         filename: (req, file, cb) => {
-    //         const filename = `${Date.now()}-${file.originalname}`;
-    //         cb(null, filename);
-    //         },
-    //     }),
-    //     }),
-    // )
-    // async createItem(
-    //     @UploadedFile() file: Express.Multer.File,
-    //     @Body() createItemDto: CreateItemDto,
-    // ) {
-    //     let imageUrl: string = '';
+    //17. Get items count by category
+    @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('items/count/:categoryId')
+    async getItemsCountByCategory(@Param('categoryId', ParseIntPipe) categoryId: number): Promise<number> {
+        return this.restaurantService.getItemsCountByCategory(categoryId);
+    }
 
-    //     if (file) {
-    //         imageUrl = `/${file.filename}`;
-    //     }
-    //     return this.restaurantService.create(createItemDto, imageUrl);
-    // }
+    //18. Create Items
+    @UseGuards(AuthGuard, RestaurantGuard)
+    @Post('createItems')
+    @UsePipes(new ValidationPipe())
+    async createItem(@Body() CreateItemDto: CreateItemDto,):Promise<object>{
+        return this.restaurantService.createItem(CreateItemDto);
+    }
 
-    
+    //19. Get Item by restaurant id and category id
+    @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('items/:restaurantId/:categoryId')
+    async getItemsByRestaurantAndCategory(
+        @Param('restaurantId', ParseIntPipe) restaurantId: number,
+        @Param('categoryId', ParseIntPipe) categoryId: number
+    ): Promise<object> {
+        return this.restaurantService.getItemsByRestaurantAndCategory(restaurantId, categoryId);
+    }
 
-      
+    //20. GET ITEMS IMAGE
+    @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('items/:name')
+    getItemsImage(@Param('name') name: string, @Res() res: Response) {
+        res.sendFile(name,{ root: './uploads' })
+    }
+
+    //21. Delete Items
+    @UseGuards(AuthGuard, RestaurantGuard)
+    @Delete('items/:itemsId')
+    async deleteItems(@Param('itemsId', ParseIntPipe) itemsId: number): Promise<object> {
+        return this.restaurantService.deleteItems(itemsId);
+    }
+
+    //22. Update Items
+    @UseGuards(AuthGuard, RestaurantGuard)
+    @Put('items/:itemsId')
+    @UseInterceptors(FileInterceptor('myfile', {
+        fileFilter: (req, file, cb) => {
+            if (file.originalname.match(/^.*\.(jpg|webp|png|jpeg)$/))
+                cb(null, true);
+            else {
+                cb(new MulterError('LIMIT_UNEXPECTED_FILE', 'image'), false);
+            }
+        },
+        limits: { fileSize: 2097152 }, // 2MB
+        storage: diskStorage({
+            destination: './uploads',
+            filename: function (req, file, cb) {
+                cb(null, Date.now() + file.originalname)
+            },
+        })
+    }))
+    async updateItem(
+        @Param('itemsId', ParseIntPipe) itemsId: number,
+        @Body() updateItemDto: UpdateItemDto,
+        @UploadedFile() file?: Express.Multer.File,
+    ): Promise<object> {
+        let imageUrl: string | undefined = undefined;
+        if(file) {
+            imageUrl = `${file.filename}`;
+            updateItemDto.imageUrl = imageUrl;
+        }
+
+        return this.restaurantService.updateItem(itemsId, updateItemDto);
+    }
+
+    //23.Get Item by item id
+    @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('item/:itemId')
+    async getItemById(@Param('itemId', ParseIntPipe) itemId: number): Promise<object> {
+        return this.restaurantService.getItemById(itemId);
+    }
+
+    //24.Get restureant order history (completed and canceled orders)
+    @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('history/:id')
+    async getRestaurantOrderHistory(
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        return this.restaurantService.getCompletedAndCanceledOrdersByRestaurant(id);
+    }
+
 
     
 

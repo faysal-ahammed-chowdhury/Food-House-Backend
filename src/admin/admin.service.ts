@@ -66,6 +66,75 @@ export class AdminService {
         return Boolean(foundEmail);
     }
 
+    /* ========== Dashboard APIs ========== */
+
+    // get stats
+    async getStats(): Promise<object> {
+        const orders = await this.orderRepository.find({
+            where: { status: OrderStatus.DELIVERED },
+        });
+
+        const platformEarnings = orders.reduce((prev, cur) => {
+            return prev + cur.commissionAmount;
+        }, 0);
+
+        const totalOrders = orders.length;
+
+        const restaurants = await this.restaurantRepository.find();
+        const totalRestaurant = restaurants.length;
+
+        const rider = await this.riderRepository.find();
+        const totalRider = rider.length;
+        return {
+            success: true,
+            message: 'Stats Fetched Successfully',
+            data: {
+                platformEarnings,
+                totalOrders,
+                totalRestaurant,
+                totalRider,
+            },
+        };
+    }
+
+    // get recent orders
+    async getRecentOrders(): Promise<object> {
+        const orders = await this.orderRepository.find({
+            order: { orderAt: 'DESC' },
+            take: 7,
+        });
+
+        return {
+            success: true,
+            message: 'Stats Fetched Successfully',
+            data: orders,
+        };
+    }
+
+    // get order status count
+    async getOrderStatusCount(): Promise<object> {
+        const orders = await this.orderRepository.find({
+            order: { orderAt: 'DESC' },
+        });
+
+        const orderStatusCount: Record<string, number> = {};
+        orders.forEach((order) => {
+            orderStatusCount[order.status] =
+                (orderStatusCount[order.status] || 0) + 1;
+        });
+
+        const result = Object.entries(orderStatusCount).map(([key, val]) => [
+            key,
+            val,
+        ]);
+
+        return {
+            success: true,
+            message: 'Order Status Fetched Successfully',
+            data: result,
+        };
+    }
+
     /* ========== Manage Admin ========== */
 
     // create an admin
