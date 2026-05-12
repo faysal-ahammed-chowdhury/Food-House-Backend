@@ -28,12 +28,12 @@ import { RestaurantModule } from './restaurant/restaurant.module';
         }),
         MailerModule.forRoot({
             transport: {
-                host: process.env.MAILER_HOST || '',
-                port: process.env.MAILER_PORT || '',
+                host: 'smtp.gmail.com',
+                port: 587,
                 secure: false,
                 auth: {
-                    user: process.env.MAILER_AUTH_USER,
-                    pass: process.env.MAILER_AUTH_PASS,
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS,
                 },
             },
         }),
