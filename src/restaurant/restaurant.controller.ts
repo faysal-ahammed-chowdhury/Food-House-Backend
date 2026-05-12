@@ -267,15 +267,15 @@ export class RestaurantController {
     }
 
     //23.Get Item by item id
-    @UseGuards(AuthGuard, RestaurantGuard)
+    // @UseGuards(AuthGuard, RestaurantGuard)
     @Get('item/:itemId')
     async getItemById(@Param('itemId', ParseIntPipe) itemId: number): Promise<object> {
         return this.restaurantService.getItemById(itemId);
     }
 
     //24.Get restureant order history (completed and canceled orders)
-    @UseGuards(AuthGuard, RestaurantGuard)
-    @Get('restaurant/:id/history')
+    // @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('history/:id')
     async getRestaurantOrderHistory(
         @Param('id', ParseIntPipe) id: number,
     ) {
