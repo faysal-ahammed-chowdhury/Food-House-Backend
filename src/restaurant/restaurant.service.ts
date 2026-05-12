@@ -506,7 +506,7 @@ export class RestaurantService {
                 customer: true
             },
             order: {
-                orderId: 'DESC',
+                orderAt: 'DESC',
             },
         });
     }

@@ -309,7 +309,7 @@ export class AdminController {
             throw new BadRequestException('NID image is required');
         }
 
-        return this.adminService.createRider(createRiderDto, file.path);
+        return this.adminService.createRider(createRiderDto, file.filename);
     }
 
     // get riders route
