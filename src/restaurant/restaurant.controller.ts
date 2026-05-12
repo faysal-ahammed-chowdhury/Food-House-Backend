@@ -14,7 +14,6 @@ import { AuthGuard } from "../auth/auth.guard";
 import { UpdateItemDto } from "./dto/update-item.dto";
 
 
-// @UseGuards(AuthGuard, RestaurantGuard)
 @Controller('restaurant')
 export class RestaurantController {
     constructor(private readonly restaurantService: RestaurantService){}
@@ -267,19 +266,22 @@ export class RestaurantController {
     }
 
     //23.Get Item by item id
-    // @UseGuards(AuthGuard, RestaurantGuard)
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('item/:itemId')
     async getItemById(@Param('itemId', ParseIntPipe) itemId: number): Promise<object> {
         return this.restaurantService.getItemById(itemId);
     }
 
     //24.Get restureant order history (completed and canceled orders)
-    // @UseGuards(AuthGuard, RestaurantGuard)
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('history/:id')
     async getRestaurantOrderHistory(
         @Param('id', ParseIntPipe) id: number,
     ) {
         return this.restaurantService.getCompletedAndCanceledOrdersByRestaurant(id);
     }
+
+
+    
 
 }
