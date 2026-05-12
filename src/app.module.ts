@@ -13,6 +13,7 @@ import { RiderModule } from './rider/rider.module';
         AdminModule,
         AuthModule,
         RestaurantModule,
+        RiderModule,
         ConfigModule.forRoot({
             isGlobal: true,
         }),
