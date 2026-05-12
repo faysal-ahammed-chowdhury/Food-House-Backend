@@ -295,4 +295,11 @@ export class RestaurantController {
         return this.restaurantService.getItemsCount(restaurantId);
     }
 
+    //28. Get active orders by restaurant id
+    // @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('activeOrders/:restaurantId')
+    async getActiveOrdersByRestaurantId(@Param('restaurantId', ParseIntPipe) restaurantId: number){
+        return this.restaurantService.getActiveOrdersByRestaurantId(restaurantId);
+    }
+
 }

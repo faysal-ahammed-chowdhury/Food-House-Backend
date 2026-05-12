@@ -564,7 +564,7 @@ export class RestaurantService {
         };
     }
 
-    26
+    //26
     async getItemsCount(restaurantId: number): Promise<number> {
         const count = await this.itemRepository.count({
             where: {
@@ -572,6 +572,29 @@ export class RestaurantService {
             },
         });
         return count;
+    }
+
+    //27
+    async getActiveOrdersByRestaurantId(restaurantId: number) {
+        return await this.orderRepository.find({
+            where: {
+                restaurant: {
+                    restaurantId,
+                },
+                status: In([
+                    OrderStatus.PENDING,
+                    OrderStatus.ACCEPTED,
+                    OrderStatus.RIDER_ASSIGNED,
+                    OrderStatus.PREPARING,
+                    OrderStatus.READY,
+                    OrderStatus.PICKED,
+                ]),
+            },
+            relations: ['orderItems', 'customer', 'delivery'],
+            order: {
+                orderAt: 'DESC',
+            },
+        });
     }
 
     
