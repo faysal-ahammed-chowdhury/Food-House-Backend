@@ -281,7 +281,37 @@ export class RestaurantController {
         return this.restaurantService.getCompletedAndCanceledOrdersByRestaurant(id);
     }
 
+    //25. Get financial info of restaurant
+    // @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('financialInfo/:restaurantId')
+    async getFinancialInfo(@Param('restaurantId', ParseIntPipe) restaurantId: number){
+        return this.restaurantService.getFinancialInfoByRestaurant(restaurantId);
+    }
 
-    
+    //26. Get restureant items count
+    // @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('itemsCount/:restaurantId')
+    async getItemsCount(@Param('restaurantId', ParseIntPipe) restaurantId: number){
+        return this.restaurantService.getItemsCount(restaurantId);
+    }
+
+    //28. Get active orders by restaurant id
+    // @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('activeOrders/:restaurantId')
+    async getActiveOrdersByRestaurantId(@Param('restaurantId', ParseIntPipe) restaurantId: number){
+        return this.restaurantService.getActiveOrdersByRestaurantId(restaurantId);
+    }
+
+
+    //Get top resturants
+    @Get('top-restaurants')
+    async getTop5Restaurants() {
+        return this.restaurantService.getTop5Restaurants();
+    }
+    //Get ALL resturants
+    @Get('all-restaurants')
+    async getAllRestaurants() {
+        return this.restaurantService.getAllRestaurants();
+    }
 
 }

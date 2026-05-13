@@ -488,7 +488,6 @@ export class RestaurantService {
         return item;
     }
     
-
     //24
     async getCompletedAndCanceledOrdersByRestaurant(restaurantId: number) {
         return this.orderRepository.find({
@@ -511,4 +510,130 @@ export class RestaurantService {
         });
     }
 
+    //25
+    async getFinancialInfoByRestaurant(restaurantId: number) {
+        const result1 = await this.orderRepository
+            .createQueryBuilder('order')
+            .select('COALESCE(SUM(order.subtotal - order.discountAmount), 0)', 'totalRevenue')
+            .where('order.restaurantId = :restaurantId', { restaurantId })
+            .andWhere('order.status IN (:...statuses)', {
+                statuses: [OrderStatus.DELIVERED],
+            })
+            .getRawOne();
+
+        const result2 = await this.orderRepository
+            .createQueryBuilder('order')
+            .where('order.restaurantId = :restaurantId', { restaurantId })
+            .andWhere('order.status = :status', {
+                status: OrderStatus.DELIVERED,
+            })
+            .getCount();
+
+        const result3 = await this.orderRepository
+            .createQueryBuilder('order')
+            .where('order.restaurantId = :restaurantId', { restaurantId })
+            .andWhere('order.status IN (:...statuses)', {
+                statuses: [
+                    OrderStatus.PENDING,
+                    OrderStatus.ACCEPTED,
+                    OrderStatus.RIDER_ASSIGNED,
+                    OrderStatus.PREPARING,
+                    OrderStatus.READY,
+                    OrderStatus.PICKED,
+                ],
+            })
+            .getCount();
+
+        const result4 = await this.orderRepository
+            .createQueryBuilder('order')
+            .select(
+                'COALESCE(SUM(order.commissionAmount), 0)',
+                'totalCommission',
+            )
+            .where('order.restaurantId = :restaurantId', { restaurantId })
+            .andWhere('order.status = :status', {
+                status: OrderStatus.DELIVERED,
+            })
+            .getRawOne();
+
+        return {
+            totalRevenue: Number(result1.totalRevenue),
+            completedCount: result2,
+            pendingCount: result3,
+            totalCommission: Number(result4.totalCommission),
+        };
+    }
+
+    //26
+    async getItemsCount(restaurantId: number): Promise<number> {
+        const count = await this.itemRepository.count({
+            where: {
+                restaurant: { restaurantId: restaurantId },
+            },
+        });
+        return count;
+    }
+
+    //27
+    async getActiveOrdersByRestaurantId(restaurantId: number) {
+        return await this.orderRepository.find({
+            where: {
+                restaurant: {
+                    restaurantId,
+                },
+                status: In([
+                    OrderStatus.PENDING,
+                    OrderStatus.ACCEPTED,
+                    OrderStatus.RIDER_ASSIGNED,
+                    OrderStatus.PREPARING,
+                    OrderStatus.READY,
+                    OrderStatus.PICKED,
+                ]),
+            },
+            relations: ['orderItems', 'customer', 'delivery'],
+            order: {
+                orderAt: 'DESC',
+            },
+        });
+    }
+
+
+    // Fetch 5 Restaurants for the Homepage
+    async getTop5Restaurants() {
+        const restaurants = await this.restaurantRepository.find({
+            where: { isOpen: true },
+            relations: ['user'],
+            take: 5, 
+        });
+
+        return restaurants.map(e => ({
+            restaurantId: e.restaurantId,
+            name: e.user?.name || 'Unknown Restaurant',
+            image: e.bannerUrl,
+            tags: e.description || "Food • Delicious", 
+            currentDeliveryFee: e.currentDeliveryFee,
+            isOpen: e.isOpen,
+        }));
+    }
+
+    // Fetch ALL Restaurants for the RESTURANT PAGE
+    async getAllRestaurants() {
+        const restaurants = await this.restaurantRepository.find({
+            relations: ['user'], 
+            order: {
+                restaurantId: 'ASC' 
+            }
+        });
+
+        return restaurants.map(e => ({
+            restaurantId: e.restaurantId,
+            name: e.user?.name || 'Unknown Restaurant',
+            image: e.bannerUrl,
+            tags: e.description || "Food • Delicious", 
+            currentDeliveryFee: e.currentDeliveryFee,
+            isOpen: e.isOpen,
+        }));
+    }
+
+    
 }
