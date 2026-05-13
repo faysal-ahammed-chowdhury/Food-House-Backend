@@ -14,10 +14,7 @@ import { CustomersModule } from './customers/customers.module';
         AdminModule,
         AuthModule,
         RestaurantModule,
-<<<<<<< HEAD
-=======
         CustomersModule,
->>>>>>> 18bbbf3d6af86239539e39ba669fc32505e8e88c
         RiderModule,
         ConfigModule.forRoot({
             isGlobal: true,
