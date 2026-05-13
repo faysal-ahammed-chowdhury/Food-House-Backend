@@ -24,6 +24,12 @@ export class CustomerEntity {
     @Column()
     phone!: string;
 
+    @Column({ default: false })
+    isVerified!: boolean;
+
+    @Column({ nullable: true })
+    verificationToken!: string;
+
     @OneToMany(() => OrderEntity, (order) => order.customer)
     orders!: OrderEntity[];
 }

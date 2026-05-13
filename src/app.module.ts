@@ -6,6 +6,7 @@ import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { RestaurantModule } from './restaurant/restaurant.module';
 import { RiderModule } from './rider/rider.module';
+import { CustomersModule } from './customers/customers.module';
 
 
 @Module({
@@ -13,6 +14,7 @@ import { RiderModule } from './rider/rider.module';
         AdminModule,
         AuthModule,
         RestaurantModule,
+        CustomersModule,
         RiderModule,
         ConfigModule.forRoot({
             isGlobal: true,
