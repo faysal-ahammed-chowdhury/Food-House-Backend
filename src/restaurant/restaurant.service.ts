@@ -592,12 +592,40 @@ export class RestaurantService {
             },
             relations: ['orderItems', 'customer', 'delivery'],
             order: {
-                orderAt: 'DESC',
+                orderAt: 'ASC',
             },
         });
     }
 
+    //28
+    async getOrderStatus(orderId: number): Promise<{ orderId: number; status: OrderStatus }> {
+        const order = await this.orderRepository.findOne({
+            where: { orderId },
+        });
+        if (!order) {
+            throw new NotFoundException(`Order with id ${orderId} not found`);
+        }
+        return { orderId: order.orderId, status: order.status };
+    }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+    //////////////////siyam er code
     // Fetch 5 Restaurants for the Homepage
     async getTop5Restaurants() {
         const restaurants = await this.restaurantRepository.find({
