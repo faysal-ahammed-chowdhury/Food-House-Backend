@@ -8,7 +8,8 @@ import { DeliveryEntity } from "../common/entities/delivery.entity";
 import { OrderEntity } from "../common/entities/order.entity";
 import {UpdateRiderDto} from "./dto/update-rider.dto";
 import {RiderStatusDto} from "./dto/rider-status.dto";
-import {AssignDeliveryDto} from "./dto/assign-delivery.dto";
+import {AcceptDeliveryDto} from "./dto/accept-delivery.dto";
+import {UpdateDeliveryDto} from "./dto/update-delivery.dto";
 import {ChangePasswordDto} from "./dto/change-password.dto";
 import * as bcrypt from 'bcrypt';
 import { UserRoles } from "../common/enums/user-roles.enum";
@@ -33,7 +34,7 @@ export class RiderService{
     ){}
 
     //---------
-    
+
 
     //get by id---
    async getRiderById(riderId: number): Promise<object> {
@@ -46,7 +47,7 @@ export class RiderService{
 
         const { password, ...userWithoutPassword } = rider.user;
         const output = {  
-            
+
             riderId: rider.riderId,
             name: userWithoutPassword.name,
             email: userWithoutPassword.email,
@@ -80,8 +81,6 @@ export class RiderService{
     return rider.nidImageUrl; 
 }
 
-
-    
     //Update Rider Profile-----
     async updateRider(
         riderId: number,
@@ -100,7 +99,7 @@ export class RiderService{
         if (updateRiderDto.phone) rider.phone = updateRiderDto.phone;
         if (updateRiderDto.bkashAccount) rider.bkashAccount = updateRiderDto.bkashAccount;
         if (updateRiderDto.bankAccount) rider.bankAccount = updateRiderDto.bankAccount;
-       // if (nidImageUrl) rider.nidImageUrl = nidImageUrl;
+       
 
         await this.riderRepository.save(rider);
         await this.userRepository.save(rider.user);
@@ -117,27 +116,7 @@ export class RiderService{
         };
     }
 
-    //change password
-    async changePassword(id: number, dto: ChangePasswordDto) {
-        const rider = await this.riderRepository.findOne({
-            where: { riderId: id },
-            relations: ["user"],
-        });
-
-        if (!rider) throw new NotFoundException("Rider not found");
-
-        const match = await bcrypt.compare(dto.oldPassword, rider.user.password);
-
-        if (!match) throw new BadRequestException("Wrong password");
-
-        const salt = await bcrypt.genSalt();
-        rider.user.password = await bcrypt.hash(dto.newPassword, salt);
-
-        await this.userRepository.save(rider.user);
-
-        return { success: true, message: "Password changed" };
-    }
-
+    
     //dashboard data get by id
     async getDashboardData(riderId: number): Promise<object> {
         const rider = await this.riderRepository.findOne({
@@ -164,9 +143,11 @@ export class RiderService{
     // Available requests
     const availableRequests = await this.orderRepository.count({
         where: {
-             status: OrderStatus.PENDING,
+             status: OrderStatus.READY,
         },
     });
+    
+
 
     // Completed
     const completedOrders = await this.orderRepository.count({
@@ -228,11 +209,199 @@ export class RiderService{
         },
     };
 }
+////////////
+    async checkPassword(
+        riderId: number,
+        password: string,
+    ) {
+        const rider = await this.riderRepository.findOne({
+        where: { riderId },
+        relations: ['user'],
+        });
+
+        if (!rider) {
+        throw new NotFoundException('Rider not found');
+        }
+
+        const isMatch = await bcrypt.compare(
+        password,
+        rider.user.password,
+        );
+
+        return {
+        matched: isMatch,
+        };
+    }
+    ////////////////
+  
+    async changePassword(
+        riderId: number,
+        newPassword: string,
+    ) {
+        const rider = await this.riderRepository.findOne({
+        where: { riderId },
+        relations: ['user'],
+        });
+
+        if (!rider) {
+        throw new NotFoundException('Rider not found');
+        }
+
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(newPassword, salt);    
+
+        rider.user.password = hashedPassword;
+
+        await this.userRepository.save(rider.user);
+
+        return {
+        success: true,
+        message: 'Password updated successfully',
+        };
+    }
+    
+    ///available request-
+    async getAvailableRequests() {
+        return this.orderRepository.find({
+        where: { status: OrderStatus.READY },
+        relations: ['restaurant', 'customer'],
+        });
+    }
+
+  //  Accept request
+ 
+    async acceptDelivery(dto: AcceptDeliveryDto) {
+        const { riderId, orderId } = dto;
+
+        const rider = await this.riderRepository.findOne({
+        where: { riderId },
+        relations: ['user'],
+        });
+
+        if (!rider) {
+        throw new NotFoundException('Rider not found');
+        }
+
+        const order = await this.orderRepository.findOne({
+        where: { orderId },
+        });
+
+        if (!order) {
+        throw new NotFoundException('Order not found');
+        }
+
+        if (order.status === OrderStatus.RIDER_ASSIGNED) {
+        throw new BadRequestException('Order already assigned to a rider');
+        }
+
+        order.status = OrderStatus.RIDER_ASSIGNED;
+        order.riderName = rider.user.name;
+        order.riderId = rider.riderId;
+        return await this.orderRepository.save(order);
+    }
 
 
-/*
+///marked picked--
+        async markPicked(dto: UpdateDeliveryDto) {
+        const { riderId, orderId } = dto;
 
+        const rider = await this.riderRepository.findOne({
+        where: { riderId },
+        relations: ['user'],
+        });
 
-    */
+        if (!rider) {
+        throw new NotFoundException('Rider not found');
+        }
+
+        const order = await this.orderRepository.findOne({
+        where: { orderId },
+        });
+
+        if (!order) {
+        throw new NotFoundException('Order not found');
+        }
+
+        if (order.status !== OrderStatus.READY) {
+        throw new BadRequestException('Order not ready for picking');
+        }
+
+        order.status = OrderStatus.PICKED;
+        
+        return await this.orderRepository.save(order);
+    }
+
+  // Mark delivered
+    async markDelivered(dto: UpdateDeliveryDto) {
+        const { riderId, orderId } = dto;
+
+        const rider = await this.riderRepository.findOne({
+        where: { riderId },
+        relations: ['user'],
+        });
+
+        if (!rider) {
+        throw new NotFoundException('Rider not found');
+        }
+
+        const order = await this.orderRepository.findOne({
+        where: { orderId },
+        });
+
+        if (!order) {
+        throw new NotFoundException('Order not found');
+        }
+
+        if (order.status !== OrderStatus.PICKED) {
+        throw new BadRequestException('Order not ready for delivery');
+        }
+
+        order.status = OrderStatus.DELIVERED;
+        
+        return await this.orderRepository.save(order);
+    }
+
+    //  My deliveries
+    async myDeliveries(riderId: number) {
+        return this.deliveryRepository.find({
+        where: { rider: { riderId } },
+        relations: ['order', 'order.customer', 'order.restaurant'],
+        });
+    }
+///get running orders by rider id- jegula delivery korbor jonno accept korechi but delivered hoy nai
+
+  async getRunningOrdersByRider(riderId: number) {
+    return await this.orderRepository.find({
+      where: {
+        riderId,
+        status: In([
+          OrderStatus.RIDER_ASSIGNED,
+          OrderStatus.PREPARING,
+          OrderStatus.READY,
+          OrderStatus.PICKED,
+        ]),
+      },
+      order: {
+        orderAt: 'DESC',
+      },
+    });
+  }
+
+  ///delivered
+  async getDeliveredOrdersByRider(riderId: number) {
+    return await this.orderRepository.find({
+      where: {
+        riderId,
+        status: In([
+          OrderStatus.DELIVERED,
+        ]),
+      },
+      order: {
+        orderAt: 'DESC',
+      },
+    });
+  }
 
 }
+
+ 

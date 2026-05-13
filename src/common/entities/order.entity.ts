@@ -63,6 +63,9 @@ export class OrderEntity {
 
     @Column({ nullable: true })
     riderName!: string;
+    
+    @Column({ nullable: true })
+    riderId!: number;
 
     @Column({ type: 'enum', enum: OrderStatus })
     status!: OrderStatus;
