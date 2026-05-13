@@ -301,4 +301,16 @@ export class RestaurantController {
         return this.restaurantService.getActiveOrdersByRestaurantId(restaurantId);
     }
 
+
+    //Get top resturants
+    @Get('top-restaurants')
+    async getTop5Restaurants() {
+        return this.restaurantService.getTop5Restaurants();
+    }
+    //Get ALL resturants
+    @Get('all-restaurants')
+    async getAllRestaurants() {
+        return this.restaurantService.getAllRestaurants();
+    }
+
 }
