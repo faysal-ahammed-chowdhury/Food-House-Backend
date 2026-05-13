@@ -295,13 +295,38 @@ export class RestaurantController {
     }
 
     //27. Get active orders by restaurant id
-    // @UseGuards(AuthGuard, RestaurantGuard)
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('activeOrders/:restaurantId')
     async getActiveOrdersByRestaurantId(@Param('restaurantId', ParseIntPipe) restaurantId: number){
         return this.restaurantService.getActiveOrdersByRestaurantId(restaurantId);
+    }Z
+
+    //28. Get order status 
+    // @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('orderStatus/:orderId')
+    async getOrderStatus(@Param('orderId', ParseIntPipe) orderId: number){
+        return this.restaurantService.getOrderStatus(orderId);
     }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+    ///////////// siyam er code
     //Get top resturants
     @Get('top-restaurants')
     async getTop5Restaurants() {
