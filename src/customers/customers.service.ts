@@ -122,8 +122,7 @@ export class CustomersService {
       deliveryFee: 0,
       total: cartData.totalPrice || 0, 
       status: OrderStatus.PENDING,
-      //paymentMethod: (CreateOrderDto as any).paymentMethod || PaymentMethod.COD,
-      paymentMethod: 'COD' as any,
+      paymentMethod: (CreateOrderDto as any).paymentMethod || PaymentMethod.COD,
       customerName: customer.user.name,
       customerAddress: customer.address || 'Address pending',
       restaurantName: 'Pending Restaurant',
@@ -182,14 +181,7 @@ export class CustomersService {
   }
 
   async placeOrder(customerId: number, createOrderDto: CreateOrderDto) {
-    // 🚨 MASSIVE CONSOLE LOG 🚨
-    console.log("=======================================");
-    console.log("🚨🚨🚨 BACKEND IS FINALLY UPDATED! 🚨🚨🚨");
-    console.log("PAYLOAD:", createOrderDto);
-    console.log("=======================================");
-
     const customer = await this.getProfile(customerId);
-
     let calculatedSubtotal = 0;
     const orderItemsToSave = createOrderDto.items.map((item: any) => {
       const itemTotal = item.price * item.quantity;
@@ -212,6 +204,7 @@ export class CustomersService {
       deliveryFee: deliveryFee,
       total: calculatedSubtotal + deliveryFee,
       status: OrderStatus.PENDING,
+      paymentMethod: (CreateOrderDto as any).paymentMethod || PaymentMethod.COD,
       customerName: customer.user.name,
       customerAddress: customer.address || 'Address pending',
       restaurantName: (createOrderDto as any).restaurantName || 'Unknown Restaurant',
@@ -222,14 +215,7 @@ export class CustomersService {
       orderItems: orderItemsToSave, 
     });
 
-    // 🚨 BRUTE FORCE OVERRIDE 🚨
-    newOrder.paymentMethod = (createOrderDto as any).paymentMethod || 'COD';
-
-    // Log the order right before it hits the database
-    console.log("ORDER ABOUT TO SAVE:", newOrder.paymentMethod);
-
     const savedOrder = await this.orderRepository.save(newOrder);
-    
     delete (savedOrder as any).customer;
     return { message: 'Order placed successfully', order: savedOrder };
   }
