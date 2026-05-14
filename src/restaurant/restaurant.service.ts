@@ -618,5 +618,21 @@ export class RestaurantService {
         return { categoryCount: count };
     }
 
+    //30
+    async setOrderStatus(orderId: number, status: string): Promise<{ orderId: number; newStatus: OrderStatus }> {
+        const order = await this.orderRepository.findOne({
+            where: { orderId },
+        }); 
+        if (!order) {
+            throw new NotFoundException(`Order with id ${orderId} not found`);
+        }
+        if (!Object.values(OrderStatus).includes(status as OrderStatus)) {
+            throw new NotFoundException(`Invalid order status: ${status}`);
+        } 
+        order.status = status as OrderStatus;
+        await this.orderRepository.save(order);
+        return { orderId: order.orderId, newStatus: order.status };
+    }
+
 
 }
