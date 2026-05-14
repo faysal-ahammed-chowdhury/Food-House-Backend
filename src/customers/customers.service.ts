@@ -24,6 +24,43 @@ export class CustomersService {
     private readonly mailerService: MailerService,
   ) {}
 
+  //1 - Fetch 5 Restaurants for the Homepage
+    async getTop5Restaurants() {
+        const restaurants = await this.restaurantRepository.find({
+            where: { isOpen: true },
+            relations: ['user'],
+            take: 5, 
+        });
+
+        return restaurants.map(e => ({
+            restaurantId: e.restaurantId,
+            name: e.user?.name || 'Unknown Restaurant',
+            image: e.bannerUrl,
+            tags: e.description || "Food • Delicious", 
+            currentDeliveryFee: e.currentDeliveryFee,
+            isOpen: e.isOpen,
+        }));
+    }
+
+    //2 - Fetch ALL Restaurants for the RESTURANT PAGE
+    async getAllRestaurants() {
+        const restaurants = await this.restaurantRepository.find({
+            relations: ['user'], 
+            order: {
+                restaurantId: 'ASC' 
+            }
+        });
+
+        return restaurants.map(e => ({
+            restaurantId: e.restaurantId,
+            name: e.user?.name || 'Unknown Restaurant',
+            image: e.bannerUrl,
+            tags: e.description || "Food • Delicious", 
+            currentDeliveryFee: e.currentDeliveryFee,
+            isOpen: e.isOpen,
+        }));
+    }
+
 
   // 3 - Search for food items or restaurants
   async searchFood(item: string) {

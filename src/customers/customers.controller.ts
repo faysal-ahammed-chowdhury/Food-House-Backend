@@ -12,7 +12,17 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 @Controller('customers')
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
-
+  
+  //1 - top 5 resturants
+  @Get('top-restaurants')
+  async getTop5Restaurants() {
+    return this.customersService.getTop5Restaurants();
+  }
+  //2 - all resturants
+  @Get('all-restaurants')
+  async getAllRestaurants() {
+    return this.customersService.getAllRestaurants();
+  }
 
   //3 - Search for food items or restaurants
   @Get('search')
