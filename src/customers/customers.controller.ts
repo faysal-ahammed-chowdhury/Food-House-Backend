@@ -105,7 +105,6 @@ export class CustomersController {
   }
 
   // 12 - Get restaurant menu
-  @UseGuards(AuthGuard)
   @Get('restaurant-menu/:id')
   async getRestaurantMenu(@Param('id', ParseIntPipe) id: number) {
     return await this.customersService.getRestaurantMenu(id);
