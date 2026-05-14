@@ -187,6 +187,21 @@ export class RiderService{
         };
     }
 
+    // get rider status
+    async getRiderStatus(riderId: number): Promise<object> {
+    const rider = await this.riderRepository.findOne({
+        where: { riderId },
+    });
+
+    if (!rider) throw new NotFoundException("Rider not found");
+
+    return {
+        success: true,
+        data: {
+            isOnline: rider.isOnline,
+        },
+    };
+}
 
     //update rider status
     async updateRiderStatus(riderId: number, dto: RiderStatusDto) {
@@ -386,6 +401,17 @@ export class RiderService{
       },
     });
   }
+ 
+  //count delivered orders by rider id
+  async countDeliveredOrdersByRider(riderId: number) {
+    return await this.orderRepository.count({
+      where: {
+        riderId,
+        status: OrderStatus.DELIVERED,
+      },
+    });
+  }
+
 
   ///delivered
   async getDeliveredOrdersByRider(riderId: number) {

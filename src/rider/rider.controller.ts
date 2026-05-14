@@ -51,6 +51,15 @@ export class RiderController{
         return this.riderService.getDashboardData(riderId);
     }
 
+    //get status-
+    @Get('riders/:id/status')
+    async getStatus(
+        @Param('id', ParseIntPipe) riderId: number,
+    ): Promise<object> {
+        return this.riderService.getRiderStatus(riderId);
+    }
+
+
     // 5. status update
 
     @Patch("riders/:id/status")
@@ -131,6 +140,14 @@ export class RiderController{
       @Param('riderId', ParseIntPipe) riderId: number,) {
         return this.riderService.getRunningOrdersByRider(riderId);
     }
+
+    // count delivered orders
+    @Get(':riderId/delivered-count')
+    countDeliveredOrders(
+        @Param('riderId', ParseIntPipe) riderId: number,) {
+        return this.riderService.countDeliveredOrdersByRider(riderId);
+    }
+
 //delivered
   @Get(':riderId/delivered-orders')
   getDeliveredOrders(
