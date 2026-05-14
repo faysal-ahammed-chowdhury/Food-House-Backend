@@ -309,10 +309,17 @@ export class RestaurantController {
     }Z
 
     //29. Get order status 
-    // @UseGuards(AuthGuard, RestaurantGuard)
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('orderStatus/:orderId')
     async getOrderStatus(@Param('orderId', ParseIntPipe) orderId: number){
         return this.restaurantService.getOrderStatus(orderId);
+    }
+
+    //30. Set Order Status
+    @UseGuards(AuthGuard, RestaurantGuard)
+    @Patch('orderStatus/:orderId/:status')
+    async setOrderStatus(@Param('orderId', ParseIntPipe) orderId: number,@Param('status') status: string){
+        return this.restaurantService.setOrderStatus(orderId, status);
     }
 
 }
