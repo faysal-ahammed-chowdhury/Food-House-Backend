@@ -10,12 +10,14 @@ import { MailerService } from '@nestjs-modules/mailer';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto'; 
 import { CreateOrderDto } from './dto/create-order.dto';
+import { RestaurantEntity } from 'src/common/entities/restaurant.entity';
 
 @Injectable()
 export class CustomersService {
   constructor(
     @InjectRepository(CustomerEntity) private customerRepository: Repository<CustomerEntity>,
     @InjectRepository(OrderEntity) private orderRepository: Repository<OrderEntity>, 
+    @InjectRepository(RestaurantEntity) private restaurantRepository: Repository<RestaurantEntity>,
     private readonly mailerService: MailerService,
   ) {}
 
@@ -227,5 +229,23 @@ export class CustomersService {
       throw new NotFoundException(`Order #${orderId} was not found`);
     }
     return order;
+  }
+
+  //  Get Restaurant Menu for Customer
+  async getRestaurantMenu(restaurantId: number) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantId: restaurantId },
+      relations: ['user', 'items', 'categories', 'items.category'],
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException(`Restaurant #${restaurantId} not found`);
+    }
+    const { password, ...safeUserInfo } = restaurant.user;
+    
+    return {
+      ...restaurant, 
+      user: safeUserInfo
+    };
   }
 }

@@ -111,4 +111,10 @@ export class CustomersController {
   ) {
     return await this.customersService.cancelOrder(id, orderId);
   }
+
+  // @UseGuards(AuthGuard)
+  @Get('restaurant-menu/:id')
+  async getRestaurantMenu(@Param('id', ParseIntPipe) id: number) {
+    return await this.customersService.getRestaurantMenu(id);
+  }
 }
