@@ -574,7 +574,7 @@ export class RestaurantService {
         return count;
     }
 
-    //27
+    //28
     async getActiveOrdersByRestaurantId(restaurantId: number) {
         return await this.orderRepository.find({
             where: {
@@ -597,7 +597,7 @@ export class RestaurantService {
         });
     }
 
-    //28
+    //29
     async getOrderStatus(orderId: number): Promise<{ orderId: number; status: OrderStatus }> {
         const order = await this.orderRepository.findOne({
             where: { orderId },
@@ -608,60 +608,15 @@ export class RestaurantService {
         return { orderId: order.orderId, status: order.status };
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-    //////////////////siyam er code
-    // Fetch 5 Restaurants for the Homepage
-    async getTop5Restaurants() {
-        const restaurants = await this.restaurantRepository.find({
-            where: { isOpen: true },
-            relations: ['user'],
-            take: 5, 
+    //27
+    async getCategoryCountByRestaurantId(restaurantId: number): Promise<{ categoryCount: number }> {
+        const count = await this.categoryRepository.count({
+            where: {
+                restaurant: { restaurantId: restaurantId },
+            },
         });
-
-        return restaurants.map(e => ({
-            restaurantId: e.restaurantId,
-            name: e.user?.name || 'Unknown Restaurant',
-            image: e.bannerUrl,
-            tags: e.description || "Food • Delicious", 
-            currentDeliveryFee: e.currentDeliveryFee,
-            isOpen: e.isOpen,
-        }));
+        return { categoryCount: count };
     }
 
-    // Fetch ALL Restaurants for the RESTURANT PAGE
-    async getAllRestaurants() {
-        const restaurants = await this.restaurantRepository.find({
-            relations: ['user'], 
-            order: {
-                restaurantId: 'ASC' 
-            }
-        });
 
-        return restaurants.map(e => ({
-            restaurantId: e.restaurantId,
-            name: e.user?.name || 'Unknown Restaurant',
-            image: e.bannerUrl,
-            tags: e.description || "Food • Delicious", 
-            currentDeliveryFee: e.currentDeliveryFee,
-            isOpen: e.isOpen,
-        }));
-    }
-
-    
 }

@@ -1,7 +1,11 @@
-import { IsString, IsNumber, ValidateNested, IsArray } from 'class-validator';
+import { IsString, IsNumber, ValidateNested, IsArray, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ItemDto {
+  @IsNumber()
+  @IsOptional()
+  itemId?: number;
+
   @IsString()
   foodName!: string;
 
@@ -13,6 +17,13 @@ class ItemDto {
 }
 
 export class CreateOrderDto {
+  @IsString()
+  restaurantName!: string;
+
+  @IsString()
+  @IsOptional()
+  paymentMethod?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ItemDto)

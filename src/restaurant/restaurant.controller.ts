@@ -294,48 +294,25 @@ export class RestaurantController {
         return this.restaurantService.getItemsCount(restaurantId);
     }
 
-    //27. Get active orders by restaurant id
+    //27 Get Category Count By Restaurant Id
+    @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('categoryCount/:restaurantId')
+    async getCategoryCountByRestaurantId(@Param('restaurantId', ParseIntPipe) restaurantId: number): Promise<{ categoryCount: number }> {
+        return this.restaurantService.getCategoryCountByRestaurantId(restaurantId);
+    }
+
+    //28. Get active orders by restaurant id
     @UseGuards(AuthGuard, RestaurantGuard)
     @Get('activeOrders/:restaurantId')
     async getActiveOrdersByRestaurantId(@Param('restaurantId', ParseIntPipe) restaurantId: number){
         return this.restaurantService.getActiveOrdersByRestaurantId(restaurantId);
     }Z
 
-    //28. Get order status 
+    //29. Get order status 
     // @UseGuards(AuthGuard, RestaurantGuard)
     @Get('orderStatus/:orderId')
     async getOrderStatus(@Param('orderId', ParseIntPipe) orderId: number){
         return this.restaurantService.getOrderStatus(orderId);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-    ///////////// siyam er code
-    //Get top resturants
-    @Get('top-restaurants')
-    async getTop5Restaurants() {
-        return this.restaurantService.getTop5Restaurants();
-    }
-    //Get ALL resturants
-    @Get('all-restaurants')
-    async getAllRestaurants() {
-        return this.restaurantService.getAllRestaurants();
     }
 
 }

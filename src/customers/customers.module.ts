@@ -6,9 +6,20 @@ import { CustomerEntity } from '../common/entities/customer.entity';
 import { OrderEntity } from '../common/entities/order.entity';
 import { UserEntity } from '../common/entities/user.entity';
 import { OrderItemEntity } from '../common/entities/order-item.entity'; 
+import { RestaurantEntity } from '../common/entities/restaurant.entity';
+import { CategoryEntity } from '../common/entities/category.entity';
+import { ItemEntity } from '../common/entities/item.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CustomerEntity, UserEntity, OrderEntity, OrderItemEntity])],
+  imports: [TypeOrmModule.forFeature([
+    CustomerEntity, 
+    UserEntity, 
+    OrderEntity, 
+    OrderItemEntity,
+    RestaurantEntity, 
+    CategoryEntity,    
+    ItemEntity       
+  ])],
   controllers: [CustomersController], 
   providers: [CustomersService],      
 })
