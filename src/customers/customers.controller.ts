@@ -1,19 +1,6 @@
 import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Patch, 
-  Delete, 
-  Param, 
-  Body, 
-  Query, 
-  UsePipes, 
-  ValidationPipe, 
-  ParseIntPipe, 
-  UseGuards,
-  Req,
-  UnauthorizedException
+  Controller, Get, Post, Put, Patch, Delete, Param, Body, Query, 
+  UsePipes, ValidationPipe, ParseIntPipe, UseGuards, Req
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto, UpdateCustomerDto } from './dto/customer.dto';
@@ -25,107 +12,86 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
+  //1 - Register a new customer
   @Post('register')
   @UsePipes(new ValidationPipe())
   async register(@Body() createCustomerDto: CreateCustomerDto) {
-    console.log('Email received from Frontend:', createCustomerDto.email);
     return await this.customersService.register(createCustomerDto);
   }
 
+  //2 - Email verification endpoint
   @Get('verify/:userId/:token')
-  async verifyEmail(
-    @Param('userId', ParseIntPipe) userId: number, 
-    @Param('token') token: string
-  ) {
+  async verifyEmail(@Param('userId', ParseIntPipe) userId: number, @Param('token') token: string) {
     return await this.customersService.verifyEmail(userId, token);
   }
 
-  // @UseGuards(AuthGuard)
+  //3 - Search for food items or restaurants
   @Get('search')
   async searchDatabase(@Query('query') query: string) {
-    if (!query) {
-      return { restaurants: [], items: [] };
-    }
+    if (!query) return { restaurants: [], items: [] };
     return await this.customersService.searchDatabase(query);
   }
 
-  // @UseGuards(AuthGuard) 
-  @Get(':id/profile')
-  async getProfile(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
-    const customer = await this.customersService.getProfile(id);
-    
-    // TEMPORARILY DISABLED: Since AuthGuard is off, req.user will be undefined!
-    // If we leave this active, the server will crash trying to read req.user.email.
-    /*
-    if (customer.user.email !== req?.user?.email) {
-      throw new UnauthorizedException("Access Denied: You cannot view someone else's profile.");
-    }
-    */
-    
-    return customer;
+  //4 - Get customer profile
+  @UseGuards(AuthGuard) 
+  @Get('profile')
+  async getProfile(@Req() req: any) {
+    return await this.customersService.getProfile(req.user.userId); 
   }
   
-  // Inside CustomersController class
-  @Patch(':id/password')
+  //5 - Update customer password
+  @UseGuards(AuthGuard) 
+  @Patch('password')
   @UsePipes(new ValidationPipe())
-  async updatePassword(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updatePasswordDto: UpdatePasswordDto,
-  ) {
-   return await this.customersService.updatePassword(id, updatePasswordDto);
-  }
-  // @UseGuards(AuthGuard)
-  @Put(':id/profile')
-  @UsePipes(new ValidationPipe())
-  async replaceProfile(
-    @Param('id', ParseIntPipe) id: number, 
-    @Body() updateCustomerDto: UpdateCustomerDto
-  ) {
-    return await this.customersService.replaceProfile(id, updateCustomerDto);
+  async updatePassword(@Req() req: any, @Body() updatePasswordDto: UpdatePasswordDto) {
+   return await this.customersService.updatePassword(req.user.userId, updatePasswordDto);
   }
 
-  // @UseGuards(AuthGuard) 
-  @Patch(':id/profile')
+  //6 - Replace entire customer profile (PUT) - requires full data
+  @UseGuards(AuthGuard)
+  @Put('profile')
   @UsePipes(new ValidationPipe())
-  async patchProfile(
-    @Param('id', ParseIntPipe) id: number, 
-    @Body() updateCustomerDto: UpdateCustomerDto
-  ) {
-    return await this.customersService.patchProfile(id, updateCustomerDto);
+  async replaceProfile(@Req() req: any, @Body() updateCustomerDto: UpdateCustomerDto) {
+    return await this.customersService.replaceProfile(req.user.userId, updateCustomerDto);
   }
 
-  // @UseGuards(AuthGuard)
-  @Post(':id/orders')
+  //7 - Partially update customer profile (PATCH) - allows partial data
+  @UseGuards(AuthGuard) 
+  @Patch('profile')
   @UsePipes(new ValidationPipe())
-  async placeOrder(
-    @Param('id', ParseIntPipe) id: number, 
-    @Body() createOrderDto: CreateOrderDto
-  ) {
-    return await this.customersService.placeOrder(id, createOrderDto);
+  async patchProfile(@Req() req: any, @Body() updateCustomerDto: UpdateCustomerDto) {
+    return await this.customersService.patchProfile(req.user.userId, updateCustomerDto);
   }
 
-  // @UseGuards(AuthGuard)
-  @Get(':id/orders')
-  async getOrders(@Param('id', ParseIntPipe) id: number) {
-    return await this.customersService.getOrders(id);
+  // 8 - Place an order for the logged-in customer
+  @UseGuards(AuthGuard)
+  @Post('orders')
+  async placeOrder(@Req() req: any, @Body() createOrderDto: CreateOrderDto) {
+    return await this.customersService.placeOrder(req.user.userId, createOrderDto);
   }
 
-  // @UseGuards(AuthGuard)
+  // 9 - Get logged-in user's orders
+  @UseGuards(AuthGuard)
+  @Get('orders')
+  async getOrders(@Req() req: any) {
+    return await this.customersService.getOrders(req.user.userId);
+  }
+
+  // 10 - Get details of a specific order
+  @UseGuards(AuthGuard)
   @Get('orders/:orderId')
   async checkOrder(@Param('orderId', ParseIntPipe) orderId: number) {
     return await this.customersService.getOrderDetails(orderId);
   }
 
-  // @UseGuards(AuthGuard)
-  @Delete(':id/orders/:orderId')
-  async cancelOrder(
-    @Param('id', ParseIntPipe) id: number, 
-    @Param('orderId', ParseIntPipe) orderId: number
-  ) {
-    return await this.customersService.cancelOrder(id, orderId);
+  // 11 - Cancel an order
+  @UseGuards(AuthGuard)
+  @Delete('orders/:orderId')
+  async cancelOrder(@Req() req: any, @Param('orderId', ParseIntPipe) orderId: number) {
+    return await this.customersService.cancelOrder(req.user.userId, orderId);
   }
 
-  // @UseGuards(AuthGuard)
+  // 12 - Get restaurant menu
   @Get('restaurant-menu/:id')
   async getRestaurantMenu(@Param('id', ParseIntPipe) id: number) {
     return await this.customersService.getRestaurantMenu(id);
