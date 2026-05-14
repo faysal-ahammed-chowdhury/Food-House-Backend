@@ -104,8 +104,8 @@ export class AuthController {
     }
 
 
-
-    @Get(':email')  //0 mane user exist kore na
+    ///////////////////FORGET PASSWORD////////////////////
+    @Get('email_exist/:email')  //0 mane user exist kore na
     async getUserIdByEmail(@Param('email') email: string): Promise<{ userId: number }> {
         return this.authService.getUserIdByEmail(email);
     }
@@ -117,14 +117,14 @@ export class AuthController {
         return { message: 'If a restaurant with that email exists, a password reset link has been sent.' };
     }
 
+    @Get('checkOTP/:userId/:otp')
+    async checkOTP(@Param('userId', ParseIntPipe) userId: number, @Param('otp') otp: string): Promise<{ success: boolean; time: boolean }> {
+        return await this.authService.checkOTP(userId, otp);
+    }
+
     @Post('new_password')
     async resetPassword(@Body() data: { userId: number, newPassword: string }):Promise<{ message: string }> {
         const { userId, newPassword } = data;
         return await this.authService.resetPassword(userId, newPassword);
-    }
-
-    @Get('checkOTP/:userId/:otp')
-    async checkOTP(@Param('userId', ParseIntPipe) userId: number, @Param('otp') otp: string): Promise<{ success: boolean; time: boolean }> {
-        return await this.authService.checkOTP(userId, otp);
     }
 }

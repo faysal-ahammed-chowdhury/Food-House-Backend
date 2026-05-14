@@ -225,7 +225,7 @@ export class AuthService {
         };
     }
 
-
+    ///////////////////////////// FORGET PASSWORD ////////////////////////////
     //get userid from email  
     async getUserIdByEmail(email: string): Promise<{ userId: number }> {
         const user = await this.userRepository.findOne({
@@ -288,7 +288,6 @@ export class AuthService {
             message: 'Password reset successful',
         };
     }
-
 
     async checkOTP(userId: number, otp: string): Promise<{ success: boolean; time: boolean }> {
         const record = await this.forgotPassRepository.findOne({
