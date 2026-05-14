@@ -24,60 +24,6 @@ export class CustomersService {
     private readonly mailerService: MailerService,
   ) {}
 
-  // 1 - Register a new customer
-  async register(createDto: CreateCustomerDto) {
-    const existingCustomer = await this.customerRepository.findOne({ where: { user: { email: createDto.email } } });
-    if (existingCustomer) {
-      throw new BadRequestException('Email is already registered!');
-    }
-    
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(createDto.password, salt);
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-
-    const newCustomer = this.customerRepository.create({
-      address: createDto.address,
-      phone: createDto.phone,
-      isVerified: false, 
-      verificationToken: verificationToken, 
-      user: {
-        name: createDto.name,
-        email: createDto.email,
-        password: hashedPassword,
-        role: UserRoles.CUSTOMER,
-      },
-    });
-    
-    const savedCustomer = await this.customerRepository.save(newCustomer);
-    const frontendUrl = process.env.FRONTEND_URL;
-    const verificationLink = `${frontendUrl}/verify/${savedCustomer.customerId}/${verificationToken}`;
-
-    try {
-      await this.mailerService.sendMail({
-        to: savedCustomer.user.email, 
-        subject: 'Verify your FoodHouse Account!',
-        text: `Please click here to verify: ${verificationLink}`,
-      });
-    } catch (error) {
-       // Silent catch for mailer
-    }
-    return { message: "Customer registered successfully. Please check your email to verify your account.", customerId: savedCustomer.customerId };
-  }
-
-  // 2 - Email verification endpoint
-  async verifyEmail(customerId: number, token: string) {
-    const customer = await this.customerRepository.findOne({ where: { customerId } });
-    
-    if (!customer) throw new BadRequestException('User not found');
-    if (customer.isVerified) return { message: 'User is already verified' };
-    if (customer.verificationToken !== token) throw new BadRequestException('Invalid or expired verification token');
-
-    customer.isVerified = true;
-    customer.verificationToken = ''; 
-    await this.customerRepository.save(customer);
-
-    return { message: 'Account successfully verified!' };
-  }
 
   // 3 - Search for food items or restaurants
   async searchFood(item: string) {

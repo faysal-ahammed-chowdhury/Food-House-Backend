@@ -13,18 +13,6 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
-  //1 - Register a new customer
-  @Post('register')
-  @UsePipes(new ValidationPipe())
-  async register(@Body() createCustomerDto: CreateCustomerDto) {
-    return await this.customersService.register(createCustomerDto);
-  }
-
-  //2 - Email verification endpoint
-  @Get('verify/:userId/:token')
-  async verifyEmail(@Param('userId', ParseIntPipe) userId: number, @Param('token') token: string) {
-    return await this.customersService.verifyEmail(userId, token);
-  }
 
   //3 - Search for food items or restaurants
   @Get('search')
