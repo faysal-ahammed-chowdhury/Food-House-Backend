@@ -12,6 +12,8 @@ import * as crypto from 'crypto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { RestaurantEntity } from 'src/common/entities/restaurant.entity';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
+import { ILike } from 'typeorm';
+import { ItemEntity } from 'src/common/entities/item.entity';
 
 
 @Injectable()
@@ -80,6 +82,43 @@ export class CustomersService {
 
   async searchFood(item: string) {
     return { message: `Searching database for food item: ${item}` };
+  }
+
+  async searchDatabase(query: string) {
+    // 1. Search Restaurants ONLY (Independent Search)
+    const restaurants = await this.restaurantRepository.find({
+      where: [
+        { user: { name: ILike(`%${query}%`) } }, 
+        { address: ILike(`%${query}%`) }         
+      ],
+      relations: ['user'], 
+      take: 10,
+    });
+
+    // 2. Search Items ONLY (Independent Search)
+    // PRO-TIP: We use `.manager.find()` to query the Item table directly!
+    const items = await this.restaurantRepository.manager.find(ItemEntity, {
+      where: {
+        name: ILike(`%${query}%`) // Look for the food name
+      },
+      // You can even bring the restaurant data along if you want to show it on the UI later!
+      relations: ['restaurant', 'restaurant.user'], 
+      take: 20,
+    });
+
+    // 3. Format the items so the frontend gets 'itemName' exactly as it expects
+    const formattedItems = items.map(item => ({
+      ...item,
+      itemName: item.name,
+      // 👇 ADD THIS LINE: Explicitly grab the restaurant ID
+      restaurantId: item.restaurant?.restaurantId 
+    }));
+
+    // 4. Return the completely decoupled results!
+    return {
+      restaurants: restaurants,
+      items: formattedItems,
+    };
   }
 
   async getProfile(id: number) {

@@ -41,8 +41,11 @@ export class CustomersController {
 
   // @UseGuards(AuthGuard)
   @Get('search')
-  async searchFood(@Query('item') item: string) {
-    return await this.customersService.searchFood(item);
+  async searchDatabase(@Query('query') query: string) {
+    if (!query) {
+      return { restaurants: [], items: [] };
+    }
+    return await this.customersService.searchDatabase(query);
   }
 
   // @UseGuards(AuthGuard) 
