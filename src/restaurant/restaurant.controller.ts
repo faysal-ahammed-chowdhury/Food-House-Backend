@@ -315,34 +315,4 @@ export class RestaurantController {
         return this.restaurantService.getOrderStatus(orderId);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-    ///////////// siyam er code
-    //Get top resturants
-    @Get('top-restaurants')
-    async getTop5Restaurants() {
-        return this.restaurantService.getTop5Restaurants();
-    }
-    //Get ALL resturants
-    @Get('all-restaurants')
-    async getAllRestaurants() {
-        return this.restaurantService.getAllRestaurants();
-    }
-
 }
