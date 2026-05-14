@@ -574,7 +574,7 @@ export class RestaurantService {
         return count;
     }
 
-    //27
+    //28
     async getActiveOrdersByRestaurantId(restaurantId: number) {
         return await this.orderRepository.find({
             where: {
@@ -597,7 +597,7 @@ export class RestaurantService {
         });
     }
 
-    //28
+    //29
     async getOrderStatus(orderId: number): Promise<{ orderId: number; status: OrderStatus }> {
         const order = await this.orderRepository.findOne({
             where: { orderId },
@@ -608,8 +608,15 @@ export class RestaurantService {
         return { orderId: order.orderId, status: order.status };
     }
 
-
-
+    //27
+    async getCategoryCountByRestaurantId(restaurantId: number): Promise<{ categoryCount: number }> {
+        const count = await this.categoryRepository.count({
+            where: {
+                restaurant: { restaurantId: restaurantId },
+            },
+        });
+        return { categoryCount: count };
+    }
 
 
 

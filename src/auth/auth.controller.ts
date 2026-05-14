@@ -16,6 +16,7 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { SignUpDto } from './dto/signup.dto';
+import { get } from 'http';
 
 @Controller('auth')
 export class AuthController {
@@ -100,5 +101,30 @@ export class AuthController {
         } catch {
             throw new UnauthorizedException();
         }
+    }
+
+
+
+    @Get(':email')  //0 mane user exist kore na
+    async getUserIdByEmail(@Param('email') email: string): Promise<{ userId: number }> {
+        return this.authService.getUserIdByEmail(email);
+    }
+
+    @Post('forgot-password')
+    async forgotPassword(@Body() data: { userId: number, email: string }) {
+        const { userId, email } = data;
+        await this.authService.forgotPass(userId, email);
+        return { message: 'If a restaurant with that email exists, a password reset link has been sent.' };
+    }
+
+    @Post('new_password')
+    async resetPassword(@Body() data: { userId: number, newPassword: string }):Promise<{ message: string }> {
+        const { userId, newPassword } = data;
+        return await this.authService.resetPassword(userId, newPassword);
+    }
+
+    @Get('checkOTP/:userId/:otp')
+    async checkOTP(@Param('userId', ParseIntPipe) userId: number, @Param('otp') otp: string): Promise<{ success: boolean; time: boolean }> {
+        return await this.authService.checkOTP(userId, otp);
     }
 }
