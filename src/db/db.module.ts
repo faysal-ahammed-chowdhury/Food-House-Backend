@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoryEntity } from 'src/common/entities/category.entity';
 import { CustomerEntity } from 'src/common/entities/customer.entity';
 import { DeliveryEntity } from 'src/common/entities/delivery.entity';
+import { ForgotPassEntity } from 'src/common/entities/forgotpass.entity';
 import { ItemEntity } from 'src/common/entities/item.entity';
 import { OrderItemEntity } from 'src/common/entities/order-item.entity';
 import { OrderEntity } from 'src/common/entities/order.entity';
@@ -24,6 +25,7 @@ import { VoucherEntity } from 'src/common/entities/voucher.entity';
             OrderEntity,
             DeliveryEntity,
             OrderItemEntity,
+            ForgotPassEntity 
         ]),
     ],
     exports: [TypeOrmModule],
