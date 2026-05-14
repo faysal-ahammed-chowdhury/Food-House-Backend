@@ -11,6 +11,7 @@ import {
     Post,
     Put,
     Query,
+    Res,
     UploadedFile,
     UseGuards,
     UseInterceptors,
@@ -41,6 +42,14 @@ import { UpdateRiderDto } from './dto/update-rider.dto';
 export class AdminController {
     constructor(private readonly adminService: AdminService) {
         this.adminService = adminService;
+    }
+
+    /* ========== Get Image ========== */
+
+    // get image
+    @Get('images/:name')
+    getImage(@Param('name') filename: string, @Res() res) {
+        res.sendFile(filename, { root: './uploads' });
     }
 
     /* ========== Dashboard APIs ========== */

@@ -72,7 +72,6 @@ export class RestaurantController {
     }
 
     //4. UPDATE RESTURENT STATUS
-    @UseGuards(AuthGuard, RestaurantGuard)
     @Patch('updateStatus/:id/:status')
     async updateOpenStatus(
         @Param('id', ParseIntPipe) resturantId: number,
@@ -282,27 +281,52 @@ export class RestaurantController {
     }
 
     //25. Get financial info of restaurant
-    // @UseGuards(AuthGuard, RestaurantGuard)
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('financialInfo/:restaurantId')
     async getFinancialInfo(@Param('restaurantId', ParseIntPipe) restaurantId: number){
         return this.restaurantService.getFinancialInfoByRestaurant(restaurantId);
     }
 
     //26. Get restureant items count
-    // @UseGuards(AuthGuard, RestaurantGuard)
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('itemsCount/:restaurantId')
     async getItemsCount(@Param('restaurantId', ParseIntPipe) restaurantId: number){
         return this.restaurantService.getItemsCount(restaurantId);
     }
 
-    //28. Get active orders by restaurant id
-    // @UseGuards(AuthGuard, RestaurantGuard)
+    //27. Get active orders by restaurant id
+    @UseGuards(AuthGuard, RestaurantGuard)
     @Get('activeOrders/:restaurantId')
     async getActiveOrdersByRestaurantId(@Param('restaurantId', ParseIntPipe) restaurantId: number){
         return this.restaurantService.getActiveOrdersByRestaurantId(restaurantId);
+    }Z
+
+    //28. Get order status 
+    // @UseGuards(AuthGuard, RestaurantGuard)
+    @Get('orderStatus/:orderId')
+    async getOrderStatus(@Param('orderId', ParseIntPipe) orderId: number){
+        return this.restaurantService.getOrderStatus(orderId);
     }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+    ///////////// siyam er code
     //Get top resturants
     @Get('top-restaurants')
     async getTop5Restaurants() {
