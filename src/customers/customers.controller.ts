@@ -1,6 +1,7 @@
 import { 
   Controller, Get, Post, Put, Patch, Delete, Param, Body, Query, 
-  UsePipes, ValidationPipe, ParseIntPipe, UseGuards, Req
+  UsePipes, ValidationPipe, ParseIntPipe, UseGuards, Req,
+  UnauthorizedException
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto, UpdateCustomerDto } from './dto/customer.dto';
@@ -36,7 +37,11 @@ export class CustomersController {
   @UseGuards(AuthGuard) 
   @Get('profile')
   async getProfile(@Req() req: any) {
-    return await this.customersService.getProfile(req.user.userId); 
+    const userId = req.user?.userId || req.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException("Your session is outdated. Please log in again.");
+    }
+    return await this.customersService.getProfile(userId); 
   }
   
   //5 - Update customer password
@@ -67,14 +72,22 @@ export class CustomersController {
   @UseGuards(AuthGuard)
   @Post('orders')
   async placeOrder(@Req() req: any, @Body() createOrderDto: CreateOrderDto) {
-    return await this.customersService.placeOrder(req.user.userId, createOrderDto);
+    const userId = req.user?.userId || req.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException("Your session is outdated. Please log in again.");
+    }
+    return await this.customersService.placeOrder(userId, createOrderDto);
   }
 
   // 9 - Get logged-in user's orders
   @UseGuards(AuthGuard)
   @Get('orders')
   async getOrders(@Req() req: any) {
-    return await this.customersService.getOrders(req.user.userId);
+    const userId = req.user?.userId || req.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException("Your session is outdated. Please log out and log in again.");
+    }
+    return await this.customersService.getOrders(userId);
   }
 
   // 10 - Get details of a specific order
@@ -92,6 +105,7 @@ export class CustomersController {
   }
 
   // 12 - Get restaurant menu
+  @UseGuards(AuthGuard)
   @Get('restaurant-menu/:id')
   async getRestaurantMenu(@Param('id', ParseIntPipe) id: number) {
     return await this.customersService.getRestaurantMenu(id);

@@ -1,22 +1,19 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { CreateCustomerDto, UpdateCustomerDto } from './dto/customer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CustomerEntity } from '../common/entities/customer.entity';
-import { OrderEntity } from '../common/entities/order.entity';
-import { UserRoles } from '../common/enums/user-roles.enum';
-import { OrderStatus } from '../common/enums/order-status.enum';
+import { Repository, ILike } from 'typeorm';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto'; 
+import { CreateCustomerDto, UpdateCustomerDto } from './dto/customer.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { RestaurantEntity } from 'src/common/entities/restaurant.entity';
-import { PaymentMethod } from 'src/common/enums/payment-method.enum';
-import { ILike } from 'typeorm';
-import { ItemEntity } from 'src/common/entities/item.entity';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { Hash } from 'crypto';
-
+import { CustomerEntity } from '../common/entities/customer.entity';
+import { OrderEntity } from '../common/entities/order.entity';
+import { RestaurantEntity } from 'src/common/entities/restaurant.entity';
+import { ItemEntity } from 'src/common/entities/item.entity';
+import { UserRoles } from '../common/enums/user-roles.enum';
+import { OrderStatus } from '../common/enums/order-status.enum';
+import { PaymentMethod } from 'src/common/enums/payment-method.enum';
 
 @Injectable()
 export class CustomersService {
@@ -27,6 +24,7 @@ export class CustomersService {
     private readonly mailerService: MailerService,
   ) {}
 
+  // 1 - Register a new customer
   async register(createDto: CreateCustomerDto) {
     const existingCustomer = await this.customerRepository.findOne({ where: { user: { email: createDto.email } } });
     if (existingCustomer) {
@@ -51,8 +49,7 @@ export class CustomersService {
     });
     
     const savedCustomer = await this.customerRepository.save(newCustomer);
-    
-    const frontendUrl = process.env.FRONTEND_URL ;
+    const frontendUrl = process.env.FRONTEND_URL;
     const verificationLink = `${frontendUrl}/verify/${savedCustomer.customerId}/${verificationToken}`;
 
     try {
@@ -62,12 +59,12 @@ export class CustomersService {
         text: `Please click here to verify: ${verificationLink}`,
       });
     } catch (error) {
-        // Mailer error handling
+       // Silent catch for mailer
     }
-    
     return { message: "Customer registered successfully. Please check your email to verify your account.", customerId: savedCustomer.customerId };
   }
 
+  // 2 - Email verification endpoint
   async verifyEmail(customerId: number, token: string) {
     const customer = await this.customerRepository.findOne({ where: { customerId } });
     
@@ -82,12 +79,12 @@ export class CustomersService {
     return { message: 'Account successfully verified!' };
   }
 
+  // 3 - Search for food items or restaurants
   async searchFood(item: string) {
     return { message: `Searching database for food item: ${item}` };
   }
 
   async searchDatabase(query: string) {
-    // 1. Search Restaurants ONLY (Independent Search)
     const restaurants = await this.restaurantRepository.find({
       where: [
         { user: { name: ILike(`%${query}%`) } }, 
@@ -97,44 +94,69 @@ export class CustomersService {
       take: 10,
     });
 
-    // 2. Search Items ONLY (Independent Search)
-    // PRO-TIP: We use `.manager.find()` to query the Item table directly!
     const items = await this.restaurantRepository.manager.find(ItemEntity, {
-      where: {
-        name: ILike(`%${query}%`) // Look for the food name
-      },
-      // You can even bring the restaurant data along if you want to show it on the UI later!
+      where: { name: ILike(`%${query}%`) },
       relations: ['restaurant', 'restaurant.user'], 
       take: 20,
     });
 
-    // 3. Format the items so the frontend gets 'itemName' exactly as it expects
     const formattedItems = items.map(item => ({
       ...item,
       itemName: item.name,
-      // 👇 ADD THIS LINE: Explicitly grab the restaurant ID
       restaurantId: item.restaurant?.restaurantId 
     }));
 
-    // 4. Return the completely decoupled results!
     return {
       restaurants: restaurants,
       items: formattedItems,
     };
   }
 
-  async getProfile(id: number) {
+  // 4 - Get customer profile
+  async getProfile(userId: number) {
     const customer = await this.customerRepository.findOne({
-      where: { customerId: id },
+      where: { user: { userId: userId } }, 
       relations: ['user'], 
     });
 
-    if (!customer) throw new NotFoundException(`Customer #${id} not found`);
+    if (!customer) {
+      throw new NotFoundException(`Customer profile for logged-in user not found`);
+    }
+
+    if (customer.user) {
+      delete (customer.user as any).password;
+      delete (customer.user as any).verificationToken;
+    }
+
     return customer;
   }
 
-  async replaceProfile(id: number, updateDto: UpdateCustomerDto) {
-    const customer = await this.getProfile(id); 
+  // 5 - Update customer password
+  async updatePassword(userId: number, updatePasswordDto: UpdatePasswordDto) {
+    const { newPassword, confirmPassword } = updatePasswordDto;
+
+    if (!newPassword || newPassword.trim() === "") {
+      throw new BadRequestException('New password is required');
+    }
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
+    const customer = await this.getProfile(userId);
+    if (!customer) throw new NotFoundException('Customer not found');
+
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    customer.user.password = hashedPassword;
+    await this.customerRepository.save(customer);
+
+    return { message: 'Password updated successfully' };
+  }
+
+  // 6 - Replace entire customer profile (PUT)
+  async replaceProfile(userId: number, updateDto: UpdateCustomerDto) {
+    const customer = await this.getProfile(userId);
     if (updateDto.address) customer.address = updateDto.address;
     if (updateDto.phone) customer.phone = updateDto.phone;
     if (updateDto.name) customer.user.name = updateDto.name;
@@ -143,8 +165,9 @@ export class CustomersService {
     return { message: "Profile fully replaced", customer };
   }
 
-  async patchProfile(id: number, updateDto: UpdateCustomerDto) {
-    const customer = await this.getProfile(id);
+  // 7 - Partially update customer profile (PATCH)
+  async patchProfile(userId: number, updateDto: UpdateCustomerDto) {
+    const customer = await this.getProfile(userId);
     if (updateDto.address) customer.address = updateDto.address;
     if (updateDto.phone) customer.phone = updateDto.phone;
     if (updateDto.name) customer.user.name = updateDto.name;
@@ -153,41 +176,62 @@ export class CustomersService {
     return { message: "Profile partially updated", customer };
   }
 
-  async checkout(id: number, cartData: any) {
-    const customer = await this.getProfile(id);
-    console.log("PAYLOAD RECEIVED FROM FRONTEND:", CreateOrderDto);
+  // 8 - Place an order for the logged-in customer
+  async placeOrder(userId: number, createOrderDto: CreateOrderDto) {
+    const customer = await this.getProfile(userId);
+    let calculatedSubtotal = 0;
+    
+    const orderItemsToSave = createOrderDto.items.map((item: any) => {
+      const itemTotal = item.price * item.quantity;
+      calculatedSubtotal += itemTotal; 
+      return { 
+        itemId: item.itemId || 1, 
+        itemName: item.foodName || 'Unknown Item', 
+        itemPrice: item.price,
+        quantity: item.quantity, 
+        total: itemTotal 
+      };
+    });
+
+    const deliveryFee = 50; 
+    
     const newOrder = this.orderRepository.create({
       customer: customer,
-      subtotal: cartData.totalPrice || 0,
+      subtotal: calculatedSubtotal,
       discountAmount: 0,
-      deliveryFee: 0,
-      total: cartData.totalPrice || 0, 
+      deliveryFee: deliveryFee,
+      total: calculatedSubtotal + deliveryFee,
       status: OrderStatus.PENDING,
-      paymentMethod: (CreateOrderDto as any).paymentMethod || PaymentMethod.COD,
+      paymentMethod: (createOrderDto as any).paymentMethod || PaymentMethod.COD,
       customerName: customer.user.name,
       customerAddress: customer.address || 'Address pending',
-      restaurantName: 'Pending Restaurant',
-      restaurantAddress: 'Pending Address',
-      commissionAmount: 0,
-      commissionPercentage: 0,
+      restaurantName: (createOrderDto as any).restaurantName || 'Unknown Restaurant',
+      restaurantAddress: 'Unknown Address',
+      commissionAmount: (calculatedSubtotal * 0.1), 
+      commissionPercentage: 10,
       estimatedDeliveryTime: 30,
+      orderItems: orderItemsToSave, 
     });
 
     const savedOrder = await this.orderRepository.save(newOrder);
-    return { message: "Order placed successfully", orderId: savedOrder.orderId };
+    delete (savedOrder as any).customer;
+    return { message: 'Order placed successfully', order: savedOrder };
   }
 
+  // 9 - Get logged-in user's orders
+  async getOrders(userId: number) {
+    const customer = await this.getProfile(userId);
 
-  
-
-  async getOrders(id: number) {
     const orders = await this.orderRepository.find({
-      where: { customer: { customerId: id } },
+      where: { customer: { customerId: customer.customerId } },
       relations: ['orderItems'], 
       order: { orderAt: 'DESC' }, 
     });
 
-    const activeStatuses = [OrderStatus.PENDING, OrderStatus.ACCEPTED, OrderStatus.RIDER_ASSIGNED, OrderStatus.PREPARING, OrderStatus.READY, OrderStatus.PICKED];
+    const activeStatuses = [
+      OrderStatus.PENDING, OrderStatus.ACCEPTED, OrderStatus.RIDER_ASSIGNED, 
+      OrderStatus.PREPARING, OrderStatus.READY, OrderStatus.PICKED
+    ];
     const pastStatuses = [OrderStatus.DELIVERED, OrderStatus.CANCELLED];
 
     const formattedOrders = orders.map((order) => {
@@ -212,58 +256,7 @@ export class CustomersService {
     };
   }
 
-  async cancelOrder(id: number, orderId: number) {
-    const order = await this.orderRepository.findOne({ 
-      where: { orderId: orderId } 
-    });
-    if (!order) {
-      throw new NotFoundException(`Order #${orderId} not found`);
-    }
-    order.status = OrderStatus.CANCELLED;
-    await this.orderRepository.save(order);
-    return { message: `Order #${orderId} has been successfully cancelled` };
-  }
-
-  async placeOrder(customerId: number, createOrderDto: CreateOrderDto) {
-    const customer = await this.getProfile(customerId);
-    let calculatedSubtotal = 0;
-    const orderItemsToSave = createOrderDto.items.map((item: any) => {
-      const itemTotal = item.price * item.quantity;
-      calculatedSubtotal += itemTotal; 
-      return { 
-        itemId: item.itemId || 1, 
-        itemName: item.foodName || 'Unknown Item', 
-        itemPrice: item.price,
-        quantity: item.quantity, 
-        total: itemTotal 
-      };
-    });
-
-    const deliveryFee = 50; 
-    
-    const newOrder = this.orderRepository.create({
-      customer: customer,
-      subtotal: calculatedSubtotal,
-      discountAmount: 0,
-      deliveryFee: deliveryFee,
-      total: calculatedSubtotal + deliveryFee,
-      status: OrderStatus.PENDING,
-      paymentMethod: (CreateOrderDto as any).paymentMethod || PaymentMethod.COD,
-      customerName: customer.user.name,
-      customerAddress: customer.address || 'Address pending',
-      restaurantName: (createOrderDto as any).restaurantName || 'Unknown Restaurant',
-      restaurantAddress: 'Unknown Address',
-      commissionAmount: (calculatedSubtotal * 0.1), 
-      commissionPercentage: 10,
-      estimatedDeliveryTime: 30,
-      orderItems: orderItemsToSave, 
-    });
-
-    const savedOrder = await this.orderRepository.save(newOrder);
-    delete (savedOrder as any).customer;
-    return { message: 'Order placed successfully', order: savedOrder };
-  }
-
+  // 10 - Get details of a specific order
   async getOrderDetails(orderId: number) {
     const order = await this.orderRepository.findOne({
       where: { orderId: orderId },
@@ -276,7 +269,30 @@ export class CustomersService {
     return order;
   }
 
-  //  Get Restaurant Menu for Customer
+  // 11 - Cancel an order
+  async cancelOrder(userId: number, orderId: number) {
+    const customer = await this.getProfile(userId);
+    const order = await this.orderRepository.findOne({ 
+      where: { 
+        orderId: orderId,
+        customer: { customerId: customer.customerId } 
+      } 
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order #${orderId} not found or you do not have permission to cancel it.`);
+    }
+    if (order.status === OrderStatus.CANCELLED || order.status === OrderStatus.DELIVERED) {
+      throw new BadRequestException(`This order cannot be cancelled in its current state.`);
+    }
+
+    order.status = OrderStatus.CANCELLED;
+    await this.orderRepository.save(order);
+    
+    return { message: `Order #${orderId} has been successfully cancelled` };
+  }
+
+  // 12 - Get restaurant menu
   async getRestaurantMenu(restaurantId: number) {
     const restaurant = await this.restaurantRepository.findOne({
       where: { restaurantId: restaurantId },
@@ -286,46 +302,12 @@ export class CustomersService {
     if (!restaurant) {
       throw new NotFoundException(`Restaurant #${restaurantId} not found`);
     }
+    
     const { password, ...safeUserInfo } = restaurant.user;
     
     return {
       ...restaurant, 
       user: safeUserInfo
     };
-  }
-
-
-  // Inside CustomersService class
-  async updatePassword(id: number, updatePasswordDto: UpdatePasswordDto) {
-    const { newPassword, confirmPassword } = updatePasswordDto;
-
-    // ✅ FIX 1: Explicitly check for undefined/empty password
-    if (!newPassword || newPassword.trim() === "") {
-      throw new BadRequestException('New password is required');
-    }
-
-    if (newPassword !== confirmPassword) {
-      throw new BadRequestException('Passwords do not match');
-    }
-
-    const customer = await this.customerRepository.findOne({
-      where: { customerId: id },
-      relations: ['user'],
-    });
-
-    if (!customer) throw new NotFoundException('Customer not found');
-
-    const salt = await bcrypt.genSalt();
-    
-    // ✅ FIX 2: Because of the check above, TypeScript knows 'newPassword' is a string.
-    // This solves the 'Promise<string> & void' mismatch automatically!
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    customer.user.password = hashedPassword;
-    
-    // Save the customer (this will update the user table too)
-    await this.customerRepository.save(customer);
-
-    return { message: 'Password updated successfully' };
   }
 }
