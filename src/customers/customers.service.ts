@@ -11,6 +11,8 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto'; 
 import { CreateOrderDto } from './dto/create-order.dto';
 import { RestaurantEntity } from 'src/common/entities/restaurant.entity';
+import { PaymentMethod } from 'src/common/enums/payment-method.enum';
+
 
 @Injectable()
 export class CustomersService {
@@ -112,7 +114,7 @@ export class CustomersService {
 
   async checkout(id: number, cartData: any) {
     const customer = await this.getProfile(id);
-    
+    console.log("PAYLOAD RECEIVED FROM FRONTEND:", CreateOrderDto);
     const newOrder = this.orderRepository.create({
       customer: customer,
       subtotal: cartData.totalPrice || 0,
@@ -120,6 +122,8 @@ export class CustomersService {
       deliveryFee: 0,
       total: cartData.totalPrice || 0, 
       status: OrderStatus.PENDING,
+      //paymentMethod: (CreateOrderDto as any).paymentMethod || PaymentMethod.COD,
+      paymentMethod: 'COD' as any,
       customerName: customer.user.name,
       customerAddress: customer.address || 'Address pending',
       restaurantName: 'Pending Restaurant',
@@ -178,14 +182,18 @@ export class CustomersService {
   }
 
   async placeOrder(customerId: number, createOrderDto: CreateOrderDto) {
+    // 🚨 MASSIVE CONSOLE LOG 🚨
+    console.log("=======================================");
+    console.log("🚨🚨🚨 BACKEND IS FINALLY UPDATED! 🚨🚨🚨");
+    console.log("PAYLOAD:", createOrderDto);
+    console.log("=======================================");
+
     const customer = await this.getProfile(customerId);
 
     let calculatedSubtotal = 0;
-    
     const orderItemsToSave = createOrderDto.items.map((item: any) => {
       const itemTotal = item.price * item.quantity;
       calculatedSubtotal += itemTotal; 
-      
       return { 
         itemId: item.itemId || 1, 
         itemName: item.foodName || 'Unknown Item', 
@@ -196,6 +204,7 @@ export class CustomersService {
     });
 
     const deliveryFee = 50; 
+    
     const newOrder = this.orderRepository.create({
       customer: customer,
       subtotal: calculatedSubtotal,
@@ -212,6 +221,12 @@ export class CustomersService {
       estimatedDeliveryTime: 30,
       orderItems: orderItemsToSave, 
     });
+
+    // 🚨 BRUTE FORCE OVERRIDE 🚨
+    newOrder.paymentMethod = (createOrderDto as any).paymentMethod || 'COD';
+
+    // Log the order right before it hits the database
+    console.log("ORDER ABOUT TO SAVE:", newOrder.paymentMethod);
 
     const savedOrder = await this.orderRepository.save(newOrder);
     

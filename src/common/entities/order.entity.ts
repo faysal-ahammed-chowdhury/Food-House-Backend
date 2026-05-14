@@ -81,6 +81,6 @@ export class OrderEntity {
     })
     delivery!: DeliveryEntity;
 
-    @OneToMany(() => OrderItemEntity, (item) => item.order)
+    @OneToMany(() => OrderItemEntity, (item) => item.order, { cascade: true })
     orderItems!: OrderItemEntity[];
 }
