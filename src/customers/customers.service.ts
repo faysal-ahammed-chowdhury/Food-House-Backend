@@ -14,6 +14,8 @@ import { RestaurantEntity } from 'src/common/entities/restaurant.entity';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
 import { ILike } from 'typeorm';
 import { ItemEntity } from 'src/common/entities/item.entity';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { Hash } from 'crypto';
 
 
 @Injectable()
@@ -175,6 +177,9 @@ export class CustomersService {
     return { message: "Order placed successfully", orderId: savedOrder.orderId };
   }
 
+
+  
+
   async getOrders(id: number) {
     const orders = await this.orderRepository.find({
       where: { customer: { customerId: id } },
@@ -287,5 +292,40 @@ export class CustomersService {
       ...restaurant, 
       user: safeUserInfo
     };
+  }
+
+
+  // Inside CustomersService class
+  async updatePassword(id: number, updatePasswordDto: UpdatePasswordDto) {
+    const { newPassword, confirmPassword } = updatePasswordDto;
+
+    // ✅ FIX 1: Explicitly check for undefined/empty password
+    if (!newPassword || newPassword.trim() === "") {
+      throw new BadRequestException('New password is required');
+    }
+
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
+    const customer = await this.customerRepository.findOne({
+      where: { customerId: id },
+      relations: ['user'],
+    });
+
+    if (!customer) throw new NotFoundException('Customer not found');
+
+    const salt = await bcrypt.genSalt();
+    
+    // ✅ FIX 2: Because of the check above, TypeScript knows 'newPassword' is a string.
+    // This solves the 'Promise<string> & void' mismatch automatically!
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    customer.user.password = hashedPassword;
+    
+    // Save the customer (this will update the user table too)
+    await this.customerRepository.save(customer);
+
+    return { message: 'Password updated successfully' };
   }
 }

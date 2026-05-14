@@ -19,6 +19,7 @@ import { CustomersService } from './customers.service';
 import { CreateCustomerDto, UpdateCustomerDto } from './dto/customer.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { AuthGuard } from '../auth/auth.guard';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Controller('customers')
 export class CustomersController {
@@ -63,7 +64,16 @@ export class CustomersController {
     
     return customer;
   }
-
+  
+  // Inside CustomersController class
+  @Patch(':id/password')
+  @UsePipes(new ValidationPipe())
+  async updatePassword(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+   return await this.customersService.updatePassword(id, updatePasswordDto);
+  }
   // @UseGuards(AuthGuard)
   @Put(':id/profile')
   @UsePipes(new ValidationPipe())
