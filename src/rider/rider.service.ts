@@ -33,11 +33,21 @@ export class RiderService{
         private orderRepository: Repository<OrderEntity>,
     ){}
 
-    //---------
+    async getRiderIdByUserId(userId: number): Promise<number> {
+    const rider = await this.riderRepository.findOne({
+      where: { user: { userId } },
+    });
+
+    if (!rider) {
+      throw new NotFoundException('Rider not found');
+    }
+
+    return rider.riderId;
+  }
 
 
     //get by id---
-   async getRiderById(riderId: number): Promise<object> {
+    async getRiderById(riderId: number): Promise<object> {
         const rider = await this.riderRepository.findOne({
             where: { riderId },
             relations: ['user', 'deliveries'],
@@ -68,25 +78,22 @@ export class RiderService{
 
     ///nid image url get by id
     async getRiderImage(riderId: number): Promise<string> {
-    const rider = await this.riderRepository.findOne({
-        where: { riderId },
-    });
-
-    if (!rider) throw new NotFoundException("Rider not found");
-
-    if (!rider.nidImageUrl) {
-        throw new NotFoundException("Image not found");
+        const rider = await this.riderRepository.findOne({
+            where: { riderId },
+        });
+        if (!rider) throw new NotFoundException("Rider not found");
+        if (!rider.nidImageUrl) {
+            throw new NotFoundException("Image not found");
+        }
+        return rider.nidImageUrl; 
     }
-
-    return rider.nidImageUrl; 
-}
 
     //Update Rider Profile-----
     async updateRider(
         riderId: number,
         updateRiderDto: UpdateRiderDto,
         //nidImageUrl?: string,
-    ): Promise<object> {
+        ): Promise<object> {
         const rider = await this.riderRepository.findOne({
             where: { riderId },
             relations: ['user'],
@@ -126,8 +133,8 @@ export class RiderService{
         if (!rider) throw new NotFoundException("Rider not found");
 
            // Active deliveries
-    const activeDeliveries = await this.orderRepository.count({
-         where: {
+        const activeDeliveries = await this.orderRepository.count({
+            where: {
                 status: In([
                     OrderStatus.RIDER_ASSIGNED,
                     OrderStatus.PREPARING,
@@ -138,29 +145,29 @@ export class RiderService{
                     rider: { riderId },
                 },
             },
-    });
+        });
 
-    // Available requests
-    const availableRequests = await this.orderRepository.count({
-        where: {
-             status: OrderStatus.READY,
-        },
-    });
+            // Available requests
+        const availableRequests = await this.orderRepository.count({
+            where: {
+                status: OrderStatus.READY,
+            },
+        });
     
 
 
-    // Completed
-    const completedOrders = await this.orderRepository.count({
-        where: {
-                status: OrderStatus.DELIVERED,
-                delivery: {
-                    rider: { riderId },
+        // Completed
+        const completedOrders = await this.orderRepository.count({
+            where: {
+                    status: OrderStatus.DELIVERED,
+                    delivery: {
+                        rider: { riderId },
+                    },
                 },
-            },
-    });
+        });
 
-    // Earnings 
-    const deliveredOrders = await this.orderRepository.find({
+        // Earnings 
+        const deliveredOrders = await this.orderRepository.find({
             where: {
                 status: OrderStatus.DELIVERED,
                 delivery: {
@@ -169,7 +176,7 @@ export class RiderService{
             },
         });
 
-    let todaysEarnings = 0;
+        let todaysEarnings = 0;
 
         for (const order of deliveredOrders) {
             todaysEarnings += order.deliveryFee || 0;
@@ -187,33 +194,48 @@ export class RiderService{
         };
     }
 
-
-    //update rider status
-    async updateRiderStatus(riderId: number, dto: RiderStatusDto) {
+    // get rider status
+    async getRiderStatus(riderId: number): Promise<object> {
     const rider = await this.riderRepository.findOne({
         where: { riderId },
     });
 
     if (!rider) throw new NotFoundException("Rider not found");
 
-    rider.isOnline = dto.isOnline;
-
-    await this.riderRepository.save(rider);
-
     return {
         success: true,
-        message: "Status updated",
         data: {
-            riderId: rider.riderId,
             isOnline: rider.isOnline,
         },
     };
 }
-////////////
+
+    //update rider status
+    async updateRiderStatus(riderId: number, dto: RiderStatusDto) {
+        const rider = await this.riderRepository.findOne({
+            where: { riderId },
+        });
+
+        if (!rider) throw new NotFoundException("Rider not found");
+
+        rider.isOnline = dto.isOnline;
+
+        await this.riderRepository.save(rider);
+
+        return {
+            success: true,
+            message: "Status updated",
+            data: {
+                riderId: rider.riderId,
+                isOnline: rider.isOnline,
+            },
+        };
+    }
+
     async checkPassword(
         riderId: number,
         password: string,
-    ) {
+         ) {
         const rider = await this.riderRepository.findOne({
         where: { riderId },
         relations: ['user'],
@@ -237,27 +259,27 @@ export class RiderService{
     async changePassword(
         riderId: number,
         newPassword: string,
-    ) {
-        const rider = await this.riderRepository.findOne({
-        where: { riderId },
-        relations: ['user'],
-        });
+        ){
+            const rider = await this.riderRepository.findOne({
+            where: { riderId },
+            relations: ['user'],
+            });
 
-        if (!rider) {
-        throw new NotFoundException('Rider not found');
-        }
+            if (!rider) {
+            throw new NotFoundException('Rider not found');
+            }
 
-        const salt = await bcrypt.genSalt();
-        const hashedPassword = await bcrypt.hash(newPassword, salt);    
+            const salt = await bcrypt.genSalt();
+            const hashedPassword = await bcrypt.hash(newPassword, salt);    
 
-        rider.user.password = hashedPassword;
+            rider.user.password = hashedPassword;
 
-        await this.userRepository.save(rider.user);
+            await this.userRepository.save(rider.user);
 
-        return {
-        success: true,
-        message: 'Password updated successfully',
-        };
+            return {
+            success: true,
+            message: 'Password updated successfully',
+            };
     }
     
     ///available request-
@@ -301,7 +323,7 @@ export class RiderService{
     }
 
 
-///marked picked--
+    ///marked picked--
         async markPicked(dto: UpdateDeliveryDto) {
         const { riderId, orderId } = dto;
 
@@ -331,7 +353,7 @@ export class RiderService{
         return await this.orderRepository.save(order);
     }
 
-  // Mark delivered
+     // Mark delivered
     async markDelivered(dto: UpdateDeliveryDto) {
         const { riderId, orderId } = dto;
 
@@ -368,39 +390,50 @@ export class RiderService{
         relations: ['order', 'order.customer', 'order.restaurant'],
         });
     }
-///get running orders by rider id- jegula delivery korbor jonno accept korechi but delivered hoy nai
+    ///get running orders by rider id- jegula delivery korbor jonno accept korechi but delivered hoy nai
 
-  async getRunningOrdersByRider(riderId: number) {
-    return await this.orderRepository.find({
-      where: {
-        riderId,
-        status: In([
-          OrderStatus.RIDER_ASSIGNED,
-          OrderStatus.PREPARING,
-          OrderStatus.READY,
-          OrderStatus.PICKED,
-        ]),
-      },
-      order: {
-        orderAt: 'DESC',
-      },
-    });
-  }
+    async getRunningOrdersByRider(riderId: number) {
+        return await this.orderRepository.find({
+        where: {
+            riderId,
+            status: In([
+            OrderStatus.RIDER_ASSIGNED,
+            OrderStatus.PREPARING,
+            OrderStatus.READY,
+            OrderStatus.PICKED,
+            ]),
+        },
+        order: {
+            orderAt: 'DESC',
+        },
+        });
+    }
+ 
+    //count delivered orders by rider id
+    async countDeliveredOrdersByRider(riderId: number) {
+        return await this.orderRepository.count({
+        where: {
+            riderId,
+            status: OrderStatus.DELIVERED,
+        },
+        });
+    }
+
 
   ///delivered
-  async getDeliveredOrdersByRider(riderId: number) {
-    return await this.orderRepository.find({
-      where: {
-        riderId,
-        status: In([
-          OrderStatus.DELIVERED,
-        ]),
-      },
-      order: {
-        orderAt: 'DESC',
-      },
-    });
-  }
+    async getDeliveredOrdersByRider(riderId: number) {
+        return await this.orderRepository.find({
+        where: {
+            riderId,
+            status: In([
+            OrderStatus.DELIVERED,
+            ]),
+        },
+        order: {
+            orderAt: 'DESC',
+        },
+        });
+    }
 
 }
 
