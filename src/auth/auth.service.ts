@@ -300,7 +300,7 @@ export class AuthService {
         if (record.expiresAt < now) {
             return { success: false, time: true };
         }
-
+        await this.forgotPassRepository.delete({ userId });
         return { success: true, time: true };
     }
 }

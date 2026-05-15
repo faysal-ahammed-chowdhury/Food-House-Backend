@@ -110,15 +110,16 @@ export class AuthController {
         return this.authService.getUserIdByEmail(email);
     }
 
-    @Post('forgot-password')
+    @Post('send_otp')
     async forgotPassword(@Body() data: { userId: number, email: string }) {
         const { userId, email } = data;
         await this.authService.forgotPass(userId, email);
         return { message: 'If a restaurant with that email exists, a password reset link has been sent.' };
     }
 
-    @Get('checkOTP/:userId/:otp')
-    async checkOTP(@Param('userId', ParseIntPipe) userId: number, @Param('otp') otp: string): Promise<{ success: boolean; time: boolean }> {
+    @Post('verifyOTP')
+    async checkOTP(@Body() data: { userId: number, otp: string }): Promise<{ success: boolean; time: boolean }> {
+        const { userId, otp } = data;
         return await this.authService.checkOTP(userId, otp);
     }
 
