@@ -1,4 +1,4 @@
-import { IsString, IsNumber, ValidateNested, IsArray, IsOptional } from 'class-validator';
+import { IsString, IsNumber, ValidateNested, IsArray, IsOptional, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ItemDto {
@@ -17,6 +17,10 @@ class ItemDto {
 }
 
 export class CreateOrderDto {
+  @IsNumber()
+  @IsNotEmpty()
+  restaurantId!: number;
+  
   @IsString()
   restaurantName!: string;
 

@@ -162,6 +162,16 @@ export class CustomersService {
   // 8 - Place an order for the logged-in customer
   async placeOrder(userId: number, createOrderDto: CreateOrderDto) {
     const customer = await this.getProfile(userId);
+    
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { restaurantId: createOrderDto.restaurantId },
+      relations: ['user'] 
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException(`Restaurant #${createOrderDto.restaurantId} not found`);
+    }
+
     let calculatedSubtotal = 0;
     
     const orderItemsToSave = createOrderDto.items.map((item: any) => {
@@ -175,11 +185,11 @@ export class CustomersService {
         total: itemTotal 
       };
     });
-
     const deliveryFee = 50; 
     
     const newOrder = this.orderRepository.create({
       customer: customer,
+      restaurant: restaurant, 
       subtotal: calculatedSubtotal,
       discountAmount: 0,
       deliveryFee: deliveryFee,
@@ -188,16 +198,17 @@ export class CustomersService {
       paymentMethod: (createOrderDto as any).paymentMethod || PaymentMethod.COD,
       customerName: customer.user.name,
       customerAddress: customer.address || 'Address pending',
-      restaurantName: (createOrderDto as any).restaurantName || 'Unknown Restaurant',
-      restaurantAddress: 'Unknown Address',
+      restaurantName: restaurant.user?.name || createOrderDto.restaurantName,
+      restaurantAddress: restaurant.address || 'Address pending',
       commissionAmount: (calculatedSubtotal * 0.1), 
       commissionPercentage: 10,
       estimatedDeliveryTime: 30,
       orderItems: orderItemsToSave, 
     });
-
     const savedOrder = await this.orderRepository.save(newOrder);
     delete (savedOrder as any).customer;
+    delete (savedOrder as any).restaurant; 
+    
     return { message: 'Order placed successfully', order: savedOrder };
   }
 
