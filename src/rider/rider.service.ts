@@ -141,9 +141,9 @@ export class RiderService{
                     OrderStatus.READY,
                     OrderStatus.PICKED,
                 ]),
-                delivery: {
-                    rider: { riderId },
-                },
+                
+                    riderId:  riderId ,
+                
             },
         });
 
@@ -160,9 +160,7 @@ export class RiderService{
         const completedOrders = await this.orderRepository.count({
             where: {
                     status: OrderStatus.DELIVERED,
-                    delivery: {
-                        rider: { riderId },
-                    },
+                    riderId: riderId,
                 },
         });
 
@@ -170,9 +168,7 @@ export class RiderService{
         const deliveredOrders = await this.orderRepository.find({
             where: {
                 status: OrderStatus.DELIVERED,
-                delivery: {
-                    rider: { riderId },
-                },
+                riderId:  riderId ,
             },
         });
 
@@ -285,7 +281,7 @@ export class RiderService{
     ///available request-
     async getAvailableRequests() {
         return this.orderRepository.find({
-        where: { status: OrderStatus.READY },
+        where: { status: OrderStatus.ACCEPTED },
         relations: ['restaurant', 'customer'],
         });
     }
