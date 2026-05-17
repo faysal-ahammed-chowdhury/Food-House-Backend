@@ -441,18 +441,29 @@ export class RiderService{
 
 
     //delete account
-    async deleteAccount(riderId: number) {
-        const rider = await this.riderRepository.findOne({
-        where: { riderId },
-        relations: ['user'],
-        });
+    async deleteUserByRiderId(riderId: number): Promise<{ message: string }> {
+    // Step 1: find rider with user
+    const rider = await this.riderRepository.findOne({
+      where: { riderId },
+      relations: ['user'],
+    });
 
-        if (!rider) {
-            throw new NotFoundException('Rider not found');
-        }
-
-        return await this.riderRepository.remove(rider);
+    if (!rider) {
+      throw new NotFoundException('Rider not found');
     }
+
+    if (!rider.user) {
+      throw new NotFoundException('User not found for this rider');
+    }
+
+    // Step 2: delete user
+    await this.userRepository.remove(rider.user);
+
+    return {
+      message: 'User deleted successfully via riderId',
+    };
+  }
+
 
 
     //siyam er code

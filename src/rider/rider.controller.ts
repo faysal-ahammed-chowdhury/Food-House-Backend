@@ -127,11 +127,13 @@ export class RiderController{
     }
 
     // count delivered orders
+    @UseGuards(AuthGuard,RiderGuard)
     @Get(':riderId/delivered-count')countDeliveredOrders(@Param('riderId', ParseIntPipe) riderId: number,) {
         return this.riderService.countDeliveredOrdersByRider(riderId);
     }
 
     //delivered
+    @UseGuards(AuthGuard,RiderGuard)
     @Get(':riderId/delivered-orders')getDeliveredOrders(@Param('riderId', ParseIntPipe) riderId: number,) {
       return this.riderService.getDeliveredOrdersByRider(riderId);
     }
@@ -140,7 +142,7 @@ export class RiderController{
     // delete account
     @UseGuards(AuthGuard,RiderGuard)
     @Delete(':riderId')deleteAccount(@Param('riderId', ParseIntPipe) riderId: number,) {
-      return this.riderService.deleteAccount(riderId);
+      return this.riderService.deleteUserByRiderId(riderId);
     }
 
 }
