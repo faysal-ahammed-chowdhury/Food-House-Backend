@@ -14,6 +14,7 @@ import { ItemEntity } from 'src/common/entities/item.entity';
 import { UserRoles } from '../common/enums/user-roles.enum';
 import { OrderStatus } from '../common/enums/order-status.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
+import Pusher from 'pusher';
 
 @Injectable()
 export class CustomersService {
@@ -204,6 +205,10 @@ export class CustomersService {
     const savedOrder = await this.orderRepository.save(newOrder);
     delete (savedOrder as any).customer;
     delete (savedOrder as any).restaurant; 
+
+    /////////////////////////////
+    this.ORDER_PUSHER();
+    //////////////////////////////
     
     return { message: 'Order placed successfully', order: savedOrder };
   }
@@ -300,4 +305,27 @@ export class CustomersService {
       user: safeUserInfo
     };
   }
+
+
+
+
+
+
+
+
+  ////////////////////////SHAMIN Er CODE
+  ORDER_PUSHER() {
+    const pusher = new Pusher({
+      appId: "2155910",
+      key: "7b2e3ff4ee3ff76372cd",
+      secret: "b17751e55b84b3c16b3f",
+      cluster: "ap1",
+      useTLS: true
+    });
+
+    pusher.trigger("order-channel", "new-order", {
+      message: "New order received"
+    });
+  }
+  
 }
