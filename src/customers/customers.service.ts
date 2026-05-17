@@ -316,10 +316,10 @@ export class CustomersService {
   ////////////////////////SHAMIN Er CODE
   ORDER_PUSHER() {
     const pusher = new Pusher({
-      appId: "2155910",
-      key: "7b2e3ff4ee3ff76372cd",
-      secret: "b17751e55b84b3c16b3f",
-      cluster: "ap1",
+      appId: process.env.PUSHER_APP_ID!,
+      key: process.env.PUSHER_KEY!,
+      secret: process.env.PUSHER_SECRET!,
+      cluster: process.env.PUSHER_CLUSTER!,
       useTLS: true
     });
 
