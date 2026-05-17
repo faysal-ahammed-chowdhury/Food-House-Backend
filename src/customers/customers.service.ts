@@ -63,10 +63,6 @@ export class CustomersService {
 
 
   // 3 - Search for food items or restaurants
-  async searchFood(item: string) {
-    return { message: `Searching database for food item: ${item}` };
-  }
-
   async searchDatabase(query: string) {
     const restaurants = await this.restaurantRepository.find({
       where: [
