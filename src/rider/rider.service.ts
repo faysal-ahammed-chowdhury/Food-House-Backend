@@ -376,6 +376,7 @@ export class RiderService{
         }
 
         order.status = OrderStatus.DELIVERED;
+        
         /////////////////////
         this.deliveryPusher();
         ////////////////////
@@ -454,7 +455,7 @@ export class RiderService{
     }
 
 
-//siyam er code
+    //siyam er code
     deliveryPusher() {
         const pusher = new Pusher({
           appId: process.env.PUSHER_APP_ID!,
