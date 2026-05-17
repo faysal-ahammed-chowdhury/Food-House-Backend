@@ -205,9 +205,8 @@ export class CustomersService {
     const savedOrder = await this.orderRepository.save(newOrder);
     delete (savedOrder as any).customer;
     delete (savedOrder as any).restaurant; 
-
     /////////////////////////////
-    this.ORDER_PUSHER();
+    this.ORDER_PUSHER(restaurant.restaurantId);
     //////////////////////////////
     
     return { message: 'Order placed successfully', order: savedOrder };
@@ -314,7 +313,7 @@ export class CustomersService {
 
 
   ////////////////////////SHAMIN Er CODE
-  ORDER_PUSHER() {
+  ORDER_PUSHER(restaurantId: number) {
     const pusher = new Pusher({
       appId: process.env.PUSHER_APP_ID!,
       key: process.env.PUSHER_KEY!,
@@ -324,6 +323,7 @@ export class CustomersService {
     });
 
     pusher.trigger("order-channel", "new-order", {
+      restaurantId: restaurantId,
       message: "New order received"
     });
   }
