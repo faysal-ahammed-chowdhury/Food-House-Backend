@@ -14,6 +14,7 @@ import {ChangePasswordDto} from "./dto/change-password.dto";
 import * as bcrypt from 'bcrypt';
 import { UserRoles } from "../common/enums/user-roles.enum";
 import { OrderStatus } from "src/common/enums/order-status.enum";
+import Pusher from "pusher";
 
 
 @Injectable()
@@ -150,7 +151,7 @@ export class RiderService{
             // Available requests
         const availableRequests = await this.orderRepository.count({
             where: {
-                status: OrderStatus.READY,
+                status: OrderStatus.ACCEPTED,
             },
         });
     
@@ -375,6 +376,9 @@ export class RiderService{
         }
 
         order.status = OrderStatus.DELIVERED;
+        /////////////////////
+        this.deliveryPusher();
+        ////////////////////
         
         return await this.orderRepository.save(order);
     }
@@ -431,6 +435,40 @@ export class RiderService{
         });
     }
 
-}
 
- 
+
+
+
+    //delete account
+    async deleteAccount(riderId: number) {
+        const rider = await this.riderRepository.findOne({
+        where: { riderId },
+        relations: ['user'],
+        });
+
+        if (!rider) {
+            throw new NotFoundException('Rider not found');
+        }
+
+        return await this.riderRepository.remove(rider);
+    }
+
+
+//siyam er code
+    deliveryPusher() {
+        const pusher = new Pusher({
+          appId: "2155910",
+          key: "7b2e3ff4ee3ff76372cd",
+          secret: "b17751e55b84b3c16b3f",
+          cluster: "ap1",
+          useTLS: true
+        });
+
+        pusher.trigger("delivery-channel", "new-delivery", {
+          message: "Parcel Delivered"
+        });
+    }
+
+
+
+}
