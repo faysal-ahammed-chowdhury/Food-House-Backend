@@ -17,6 +17,7 @@ import { CreateItemDto } from "./dto/create-item.dto";
 import { UpdateItemDto } from "./dto/update-item.dto";
 import { OrderStatus } from "src/common/enums/order-status.enum";
 import { OrderEntity } from "src/common/entities/order.entity";
+import Pusher from "pusher";
  
 
 @Injectable()
@@ -631,8 +632,29 @@ export class RestaurantService {
         } 
         order.status = status as OrderStatus;
         await this.orderRepository.save(order);
+        //////////////////////////
+        if(order.status === OrderStatus.READY && order.riderId!== null){
+            this.readyPusher(order.riderId);
+        }
+        ////////////////////////////
         return { orderId: order.orderId, newStatus: order.status };
     }
+    
 
+    //CHHOYA code
+    readyPusher(riderId: number) {
+        const pusher = new Pusher({
+          appId: process.env.PUSHER_APP_ID!,
+          key: process.env.PUSHER_KEY!,
+          secret: process.env.PUSHER_SECRET!,
+          cluster: process.env.PUSHER_CLUSTER!,
+          useTLS: true
+        });
+    
+        pusher.trigger("rider-channel", "rider-order", {
+          riderId: riderId,
+          message: "Order is ready for pickup"
+        });
+    }
 
 }
