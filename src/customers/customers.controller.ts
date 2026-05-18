@@ -1,7 +1,8 @@
 import { 
   Controller, Get, Post, Put, Patch, Delete, Param, Body, Query, 
   UsePipes, ValidationPipe, ParseIntPipe, UseGuards, Req,
-  UnauthorizedException
+  UnauthorizedException,
+  Res
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto, UpdateCustomerDto } from './dto/customer.dto';
@@ -13,18 +14,18 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
   
-  //1 - top 5 resturants
+  //1 - top 5 resturants //ok
   @Get('top-restaurants')
   async getTop5Restaurants() {
     return this.customersService.getTop5Restaurants();
   }
-  //2 - all resturants
+  //2 - all resturants //ok
   @Get('all-restaurants')
   async getAllRestaurants() {
     return this.customersService.getAllRestaurants();
   }
 
-  //3 - Search for food items or restaurants
+  //3 - Search for food items or restaurants //ok
   @Get('search')
   async searchDatabase(@Query('query') query: string) {
     if (!query) return { restaurants: [], items: [] };
@@ -102,9 +103,17 @@ export class CustomersController {
     return await this.customersService.cancelOrder(req.user.userId, orderId);
   }
 
-  // 12 - Get restaurant menu
+  // 12 - Get restaurant menu //ok
   @Get('restaurant-menu/:id')
   async getRestaurantMenu(@Param('id', ParseIntPipe) id: number) {
     return await this.customersService.getRestaurantMenu(id);
+  }
+
+  //13 - Delete customer account
+  @Delete('account')
+  @UseGuards(AuthGuard) 
+  async deleteAccount(@Req() req) {
+    const userId = req.user.userId; 
+    return await this.customersService.deleteAccount(userId);
   }
 }

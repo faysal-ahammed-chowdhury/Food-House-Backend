@@ -483,7 +483,7 @@ export class RiderService{
         });
 
         pusher.trigger("delivery-channel", "new-delivery", {
-          message: "Parcel Delivered"
+          message: "Your Parcel Has Been Delivered!"
         });
     }
 

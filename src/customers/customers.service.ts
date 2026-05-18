@@ -1,10 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+
+import Pusher from 'pusher';
+import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
-import { MailerService } from '@nestjs-modules/mailer';
-import * as bcrypt from 'bcrypt';
-import * as crypto from 'crypto'; 
-import { CreateCustomerDto, UpdateCustomerDto } from './dto/customer.dto';
+import { UpdateCustomerDto } from './dto/customer.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { CustomerEntity } from '../common/entities/customer.entity';
@@ -14,7 +13,9 @@ import { ItemEntity } from 'src/common/entities/item.entity';
 import { UserRoles } from '../common/enums/user-roles.enum';
 import { OrderStatus } from '../common/enums/order-status.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.enum';
-import Pusher from 'pusher';
+import { UserEntity } from 'src/common/entities/user.entity';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+
 
 @Injectable()
 export class CustomersService {
@@ -22,7 +23,8 @@ export class CustomersService {
     @InjectRepository(CustomerEntity) private customerRepository: Repository<CustomerEntity>,
     @InjectRepository(OrderEntity) private orderRepository: Repository<OrderEntity>, 
     @InjectRepository(RestaurantEntity) private restaurantRepository: Repository<RestaurantEntity>,
-    private readonly mailerService: MailerService,
+    @InjectRepository(ItemEntity) private itemRepository: Repository<ItemEntity>, 
+    @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>
   ) {}
 
   //1 - Fetch 5 Restaurants for the Homepage
@@ -74,11 +76,11 @@ export class CustomersService {
       take: 10,
     });
 
-    const items = await this.restaurantRepository.manager.find(ItemEntity, {
+    const items = await this.itemRepository.find({
       where: { name: ILike(`%${query}%`) },
       relations: ['restaurant', 'restaurant.user'], 
       take: 20,
-    });
+    }); 
 
     const formattedItems = items.map(item => ({
       ...item,
@@ -92,7 +94,7 @@ export class CustomersService {
     };
   }
 
-  // 4 - Get customer profile
+  // 4 - Get customer profile //ok
   async getProfile(userId: number) {
     const customer = await this.customerRepository.findOne({
       where: { user: { userId: userId } }, 
@@ -145,7 +147,7 @@ export class CustomersService {
     return { message: "Profile fully replaced", customer };
   }
 
-  // 7 - Partially update customer profile (PATCH)
+  // 7 - Partially update customer profile (PATCH)  //ok
   async patchProfile(userId: number, updateDto: UpdateCustomerDto) {
     const customer = await this.getProfile(userId);
     if (updateDto.address) customer.address = updateDto.address;
@@ -305,6 +307,11 @@ export class CustomersService {
     };
   }
 
+  // 13 - Delete customer account
+  async deleteAccount(userId: number) {
+    await this.userRepository.delete(userId);
+    return { message: 'Account successfully deleted' };
+  }
 
 
 
