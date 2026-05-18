@@ -116,4 +116,18 @@ export class CustomersController {
     const userId = req.user.userId; 
     return await this.customersService.deleteAccount(userId);
   }
+
+  //14 - Validate voucher code
+  @Post('voucher/validate')
+  @UseGuards(AuthGuard) 
+  async validateVoucher(
+    @Body('code') code: string,
+    @Body('restaurantId') restaurantId: number,
+    @Body('subtotal') subtotal: number,
+  ) {
+    if (!code || !restaurantId || !subtotal) {
+      return { success: false, message: 'Missing required fields' };
+    }
+    return await this.customersService.validateVoucher(code, restaurantId, subtotal);
+  }
 }

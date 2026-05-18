@@ -9,6 +9,7 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import { CustomerEntity } from '../common/entities/customer.entity';
 import { OrderEntity } from '../common/entities/order.entity';
 import { RestaurantEntity } from 'src/common/entities/restaurant.entity';
+import { VoucherEntity } from 'src/common/entities/voucher.entity';
 import { ItemEntity } from 'src/common/entities/item.entity';
 import { UserRoles } from '../common/enums/user-roles.enum';
 import { OrderStatus } from '../common/enums/order-status.enum';
@@ -24,7 +25,8 @@ export class CustomersService {
     @InjectRepository(OrderEntity) private orderRepository: Repository<OrderEntity>, 
     @InjectRepository(RestaurantEntity) private restaurantRepository: Repository<RestaurantEntity>,
     @InjectRepository(ItemEntity) private itemRepository: Repository<ItemEntity>, 
-    @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>
+    @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
+    @InjectRepository(VoucherEntity) private voucherRepository: Repository<VoucherEntity>,
   ) {}
 
   //1 - Fetch 5 Restaurants for the Homepage
@@ -172,7 +174,6 @@ export class CustomersService {
     }
 
     let calculatedSubtotal = 0;
-    
     const orderItemsToSave = createOrderDto.items.map((item: any) => {
       const itemTotal = item.price * item.quantity;
       calculatedSubtotal += itemTotal; 
@@ -184,26 +185,33 @@ export class CustomersService {
         total: itemTotal 
       };
     });
+    
     const deliveryFee = 50; 
     
+    const appliedDiscount = (createOrderDto as any).discountApplied || 0;
+    const trueFinalTotal = Math.max(0, calculatedSubtotal + deliveryFee - appliedDiscount);
+
     const newOrder = this.orderRepository.create({
       customer: customer,
       restaurant: restaurant, 
       subtotal: calculatedSubtotal,
-      discountAmount: 0,
+      discountAmount: appliedDiscount,
+      total: trueFinalTotal,
+      voucherCode: (createOrderDto as any).voucherCode || null, 
       deliveryFee: deliveryFee,
-      total: calculatedSubtotal + deliveryFee,
       status: OrderStatus.PENDING,
       paymentMethod: (createOrderDto as any).paymentMethod || PaymentMethod.COD,
       customerName: customer.user.name,
       customerAddress: customer.address || 'Address pending',
-      restaurantName: restaurant.user?.name || createOrderDto.restaurantName,
+      restaurantName: restaurant.user?.name || (createOrderDto as any).restaurantName,
       restaurantAddress: restaurant.address || 'Address pending',
-      commissionAmount: (calculatedSubtotal * 0.1), 
+      commissionAmount: ((calculatedSubtotal - appliedDiscount) * 0.1), 
       commissionPercentage: 10,
+      
       estimatedDeliveryTime: 30,
       orderItems: orderItemsToSave, 
     });
+
     const savedOrder = await this.orderRepository.save(newOrder);
     delete (savedOrder as any).customer;
     delete (savedOrder as any).restaurant; 
@@ -311,6 +319,38 @@ export class CustomersService {
   async deleteAccount(userId: number) {
     await this.userRepository.delete(userId);
     return { message: 'Account successfully deleted' };
+  }
+
+
+  // 14 - Validate voucher code
+  async validateVoucher(code: string, restaurantId: number, subtotal: number) {
+    const voucher = await this.voucherRepository.findOne({
+      where: { 
+        voucherCode: code,
+        restaurant: { restaurantId: restaurantId } 
+      },
+    });
+
+    if (!voucher) {
+      throw new NotFoundException('Invalid voucher code for this restaurant');
+    }
+
+    if (voucher.expiresAt && new Date() > voucher.expiresAt) {
+      throw new BadRequestException('This voucher code has expired');
+    }
+
+    if (subtotal < voucher.minOrderAmount) {
+      throw new BadRequestException(`You must spend at least ৳${voucher.minOrderAmount} to use this voucher`);
+    }
+
+    const calculatedDiscount = subtotal * (voucher.percent / 100);
+    const finalDiscount = Math.min(calculatedDiscount, voucher.maxDiscount);
+
+    return {
+      success: true,
+      discount: Number(finalDiscount.toFixed(2)),
+      message: 'Voucher applied successfully!',
+    };
   }
 
 

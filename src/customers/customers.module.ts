@@ -9,6 +9,7 @@ import { OrderItemEntity } from '../common/entities/order-item.entity';
 import { RestaurantEntity } from '../common/entities/restaurant.entity';
 import { CategoryEntity } from '../common/entities/category.entity';
 import { ItemEntity } from '../common/entities/item.entity';
+import { VoucherEntity } from 'src/common/entities/voucher.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([
@@ -18,7 +19,8 @@ import { ItemEntity } from '../common/entities/item.entity';
     OrderItemEntity,
     RestaurantEntity, 
     CategoryEntity,    
-    ItemEntity       
+    ItemEntity,
+    VoucherEntity    
   ])],
   controllers: [CustomersController], 
   providers: [CustomersService],      
