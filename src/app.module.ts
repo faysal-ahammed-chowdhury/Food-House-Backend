@@ -4,10 +4,9 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
+import { CustomersModule } from './customers/customers.module';
 import { RestaurantModule } from './restaurant/restaurant.module';
 import { RiderModule } from './rider/rider.module';
-import { CustomersModule } from './customers/customers.module';
-
 
 @Module({
     imports: [
