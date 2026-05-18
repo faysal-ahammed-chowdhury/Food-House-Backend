@@ -468,6 +468,7 @@ export class RiderService{
       message: 'User deleted successfully via riderId',
     };
   }
+  
 
 
 
