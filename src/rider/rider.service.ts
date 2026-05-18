@@ -292,9 +292,11 @@ export class RiderService{
     async acceptDelivery(dto: AcceptDeliveryDto) {
         const { riderId, orderId } = dto;
 
+
         const rider = await this.riderRepository.findOne({
         where: { riderId },
         relations: ['user'],
+
         });
 
         if (!rider) {
@@ -303,6 +305,7 @@ export class RiderService{
 
         const order = await this.orderRepository.findOne({
         where: { orderId },
+        relations: ['restaurant'],
         });
 
         if (!order) {
@@ -316,6 +319,7 @@ export class RiderService{
         order.status = OrderStatus.RIDER_ASSIGNED;
         order.riderName = rider.user.name;
         order.riderId = rider.riderId;
+        this.rider_assign_Pusher(order.restaurant.restaurantId); // Notify restaurant of new rider assignment
         return await this.orderRepository.save(order);
     }
 
@@ -335,6 +339,7 @@ export class RiderService{
 
         const order = await this.orderRepository.findOne({
         where: { orderId },
+        relations: ['restaurant'],
         });
 
         if (!order) {
@@ -346,7 +351,7 @@ export class RiderService{
         }
 
         order.status = OrderStatus.PICKED;
-        
+        this.picked_Pusher(order.restaurant.restaurantId); // Notify restaurant of order pickup
         return await this.orderRepository.save(order);
     }
 
@@ -483,5 +488,34 @@ export class RiderService{
     }
 
 
+
+    //SHAMIN er code
+    rider_assign_Pusher(restaurantId: number) {
+        const pusher = new Pusher({
+          appId: process.env.PUSHER_APP_ID!,
+          key: process.env.PUSHER_KEY!,
+          secret: process.env.PUSHER_SECRET!,
+          cluster: process.env.PUSHER_CLUSTER!,
+          useTLS: true
+        });
+        pusher.trigger("rider_assigned-channel", "rider_assigned", {    
+            restaurantId: restaurantId,
+            message: "Rider assigned to order, Prepare your food!",
+        });
+    }
+
+    picked_Pusher(restaurantId: number) {
+        const pusher = new Pusher({
+          appId: process.env.PUSHER_APP_ID!,
+          key: process.env.PUSHER_KEY!,
+          secret: process.env.PUSHER_SECRET!,
+          cluster: process.env.PUSHER_CLUSTER!,
+          useTLS: true
+        });
+        pusher.trigger("picked-channel", "picked", {    
+            restaurantId: restaurantId,
+            message: "Food picked up by rider, on the way to customer!",
+        });
+    }
 
 }
