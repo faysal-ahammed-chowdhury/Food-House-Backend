@@ -14,6 +14,7 @@ import { UserEntity } from 'src/common/entities/user.entity';
 import { UserRoles } from 'src/common/enums/user-roles.enum';
 import { Repository } from 'typeorm';
 import { SignUpDto } from './dto/signup.dto';
+import { ForgotPassEntity } from 'src/common/entities/forgotpass.entity';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,8 @@ export class AuthService {
         private userRepository: Repository<UserEntity>,
         @InjectRepository(CustomerEntity)
         private customerRepository: Repository<CustomerEntity>,
+        @InjectRepository(ForgotPassEntity)
+        private forgotPassRepository: Repository<ForgotPassEntity>,
         private jwtService: JwtService,
         private mailerService: MailerService,
     ) {}
@@ -84,10 +87,10 @@ export class AuthService {
         };
     }
 
-    async getUserById(userId: number): Promise<object>{
+    async getUserById(userId: number): Promise<object> {
         const user = await this.userRepository.findOne({
             select: ['userId', 'name', 'email', 'role'],
-            where: { userId: userId, },
+            where: { userId: userId },
         });
         if (!user) {
             throw new NotFoundException(`User not found with id ${userId}`);
@@ -158,10 +161,10 @@ export class AuthService {
         }
 
         const verificationTokenHere: string = String(Date.now());
-        const verificationLink = `http://localhost:3000/auth/verify/${userId}/${verificationTokenHere}`;
 
         user.verificationToken = verificationTokenHere;
         const newUser = await this.userRepository.save(user);
+        const verificationLink = `http://localhost:3000/auth/verify/${userId}/${newUser.verificationToken}`;
 
         try {
             await this.mailerService.sendMail({
@@ -197,32 +200,107 @@ export class AuthService {
         const user = await this.userRepository.findOne({
             where: {
                 userId: id,
-                verificationToken: token,
             },
         });
 
         if (!user) {
-            throw new UnauthorizedException('Invalid User or Token');
+            throw new UnauthorizedException('Invalid User');
         }
 
         if (user.isVerified) {
             throw new BadRequestException('User already verified');
         }
 
+        if (user.verificationToken != token) {
+            throw new UnauthorizedException('Invalid Token');
+        }
+
         user.isVerified = true;
         user.verificationToken = null;
-        const newUser = await this.userRepository.save(user);
-
-        const payload = {
-            userId: newUser.userId,
-            email: newUser.email,
-            role: newUser.role,
-        };
+        await this.userRepository.save(user);
 
         return {
             success: true,
             message: 'User verified',
-            access_token: await this.jwtService.signAsync(payload),
         };
+    }
+
+    ///////////////////////////// FORGET PASSWORD ////////////////////////////
+    //get userid from email  
+    async getUserIdByEmail(email: string): Promise<{ userId: number }> {
+        const user = await this.userRepository.findOne({
+            where: { email },
+        });
+        if (!user) {
+            return { userId: 0 };
+        }
+        return {
+            userId: user.userId,
+        };
+    }
+
+    //FORGET PASSWORD
+    async forgotPass(userId: number, email: string): Promise<{ message: string }> {
+        const resetToken = Math.floor(100000 + Math.random() * 900000);
+        await this.forgotPassRepository.delete({ userId });
+        
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+
+        const record = this.forgotPassRepository.create({
+            userId,
+            OPT: resetToken.toString(),
+            expiresAt,
+        });
+
+        await this.forgotPassRepository.save(record);
+        
+        await this.mailerService.sendMail({
+            to: email,
+            subject: 'Food House Password Reset OTP',
+            text: `Your OTP is ${resetToken}`,
+            html: `
+            <h2>Password Reset</h2>
+            <p>Your OTP is:</p>
+            <h1>${resetToken}</h1>
+            <p>This OTP is valid for 5 minutes. If you did not request a password reset, please ignore this email.</p>
+            `,
+        });
+        return {
+            message: 'Reset email sent',
+        };
+    }
+
+
+    async resetPassword(userId: number, newPassword: string): Promise<{ message: string }> {
+        const user = await this.userRepository.findOne({
+            where: { userId },
+        });
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        user.password = hashedPassword;
+        await this.userRepository.save(user);
+        await this.forgotPassRepository.delete({ userId });
+        return {
+            message: 'Password reset successful',
+        };
+    }
+
+    async checkOTP(userId: number, otp: string): Promise<{ success: boolean; time: boolean }> {
+        const record = await this.forgotPassRepository.findOne({
+            where: { userId, OPT: otp },
+        });
+        if(!record) {
+          return { success: false, time: false };  
+        }
+        const now = new Date();
+        if (record.expiresAt < now) {
+            return { success: false, time: true };
+        }
+        await this.forgotPassRepository.delete({ userId });
+        return { success: true, time: true };
     }
 }

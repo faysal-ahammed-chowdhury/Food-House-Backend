@@ -17,6 +17,7 @@ import { CreateItemDto } from "./dto/create-item.dto";
 import { UpdateItemDto } from "./dto/update-item.dto";
 import { OrderStatus } from "src/common/enums/order-status.enum";
 import { OrderEntity } from "src/common/entities/order.entity";
+import Pusher from "pusher";
  
 
 @Injectable()
@@ -488,7 +489,6 @@ export class RestaurantService {
         return item;
     }
     
-
     //24
     async getCompletedAndCanceledOrdersByRestaurant(restaurantId: number) {
         return this.orderRepository.find({
@@ -506,8 +506,154 @@ export class RestaurantService {
                 customer: true
             },
             order: {
-                orderId: 'DESC',
+                orderAt: 'DESC',
             },
+        });
+    }
+
+    //25
+    async getFinancialInfoByRestaurant(restaurantId: number) {
+        const result1 = await this.orderRepository
+            .createQueryBuilder('order')
+            .select('COALESCE(SUM(order.subtotal - order.discountAmount), 0)', 'totalRevenue')
+            .where('order.restaurantId = :restaurantId', { restaurantId })
+            .andWhere('order.status IN (:...statuses)', {
+                statuses: [OrderStatus.DELIVERED],
+            })
+            .getRawOne();
+
+        const result2 = await this.orderRepository
+            .createQueryBuilder('order')
+            .where('order.restaurantId = :restaurantId', { restaurantId })
+            .andWhere('order.status = :status', {
+                status: OrderStatus.DELIVERED,
+            })
+            .getCount();
+
+        const result3 = await this.orderRepository
+            .createQueryBuilder('order')
+            .where('order.restaurantId = :restaurantId', { restaurantId })
+            .andWhere('order.status IN (:...statuses)', {
+                statuses: [
+                    OrderStatus.PENDING,
+                    OrderStatus.ACCEPTED,
+                    OrderStatus.RIDER_ASSIGNED,
+                    OrderStatus.PREPARING,
+                    OrderStatus.READY,
+                    OrderStatus.PICKED,
+                ],
+            })
+            .getCount();
+
+        const result4 = await this.orderRepository
+            .createQueryBuilder('order')
+            .select(
+                'COALESCE(SUM(order.commissionAmount), 0)',
+                'totalCommission',
+            )
+            .where('order.restaurantId = :restaurantId', { restaurantId })
+            .andWhere('order.status = :status', {
+                status: OrderStatus.DELIVERED,
+            })
+            .getRawOne();
+
+        return {
+            totalRevenue: Number(result1.totalRevenue),
+            completedCount: result2,
+            pendingCount: result3,
+            totalCommission: Number(result4.totalCommission),
+        };
+    }
+
+    //26
+    async getItemsCount(restaurantId: number): Promise<number> {
+        const count = await this.itemRepository.count({
+            where: {
+                restaurant: { restaurantId: restaurantId },
+            },
+        });
+        return count;
+    }
+
+    //28
+    async getActiveOrdersByRestaurantId(restaurantId: number) {
+        return await this.orderRepository.find({
+            where: {
+                restaurant: {
+                    restaurantId,
+                },
+                status: In([
+                    OrderStatus.PENDING,
+                    OrderStatus.ACCEPTED,
+                    OrderStatus.RIDER_ASSIGNED,
+                    OrderStatus.PREPARING,
+                    OrderStatus.READY,
+                    OrderStatus.PICKED,
+                ]),
+            },
+            relations: ['orderItems', 'customer', 'delivery'],
+            order: {
+                orderAt: 'ASC',
+            },
+        });
+    }
+
+    //29
+    async getOrderStatus(orderId: number): Promise<{ orderId: number; status: OrderStatus }> {
+        const order = await this.orderRepository.findOne({
+            where: { orderId },
+        });
+        if (!order) {
+            throw new NotFoundException(`Order with id ${orderId} not found`);
+        }
+        return { orderId: order.orderId, status: order.status };
+    }
+
+    //27
+    async getCategoryCountByRestaurantId(restaurantId: number): Promise<{ categoryCount: number }> {
+        const count = await this.categoryRepository.count({
+            where: {
+                restaurant: { restaurantId: restaurantId },
+            },
+        });
+        return { categoryCount: count };
+    }
+
+    //30
+    async setOrderStatus(orderId: number, status: string): Promise<{ orderId: number; newStatus: OrderStatus }> {
+        const order = await this.orderRepository.findOne({
+            where: { orderId },
+        }); 
+        if (!order) {
+            throw new NotFoundException(`Order with id ${orderId} not found`);
+        }
+        if (!Object.values(OrderStatus).includes(status as OrderStatus)) {
+            throw new NotFoundException(`Invalid order status: ${status}`);
+        } 
+        order.status = status as OrderStatus;
+        await this.orderRepository.save(order);
+        //////////////////////////
+        if(order.status === OrderStatus.READY && order.riderId!== null){
+            this.readyPusher(order.riderId);
+        }
+        ////////////////////////////
+        return { orderId: order.orderId, newStatus: order.status };
+    }
+    
+
+    //CHHOYA code
+    readyPusher(riderId: number) {
+        const pusher = new Pusher({
+          appId: process.env.PUSHER_APP_ID!,
+          key: process.env.PUSHER_KEY!,
+          secret: process.env.PUSHER_SECRET!,
+          cluster: process.env.PUSHER_CLUSTER!,
+          useTLS: true
+        });
+    
+        pusher.trigger("rider-channel", "rider-order", {
+          riderId: riderId,
+          message: "Order is ready for pickup"
         });
     }
 

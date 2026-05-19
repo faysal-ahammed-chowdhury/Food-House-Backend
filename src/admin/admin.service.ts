@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import Pusher from 'pusher';
 import { CategoryEntity } from 'src/common/entities/category.entity';
 import { CustomerEntity } from 'src/common/entities/customer.entity';
 import { ItemEntity } from 'src/common/entities/item.entity';
@@ -66,7 +67,92 @@ export class AdminService {
         return Boolean(foundEmail);
     }
 
+    /* ========== Dashboard APIs ========== */
+
+    // get stats
+    async getStats(): Promise<object> {
+        const orders = await this.orderRepository.find({
+            where: { status: OrderStatus.DELIVERED },
+        });
+
+        const platformEarnings = orders.reduce((prev, cur) => {
+            return prev + cur.commissionAmount;
+        }, 0);
+
+        const totalOrders = orders.length;
+
+        const restaurants = await this.restaurantRepository.find();
+        const totalRestaurant = restaurants.length;
+
+        const rider = await this.riderRepository.find();
+        const totalRider = rider.length;
+        return {
+            success: true,
+            message: 'Stats Fetched Successfully',
+            data: {
+                platformEarnings,
+                totalOrders,
+                totalRestaurant,
+                totalRider,
+            },
+        };
+    }
+
+    // get recent orders
+    async getRecentOrders(): Promise<object> {
+        const orders = await this.orderRepository.find({
+            order: { orderAt: 'DESC' },
+            take: 7,
+        });
+
+        return {
+            success: true,
+            message: 'Stats Fetched Successfully',
+            data: orders,
+        };
+    }
+
+    // get order status count
+    async getOrderStatusCount(): Promise<object> {
+        const orders = await this.orderRepository.find({
+            order: { orderAt: 'DESC' },
+        });
+
+        const orderStatusCount: Record<string, number> = {};
+        orders.forEach((order) => {
+            orderStatusCount[order.status] =
+                (orderStatusCount[order.status] || 0) + 1;
+        });
+
+        const result = Object.entries(orderStatusCount).map(([key, val]) => [
+            key,
+            val,
+        ]);
+
+        return {
+            success: true,
+            message: 'Order Status Fetched Successfully',
+            data: result,
+        };
+    }
+
     /* ========== Manage Admin ========== */
+
+    async adminPusher() {
+        console.log('Look: ', process.env.FAYSAL_PUSHER_APP_ID);
+
+        const pusher = new Pusher({
+            appId: process.env.FAYSAL_PUSHER_APP_ID || '',
+            key: process.env.FAYSAL_PUSHER_KEY || '',
+            secret: process.env.FAYSAL_PUSHER_SECRET || '',
+            cluster: process.env.FAYSAL_PUSHER_CLUSTER || '',
+            useTLS: true,
+        });
+
+        await pusher.trigger('my-channel', 'my-event', {
+            data: await this.getAdmins(),
+        });
+    }
 
     // create an admin
     async createAdmin(createAdminDto: CreateAdminDto): Promise<object> {
@@ -86,6 +172,8 @@ export class AdminService {
             isVerified: true,
         });
         const { password, verificationToken, ...adminWithoutPassword } = admin;
+
+        await this.adminPusher();
 
         return {
             success: true,
@@ -187,6 +275,8 @@ export class AdminService {
         const updated = await this.userRepository.save(admin);
         const { password, verificationToken, ...output } = updated;
 
+        await this.adminPusher();
+
         return {
             success: true,
             message: `Admin Updated Successfully`,
@@ -208,6 +298,8 @@ export class AdminService {
         }
 
         await this.userRepository.delete(userId);
+
+        await this.adminPusher();
 
         return {
             success: true,

@@ -63,6 +63,9 @@ export class OrderEntity {
 
     @Column({ nullable: true })
     riderName!: string;
+    
+    @Column({ nullable: true })
+    riderId!: number;
 
     @Column({ type: 'enum', enum: OrderStatus })
     status!: OrderStatus;
@@ -81,6 +84,6 @@ export class OrderEntity {
     })
     delivery!: DeliveryEntity;
 
-    @OneToMany(() => OrderItemEntity, (item) => item.order)
+    @OneToMany(() => OrderItemEntity, (item) => item.order, { cascade: true })
     orderItems!: OrderItemEntity[];
 }
